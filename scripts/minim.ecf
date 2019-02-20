@@ -1,0 +1,289 @@
+#!/bin/ksh
+#
+# Script to run assim/minimization
+
+%include <pbs.h>
+
+%include <head.h>
+
+module load python/2.7.12-01
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+assimc=%ASSIMC%
+lagg=%VORHI%
+enjk=%ENSJK%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/ASSIM/MINIMIZATION
+CLIMDIR=${MY_DIR}/CLIM
+BINDIR=${MY_DIR}/BIN
+NAMELDIR=${MY_DIR}/NAMEL
+SCREENDIR=${MY_DIR}/ASSIM/SCREENING/${date}/${run}/MEM_${mem}
+ADDSURFDIR=${MY_DIR}/ASSIM/ADDSURF/${date}/${run}/MEM_${mem}
+C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
+
+GRIBTABLES=$CLIMDIR/GRIBTABLES/gribtables
+GRIBTEMPLATES=$CLIMDIR/GRIBTABLES/gribtemplates
+BMATRIXFILE1=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.bal
+BMATRIXFILE2=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.cv
+BMATRIXFILE3=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.cvt
+VMATRIXFILE_f=${MY_DIR}/ASSIM/VMATRIX/V_forecast_6h_GLdef/stabfiltn42.cvt
+VMATRIXFILE_a=${MY_DIR}/ASSIM/VMATRIX/V_analysis_GLdef/stabfiltn42.cvt
+NAMELIASICHAN=$NAMELDIR/iasichannels
+NAMELCRISCHAN=$NAMELDIR/namelist_cris331
+NAMELMINIM=${NAMELDIR}/namelist_minim_cy40t1
+NAMELBLEND=${NAMELDIR}/namelist_blend_cy40t1
+BLENDBIN=${BINDIR}/BLEND_cy40t1
+
+INFLATION=.FALSE.       # ECMWF EDA spread will be increased by an inflation factor
+LHYDRO3D=.TRUE.
+
+date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
+run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
+
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
+cd ${RUNDIR}
+
+rm -fr ${RUNDIR}/*
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+# Environmental settings 
+export NPROC=$EC_total_tasks
+export NPROMA=-`expr $NPROC \/ 2`
+export NPOOLS=$NPROC
+export NPRGPEW=1
+export NPRGPNS=$NPROC
+export NPRTRV=$NPRGPEW
+export NPRTRW=$NPRGPNS
+export NSTRIN=`expr $NPROC \/ 2`
+export NSTROUT=`expr $NPROC \/ 2`
+
+export OMP_NUM_THREADS=1
+export MALLOC_CHECK_=0   
+#export MALLOC_CHECK_=3   
+#export CNF_DEBUG=1
+#export TO_ODB_DEBUG=1
+#export F_RECLUNIT=BYTE  #cini se da ne utjece na rezultat
+LSPRT=.FALSE.            #treba biti FALSE za minim.
+QLGP=.FALSE.             #humidity GP in input
+QLSP=.TRUE.              #humidity SP in input
+REDNMC=1.35
+NITER=120 
+NSIMU=130
+
+# Some environment variables (ODB, DR. HOOK, GRIBTABLES)
+export ECMWF_LOCAL_TABLE_PATH=$GRIBTABLES
+export LOCAL_DEFINITION_TEMPLATES=$GRIBTEMPLATES
+export DR_HOOK=0
+export DR_HOOK_SILENT=0
+export DR_HOOK_IGNORE_SIGNALS=-1
+export EC_PROFILE_HEAP=0
+export ODB_SRCPATH_CCMA=$RUNDIR/CCMA
+export ODB_DATAPATH_CCMA=$RUNDIR/CCMA
+export IOASSIGN=$RUNDIR/IOASSIGN
+export ODB_CMA=CCMA
+export ODB_ANALYSIS_DATE=$date
+export ODB_ANALYSIS_TIME=${run}0000
+export TIME_INIT_YYYYMMDD=$date
+export TIME_INIT_HHMMSS=${run}0000
+export ODB_STATIC_LINKING=1
+export TO_ODB_ECMWF=0
+
+# Jk parameters perturbations
+typeset -i seed seed1 aa
+date2=$(echo $date | cut -c5-8)
+date2=$(echo $date2 | sed 's/^0*//') #remove leading zero if necessary
+date3=$date2$run
+date3=$(($date3 + $mem))
+seed=$mem*$date3
+
+if [[ $mem -eq "00" ]]; then
+  AT=0.70
+  AV=0.80
+  AD=0.10
+  AQ=0.04
+  AP=0.00
+fi
+
+if [[ $mem -ne "00" ]]; then
+  aa=$date3*1
+  seed1=$(($seed + $aa))
+  AT=$(python -c "import random; random.seed($seed1); br=random.randint(2,11)/10.;print(br)")
+
+  aa=$date3*2
+  seed1=$(($seed + $aa))
+  AV=$(python -c "import random; random.seed($seed1); br=random.randint(3,13)/10.;print(br)")
+
+  aa=$date3*3
+  seed1=$(($seed + $aa))
+  AD=$(python -c "import random; random.seed($seed1); br=random.randint(7,15)/100.;print(br)")
+
+  aa=$date3*4
+  seed1=$(($seed + $aa))
+  AQ=$(python -c "import random; random.seed($seed1); br=random.randint(0,7)/100.;print(br)")
+
+  aa=$date3*5
+  seed1=$(($seed + $aa))
+  AP=$(python -c "import random; random.seed($seed1); br=random.randint(0,2)/2.;print(br)")
+fi
+
+# Jk namelist parameters
+if [[ enjk == 1 ]]; then
+   LEJK=.TRUE.          # main Jk switch
+else
+   LEJK=.FALSE.
+fi
+
+if [[ $mem -eq "00" ]]; then
+   LEJK=.FALSE.
+fi
+NSMAXJK=215          # integer truncation of the low res. LAM geometry
+ALPHAKT=$AT          # amplification factor for Jk temperture term
+ALPHAKVOR=$AV        # amplification factor for Jk vorticity term
+ALPHAKDIV=$AD        # amplification factor for Jk divergence term
+ALPHAKQ=$AQ          # amplification factor for Jk humidity term
+ALPHAKP=0.0          # amplification factor for Jk pressure term
+PRESINFJK=100500.0   # Jk activated above pressure level
+PRESUPJK=98000.0     # Jk fully active above pressure level
+NTRUNCJK=8           # wave number after which Jk will have no impact
+
+# Fetching of the input files
+cp $CLIMDIR/table? .
+
+cp ${CLIMDIR}/const.tar.gz .
+tar -xzvf const.tar.gz
+mv const_tar/* .
+
+ln -s scat.cmod5.table fort.36
+
+# Get VARBC file from SCREENING, ODB file from CCMA and first guess
+#cp $SCREENINGDIR/VARBC.cycle ./VARBC.cycle
+typeset -Z2 acycle
+acycle=${assimc}
+cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf ./ICMSHMINIIMIN
+cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf .
+cp $C927DIR/ELSCFAROMALBC000 ./ICMJKMINIINIT 
+cp $SCREENDIR/CCMA.tar CCMA.tar
+
+tar -xvf CCMA.tar
+
+cp $NAMELIASICHAN $RUNDIR/iasichannels
+cp $NAMELCRISCHAN $RUNDIR/crischannels
+cp CCMA/IOASSIGN IOASSIGN
+
+# Get B-MATRIX and V-MATRIX files
+cp $BMATRIXFILE1 ./stabal96.bal
+cp $BMATRIXFILE2 ./stabal96.cv
+cp $BMATRIXFILE3 ./stabal96.cvt
+if [[ $run -eq "06" || $run -eq "18" ]]; then
+  cp $VMATRIXFILE_f  ./nonsep93_jk.cvt
+else
+  cp $VMATRIXFILE_a  ./nonsep93_jk.cvt
+fi
+rm -rf fort.4
+
+# Fill namelist template -> fort.4
+sed -e "s/{NBPROC}/${NPROC}/" \
+    -e "s/{NPRTRV}/${NPRTRV}/" \
+    -e "s/{NPRTRW}/${NPRTRW}/" \
+    -e "s/{NSTRIN}/${NSTRIN}/" \
+    -e "s/{NSTROUT}/${NSTROUT}/" \
+    -e "s/{NPROMA}/${NPROMA}/" \
+    -e "s/{NPRGPEW}/${NPRGPEW}/" \
+    -e "s/{NPRGPNS}/${NPRGPNS}/" \
+    -e "s/{niter}/${NITER}/" \
+    -e "s/{nsimu}/${NSIMU}/" \
+    -e "s/{LEJK}/${LEJK}/" \
+    -e "s/{LSPRT}/${LSPRT}/" \
+    -e "s/{qlsp}/${QLSP}/" \
+    -e "s/{qlgp}/${QLGP}/" \
+    -e "s/{rednmc}/${REDNMC}/" \
+    -e "s/{NSMAXJK}/${NSMAXJK}/" \
+    -e "s/{ALPHAKT}/${ALPHAKT}/" \
+    -e "s/{ALPHAKVOR}/${ALPHAKVOR}/" \
+    -e "s/{ALPHAKDIV}/${ALPHAKDIV}/" \
+    -e "s/{ALPHAKQ}/${ALPHAKQ}/" \
+    -e "s/{ALPHAKP}/${ALPHAKP}/" \
+    -e "s/{PRESINFJK}/${PRESINFJK}/" \
+    -e "s/{PRESUPJK}/${PRESUPJK}/" \
+    -e "s/{NTRUNCJK}/${NTRUNCJK}/" ${NAMELMINIM} > fort.4
+
+# Humidity -> spectral (because of Jk)
+fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMSHMINIIMIN medusa_worm
+fa_gp2sp.py medusa_worm
+fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f medusa_worm.allsp ICMSHMINIIMIN
+rm -rf medusa_worm.allsp 
+cp ICMSHMINIIMIN ICMSHMINIINIT
+cp ICMSHMINIIMIN ICMRFMINI0000
+
+# ECMWF perturbations inflation
+if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
+  cp $C927DIR/ELSCFAROMALBC000 00-ICMJKMINIINIT 
+  export DR_HOOK_NOT_MPI="yes"
+  cp $BINDIR/inflating_new.py .
+  python inflating_new.py
+  fa_copy -w prefix=S,suffix=TEMPERATURE -f fossil_dyna ICMJKMINIINIT
+  fa_copy -w prefix=S,suffix=WIND.U.PHYS -f fossil_dyna ICMJKMINIINIT
+  fa_copy -w prefix=S,suffix=WIND.V.PHYS -f fossil_dyna ICMJKMINIINIT
+  fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna ICMJKMINIINIT
+  rm -rf fossil_dyna
+fi
+
+if [[ $INFLATION == ".FALSE." && $LEJK == ".TRUE." ]]; then
+  fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMJKMINIINIT fossil_dyna
+  fa_gp2sp.py fossil_dyna
+  fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna.allsp ICMJKMINIINIT
+  rm -rf fossil_dyna.allsp
+fi
+
+# Run minimization config 131
+#aprun -n $NPROC $MASTERBIN 
+aprun -n $NPROC ${BINDIR}/cy40t1_MASTERODB_WASTL
+#aprun -n $NPROC ${BINDIR}/MASTERODB_endy
+
+fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
+fa_sp2gp.py golem_sentry
+fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f golem_sentry.allgp MXMINI999+0000
+rm -rf golem_sentry.allgp
+
+# Correction of humidity errors due to SP<->GP conversions
+export DR_HOOK_NOT_MPI="yes"
+cp $BINDIR/corrections_ecf.py .
+python corrections_ecf.py ${acycle}
+fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f block_dragon MXMINI999+0000
+rm -rf block_dragon
+
+# Distribute output (logfiles,nodefiles, ODB output FA output, VARBC output)
+#cp VARBC.cycle $VARBCFILE
+#mv VARBC.cycle $MINIMIZATIONDIR
+
+tar cvf CCMA_minim.tar CCMA*
+mv CCMA_minim.tar ${OUTDIR}/CCMA_minim.tar
+cp MXMINI999+0000 ${OUTDIR}/MXMINI999+0000
+
+# BLEND hydrometeors with first guess file
+if [[ $LHYDRO3D == ".TRUE." ]]
+then
+# Add other 3D fields
+  cp MXMINI999+0000 AldsurfA
+  cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf AldsurfB
+  cp AldsurfA AldsurfC
+  cp $NAMELBLEND fort.4
+
+  aprun -n 1 $BLENDBIN
+
+  mv AldsurfC ${OUTDIR}/MXMINI999+0000_blend
+fi
+
+cp NODE.001_01 ${MY_DIR}/LOG/NODE_MINIMIZATION_${date}${run}_${mem}
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

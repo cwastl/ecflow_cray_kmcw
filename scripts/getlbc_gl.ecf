@@ -1,0 +1,75 @@
+#!/bin/ksh
+#
+#Script to get couplingfiles from ECMWF for gl
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+lagg=%VORHI%
+leadtime=%LEAD%
+couplfr=%KOPPLUNG%
+mem=%MEMBER%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/COUPL/LBC_GL
+BINDIR=${MY_DIR}/BIN
+LBCDIR=/sc1/tcwork/zat/lb/ecdiss
+
+n1run=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
+n1date=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
+n1mm=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 5-6)
+n1dd=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 7-8)
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+cd ${OUTDIR}
+
+actdate=$(date '+%%Y%%m%%d');
+actdate1=$(/home/ms/at/kmcw/bin/datecalc ${actdate} -f -t -1 | cut -c 1-8)
+
+if [[ $date == $actdate || $date == $actdate1 ]]
+then
+
+   HIST=.FALSE.
+
+else
+
+   HIST=.TRUE.
+
+fi
+ 
+i=${lagg}
+(( leadtime=$leadtime+$lagg ))
+while (( i <= $leadtime )) ; do
+  
+   actmm=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
+   actdd=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)
+   acthh=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 9-10)
+
+   if [[ ${HIST} == .TRUE. ]]
+   then
+
+      if [[ ! -s ECMWF_${mem}.grb ]]
+      then
+
+         ecp ec:/zat2/COUPLING/ARCHIVE_4_LAEFCOUPL/${n1date}${n1run}/ECMWF_${mem}.grb.gz .    
+         gunzip ECMWF_${mem}.grb.gz
+
+      fi
+
+   else
+
+      cp ${LBCDIR}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 .     
+
+   fi
+
+   (( i=$i+$couplfr ))
+
+done
+
+%include <tail.h>

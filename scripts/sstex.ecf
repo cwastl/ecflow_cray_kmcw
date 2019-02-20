@@ -1,0 +1,74 @@
+#!/bin/ksh
+#
+# Script to run SSTEX for assimilation
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+lagg=%VORHI%
+assimc=%ASSIMC%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/ASSIM/SSTEX
+C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
+C001DIR=${MY_DIR}/001
+NAMELDIR=${MY_DIR}/NAMEL
+BINDIR=${MY_DIR}/BIN
+
+date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
+run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
+date2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 1-8)
+run2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 9-10)
+
+# Create working directory
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
+cd ${RUNDIR}
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+rm -rf $RUNDIR/*
+
+# Environmental settings
+NPROC=$EC_total_tasks
+export OMP_NUM_THREADS=1
+#export MALLOC_CHECK_=0
+export MALLOC_CHECK_=3
+export DR_HOOK=0                  # Dr. Hook is for the traceback errors, but it's now disabled
+export DR_HOOK_NOT_MPI="yes"      # had to be added - crashing otherwise (calling to MPI). Maybe because sst_exc. is single task (non-MPI) job?
+export DR_HOOK_SILENT=0           # prints out error messages but doesn't terminate the job
+export DR_HOOK_IGNORE_SIGNALS=-1  # ignores all possible signals
+
+# Get input data (ELSC*, namelist, binary, etc.)
+typeset -Z2 acycle
+acycle=$assimc
+
+cp ${C927DIR}/ELSCFAROMALBC000 ./IFS_ANALYSE
+cp ${C001DIR}/${date2}/${run2}/MEM_${mem}/ICMSHAROM+00${acycle} ./AROME_GUESS 
+
+cp AROME_GUESS Blend_sea0
+
+# Copy namelist
+cp ${NAMELDIR}/namelist_sstexchange1_cy40t1 fort.4
+
+mpiexec -n $NPROC ${BINDIR}/BLENDSUR_cy40t1
+
+rm -f fort.4
+cp AROME_GUESS AROME_SSTOK
+cp ${NAMELDIR}/namelist_sstexchange2_cy40t1 fort.4
+
+mpiexec -n $NPROC ${BINDIR}/BLENDSUR_cy40t1
+
+chmod 666 AROME_SSTOK
+mv AROME_SSTOK ${OUTDIR}/AROME_SSTOK
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

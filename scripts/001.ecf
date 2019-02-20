@@ -1,0 +1,178 @@
+#!/bin/ksh
+#
+# Script to run 001
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+leadtime=%LEAD%
+couplfr=%KOPPLUNG%
+assim=%ASSIM%
+assimc=%ASSIMC%
+stophy=%STOCH%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/001
+CLIMDIR=${MY_DIR}/CLIM
+BINDIR=${MY_DIR}/BIN
+NAMELDIR=${MY_DIR}/NAMEL
+C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
+ASSIMDIR=${MY_DIR}/ASSIM
+
+if [[ $stophy == 1 ]]; then
+   export EXEC=${BINDIR}/cy40t1_MASTERODB_WASTL_sppt_mihaly_ipsrcm_sppturb_all_supmiha+par+ENJK
+elif [[ $stophy == 0 ]]; then
+   export EXEC=${BINDIR}/cy40t1_MASTERODB_WASTL_sppt_mihaly+supmiha+ENJK 
+fi
+
+EXP=AROM
+
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
+cd ${RUNDIR}
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+rm -fr ${RUNDIR}/*
+
+NPROMA=-32
+NPROC=$EC_total_tasks
+NPRGPNS=30
+NPRGPEW=16
+NPRTRV=$NPRGPEW
+NPRTRW=$NPRGPNS
+NSTRIN=$NPROC
+NSTROUT=`expr $NPROC \/ 2`
+
+month=`echo "$date" | awk '{print substr($1,5,2)}'`
+
+# MPI, openMP env, etc.
+
+export MALLOC_CHECK_=0
+export MPI_IB_RAILS=1
+export MPI_DSM_DISTRIBUTE=1
+export MPI_DSM_VERBOSE=1
+export MPI_VERBOSE=1
+export MPI_BUFS_PER_PROC=256
+export MPI_BUFS_PER_HOST=4096
+export MPI_BUFFER_MAX=20000000
+export OMP_NUM_THREADS=1
+export KMP_STACKSIZE=500m
+export KMP_MONITOR_STACKSIZE=500m
+
+export DR_HOOK=0
+export DR_HOOK_SILENT=1
+export DR_HOOK_IGNORE_SIGNALS=-1
+
+# fetch input files 
+
+if [ $assim == 1 ]
+then
+
+    INITFILE_3D=${ASSIMDIR}/MINIMIZATION/${date}/${run}/MEM_${mem}/MXMINI999+0000_blend
+    INITFILE_SURFACE=${C927DIR}/PGD_${EXP}.fa
+    INITFILE_SFX=${ASSIMDIR}/CANARI/${date}/${run}/MEM_${mem}/ICMSHCYCL+0000.sfx
+
+else
+
+    INITFILE_3D=${C927DIR}/ELSCF${EXP}ALBC000
+    INITFILE_SURFACE=${C927DIR}/PGD_${EXP}.fa
+    INITFILE_SFX=${C927DIR}/PFE927${EXP}+0000.sfx
+
+fi
+
+cp ${C927DIR}/ELSC*${EXP}* .
+cp ${INITFILE_3D} ICMSH${EXP}INIT
+
+cp ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
+cp ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
+cp ${INITFILE_SURFACE} Const.Clim.sfx    #nka
+cp ${CLIMDIR}/clim_arome_oper_new_m${month} ./Const.Clim
+
+cp ${CLIMDIR}/ecoclimapI_covers_param.bin . #cy40
+cp ${CLIMDIR}/ecoclimapII_eu_covers_param.bin . #cy40
+cp ${CLIMDIR}/RADRRTM . #cy40 
+cp ${CLIMDIR}/GCO2CLIM . #cy40 
+cp ${CLIMDIR}/GCH4CLIM . #cy40 
+cp ${CLIMDIR}/N2OCLIM . #cy40 
+cp ${CLIMDIR}/NO2CLIM . #cy40 
+cp ${CLIMDIR}/C11CLIM . #cy40 
+cp ${CLIMDIR}/C12CLIM . #cy40 
+cp ${CLIMDIR}/GOZOCLIM . #cy40 
+cp ${CLIMDIR}/C22CLIM . #cy40 
+cp ${CLIMDIR}/CCL4CLIM . #cy40 
+
+cp ${CLIMDIR}/RADSRTM . #cy40 
+cp ${NAMELDIR}/namelist_surfex_arome_cy40t1_sha EXSEG1.nam
+
+# run 001
+#-------------------------------------
+
+couplfr_s=`expr ${couplfr} \* 3600`
+date2=$( echo $date | cut -c7-8 )
+seedm=`expr ${mem} \* ${date2}`
+
+if [[ $mem == "00" || $stophy == 0 ]]
+then 
+   
+   sed -e   "s/{nproma}/$NPROMA/"\
+       -e   "s/{experiment}/${EXP}/"\
+       -e   "s/{nproc}/$NPROC/"\
+       -e   "s/{nprgpns}/$NPRGPNS/"\
+       -e   "s/{nprgpew}/$NPRGPEW/"\
+       -e   "s/{nprtrv}/$NPRTRV/"\
+       -e   "s/{nprtrw}/$NPRTRW/"\
+       -e   "s/{nstrin}/$NSTRIN/"\
+       -e   "s/{nstrout}/$NSTROUT/"\
+       -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
+       -e   "s/{couplfreq}/${couplfr_s}/"\
+       -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+       -e   "s/{fcstrange}/${leadtime}/g" ${NAMELDIR}/namel_001_CY40T1_sppt_fpos_saphir_ > $RUNDIR/fort.4
+
+else
+
+   sed -e   "s/{nproma}/$NPROMA/"\
+       -e   "s/{experiment}/${EXP}/"\
+       -e   "s/{nproc}/$NPROC/"\
+       -e   "s/{nprgpns}/$NPRGPNS/"\
+       -e   "s/{nprgpew}/$NPRGPEW/"\
+       -e   "s/{nprtrv}/$NPRTRV/"\
+       -e   "s/{nprtrw}/$NPRTRW/"\
+       -e   "s/{nstrin}/$NSTRIN/"\
+       -e   "s/{nstrout}/$NSTROUT/"\
+       -e   "s/{couplfreq}/${couplfr_s}/"\
+       -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+       -e   "s/{fcstrange}/${leadtime}/g" ${NAMELDIR}/namel_001_CY40T1_sppt_fpos_saphir_ > $RUNDIR/fort.4
+
+fi
+
+/usr/bin/time aprun -n $NPROC ${EXEC} > ${MY_DIR}/LOG/MASTERODB_${mem}.log 2>&1
+
+mv NODE.001_01 ${MY_DIR}/LOG/NODE.001_01_${mem} 
+
+typeset -Z2 acycle2
+acycle2=${assimc}
+
+#ii = 0                        #For B-Matrix calculation
+#while [ $ii -le 6 ]
+#do
+#   cp ICMSH${EXP}+000${ii} ${BASEDIR}/ICMSH${EXP}+000${ii}_${mem}
+#   let "ii = $ii + 1"
+#done
+
+mv ICMSH${EXP}+00${acycle2} ${OUTDIR}/ICMSH${EXP}+00${acycle2}
+mv ICMSH${EXP}+00${acycle2}.sfx ${OUTDIR}/ICMSH${EXP}+00${acycle2}.sfx
+
+mv PF${EXP}000+* ${OUTDIR}
+
+rm -f ELSC*${EXP}*
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

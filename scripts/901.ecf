@@ -1,0 +1,122 @@
+#!/bin/ksh
+#
+# Script to run 901 for preparation of 927
+
+%include <pbs.h>
+
+%include <head.h>
+
+module load craype-hugepages2M
+module load cray-snplauncher
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+lagg=%VORHI%
+leadtime=%LEAD%
+couplfr=%KOPPLUNG%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/COUPL/901
+LBCDIR=${MY_DIR}/COUPL/LBC/${date}/${run}/MEM_${mem}
+CLIMDIR=${MY_DIR}/CLIM
+BINDIR=${MY_DIR}/BIN
+NAMELDIR=${MY_DIR}/NAMEL
+LOGDIR=${MY_DIR}/LOG
+
+n1run=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
+n1date=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
+
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
+cd ${RUNDIR}
+
+OUTDIR=${MY_DIR}/COUPL/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+rm -fr ${RUNDIR}/*
+
+#ln -sf ${BINDIR}/cy40t1_MASTERODB_WASTL MASTER
+ln -sf ${BINDIR}/MASTER_901 MASTER
+
+export OMP_NUM_THREADS=$EC_threads_per_task
+
+i=$lagg
+(( leadtime=$leadtime+$lagg ))
+while (( i <= $leadtime )) ; do
+
+    typeset -Z3 ii
+    ii=$i
+
+    rm -f ICMUAa001INIT ICMSHa001INIT ICMGGa001INIT
+    rm -f CN90xa001INIT
+    rm -f NODE.001_01
+    rm -f Const.Clim
+    rm -f ifs.*
+
+    #--- prepare namelist
+    rm -f fort.4
+    #cp ${NAMELDIR}/namelist_901_cy40t1 fort.4
+    cp ${NAMELDIR}/c901_nam36t1 fort.4
+
+    TFT=00
+    MM_FT=$(echo ${date} | cut -c 5-6)
+    ln -sf ${CLIMDIR}/const.clim_${MM_FT} Const.Clim
+        
+    if [[ ! -s ${OUTDIR}/ICMSHBC${mem}+0${ii} ]] && [[ -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ]]
+    then
+       ln -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ICMUAa001INIT
+       ln -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ICMSHa001INIT
+       ln -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
+
+      	#-- Run 901
+#	    mpiexec -n $EC_total_tasks MASTER -fd5 -aeul -vecmwf
+       mpiexec -n $EC_total_tasks MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
+#	    aprun -n $EC_total_tasks -d $EC_threads_per_task -cc none MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
+       CODEREP=$?
+
+       if (( ${CODEREP} !=0 ))
+       then
+          echo "901 for ${ii} failed"
+          mv 901.out ${LOGDIR}/${mem}-901.out.${ii}
+          mv 901.err ${LOGDIR}/${mem}-901.err.${ii}
+          mv NODE.001_01 ${d_LOG}/${mem}-901.node.${ii}
+          exit 1
+       fi
+
+	   mv CN90xa001INIT fort.11
+	   cp Const.Clim fort.12
+       cp ${NAMELDIR}/nam_addsurf fort.4
+
+       ln -sf ${BINDIR}/ADDSURF_cy40t1 ADDSURF
+#set +e
+       mpiexec -n $EC_total_tasks ADDSURF fort.11 fort.12
+#		aprun -n $EC_total_tasks -d $EC_threads_per_task -cc none ADDSURF fort.11 fort.12
+#set -e
+       CODEREP=$?
+       mv fort.11 ${OUTDIR}/ICMSHBC${mem}+0${ii}
+
+       if (( ${CODEREP} !=0 ))
+       then
+          echo "ADDSURF for ${ii} failed"
+	      mv addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii}
+          mv addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii}
+	      exit 1
+       fi
+    fi
+
+    (( i=$i+$couplfr ))
+
+done
+
+#-- Cleaning
+rm -f fort.4 MASTER
+rm -f ICMUAa001INIT ICMSHa001INIT ICMGGa001INIT
+rm -f CN90xa001INIT
+rm -f Const.Clim
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

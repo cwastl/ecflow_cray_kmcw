@@ -1,0 +1,52 @@
+#!/bin/ksh
+#
+# Script to run getobs
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/ASSIM/OBS/${date}/${run}
+
+date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -1:00 | cut -c 1-8)
+hh1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -1:00 | cut -c 9-10)
+date2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +1:00 | cut -c 1-8)
+hh2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +1:00 | cut -c 9-10)
+date3=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -2:00 | cut -c 1-8)
+hh3=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -2:00 | cut -c 9-10)
+date4=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +2:00 | cut -c 1-8)
+hh4=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +2:00 | cut -c 9-10)
+date5=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -3:00 | cut -c 1-8)
+hh5=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -3:00 | cut -c 9-10)
+date6=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +3:00 | cut -c 1-8)
+hh6=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +3:00 | cut -c 9-10)
+
+[[ ! -d ${BASEDIR} ]] && mkdir -p ${BASEDIR}
+cd ${BASEDIR}
+
+# First get OPLACE data - /ment_arch/aladin/ASSIM/
+fectrans=wastl_eps
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/ASSIM/OPLACE_archive/obs_short_${date}${run}.tar -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/ASSIM/OPLACE_archive/obs_foreign_${date}${run}.tar.gz -overwrite -verbose
+gunzip -f obs_foreign_${date}${run}.tar.gz
+#  ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../MODE-S/DATA_IN/${date}/obsoul_MODES_${date}_${run}00_RUC -overwrite -verbose
+
+# Now get ZAMG observations - /modelle/prod/mgruppe
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_amdar_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date1}/obsoul_amdar_${date1}_${hh1}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date2}/obsoul_amdar_${date2}_${hh2}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date3}/obsoul_amdar_${date3}_${hh3}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_pilot_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_schiwm_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_ship_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_taw_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_temp_${date}_${run}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_${date}_${run}0000.asc -overwrite -verbose 
+
+%include <tail.h>

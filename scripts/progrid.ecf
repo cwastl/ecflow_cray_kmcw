@@ -1,0 +1,75 @@
+#!/bin/ksh
+#
+# Script to run PROGRID
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+leadtime=%LEAD%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/PROGRID
+BINDIR=${MY_DIR}/BIN
+C001DIR=${MY_DIR}/001
+LOGDIR=${MY_DIR}/LOG
+
+EXEC=${BINDIR}/cy40t1_PROGRID
+NSLOTS=$EC_total_tasks
+
+EXP=AROM
+
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
+cd ${RUNDIR}
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+rm -fr ${RUNDIR}/*
+
+# MPI, openMP env, etc.
+
+export MPI_IB_RAILS=1
+export MPI_DSM_DISTRIBUTE=1
+export MPI_DSM_VERBOSE=1
+export MPI_VERBOSE=1
+export MPI_BUFS_PER_PROC=256
+export MPI_BUFS_PER_HOST=2048
+export MPI_BUFFER_MAX=2000000
+
+export OMP_NUM_THREADS=1
+export KMP_STACKSIZE=500m
+export KMP_MONITOR_STACKSIZE=500m
+
+export DR_HOOK=0
+export DR_HOOK_SILENT=1
+export DR_HOOK_IGNORE_SIGNALS=-1
+
+export TSTEP=60
+
+step=0
+while (( $step <= ${leadtime} )) ; do
+  
+  typeset -Z4 cstep
+  cstep=$step
+
+  if [ ! -s ${OUTDIR}/PF${EXP}000+${cstep}".grb" ] ; then
+    cp ${C001DIR}/${date}/${run}/MEM_${mem}/PF${EXP}000+${cstep} fort.11
+    status=0
+    /usr/bin/time aprun -n ${NSLOTS} ${EXEC} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
+    status=$?
+    mv GRIDBIZARRE ${OUTDIR}/PF${EXP}000+${cstep}".grb"
+    rm -f fort.11
+  fi
+  (( step=${step}+1 ))
+done
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

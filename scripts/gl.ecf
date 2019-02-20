@@ -1,0 +1,98 @@
+#!/bin/ksh
+#
+# Script to run GL tool to prepare ECMWF couplingfiles for 927
+%include <pbs.h>
+
+%include <head.h>
+
+module load cray-snplauncher
+
+# Include auxlibs in LD_LIBRARY_PATH because we use dynamic libs
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ms/fr/rme/opt/INTEL/auxlibs/lib/
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+lagg=%VORHI%
+leadtime=%LEAD%
+couplfr=%KOPPLUNG%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/GL
+CLIMDIR=${MY_DIR}/CLIM
+BINDIR=${MY_DIR}/BIN
+RUNDIR=$BASEDIR/$PBS_JOBID
+LBCDIR=${MY_DIR}/COUPL/LBC_GL/${date}/${run}/MEM_${mem}
+
+month=`echo "$date" | awk '{print substr($1,5,2)}'`
+
+[[ ! -d $RUNDIR ]] && mkdir -p $RUNDIR
+cd $RUNDIR
+rm -rf $RUNDIR/*
+
+OUTDIR=${MY_DIR}/COUPL/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+export MALLOC_CHECK_=0
+export DR_HOOK=0                 #turn off dr_hook
+export DR_HOOK_SILENT=0          #write to log-file if some signal was ignored
+export DR_HOOK_IGNORE_SIGNALS=-1 #ignore all signals
+
+LQGP=FALSE    #if true, humidity is gridpoint in output
+NHYD=TRUE    #if true, nonhydrostatic fields will be produced in output
+
+# ECMWF files and AROME climate file
+cp $LBCDIR/ECMWF_$mem.grb .
+ln -sf $CLIMDIR/clim_ecmwf_m${month} ./climate_aladin
+# Extract z, ci and sst
+grib_copy -w shortName=z/ci/sst ECMWF_$mem.grb CONST.grb
+
+let "anzahl = (${leadtime})/${couplfr}"
+
+i=0
+while [ $i -le $anzahl ]
+do
+
+    (( j = ${i}*${couplfr}+${lagg} ))
+    typeset -Z2 jj
+    jj=$j
+
+    if [ ! -s ${OUTDIR}/ICMSHBC${mem}+00${jj} ]
+    then
+   
+       grib_copy -w stepRange=$j ECMWF_$mem.grb ECMWF_${mem}_small.grb
+
+       # Handling of the surface fields
+       if [[ ${jj} == 00 ]]; then
+          SKIP_SURF=F
+          LQGP=FALSE   #because of Jk. But for 06/18 runs, q will still be gp. Conversion in minim. is neccessary
+       else
+          SKIP_SURF=F
+          cat CONST.grb >> ECMWF_${mem}_small.grb
+          LQGP=FALSE
+       fi
+
+       # Namelist settings
+       sed -e "s/{lqgp}/$LQGP/" \
+           -e "s/{skip_surf}/$SKIP_SURF/" $PERM/NAMEL/gl_namel_ecmwf > ./gl_namel
+
+       # Running the GL
+       mpiexec -n 1 $BINDIR/gl_grib_api_def -lbc ifs ECMWF_${mem}_small.grb -o ELSCFAROMALBC0${jj} -d -s -n gl_namel
+
+       mv ELSCFAROMALBC0${jj} ${OUTDIR}/ICMSHBC${mem}+00${jj}
+
+    else
+
+       echo "File already there"
+
+    fi
+
+    (( i=$i+1 ))
+
+done
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

@@ -1,0 +1,172 @@
+#!/bin/ksh
+#
+# Script to run 927atm
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+lagg=%VORHI%
+leadtime=%LEAD%
+couplfr=%KOPPLUNG%
+assim=%ASSIM%
+gl=%GL%
+
+# My Environment
+MY_DIR=/home/ms/at/kmcw/ECF
+BASEDIR=${MY_DIR}/927
+CLIMDIR=${MY_DIR}/CLIM
+COUPLDIR=${MY_DIR}/COUPL
+BINDIR=${MY_DIR}/BIN
+NAMELDIR=${MY_DIR}/NAMEL
+LOGDIR=${MY_DIR}/LOG
+
+NPROMA=-32
+NPROC=$EC_total_tasks
+NPRGPNS=$NPROC
+NPRGPEW=1
+NPRTRV=$NPRGPEW
+NPRTRW=$NPRGPNS
+NSTRIN=1
+NSTROUT=1
+
+NEINI=0
+EXP=AROM
+
+addsurf=0
+month=`echo "$date" | awk '{print substr($1,5,2)}'`
+
+# MPI, openMP env, etc.
+
+export export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
+export MPI_IB_RAILS=1
+export MPI_DSM_DISTRIBUTE=1
+export MPI_DSM_VERBOSE=1
+export MPI_VERBOSE=1
+export MPI_BUFS_PER_PROC=256
+export MPI_BUFS_PER_HOST=2048
+export MPI_BUFFER_MAX=2000000
+
+export OMP_NUM_THREADS=1
+export KMP_STACKSIZE=500m
+export KMP_MONITOR_STACKSIZE=500m
+export F_RECLUNIT=BYTE
+export F_UFMTENDIAN="big:10,33,50,54,81"
+export DR_HOOK=0
+export DR_HOOK_SILENT=1
+export DR_HOOK_IGNORE_SIGNALS=-1
+
+if [[ $OMP_NUM_THREADS = 1 ]] ; then
+  export XLSMPOPTS="parthds=1:stack=358400000 : spins=500000 : yields=50000"
+else
+  export XLSMPOPTS="parthds=$OMP_NUM_THREADS:stack=358400000"
+fi
+
+#--- Set up for 927
+# ---- Create working directory
+RUNDIR=${BASEDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
+cd ${RUNDIR}
+
+OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+
+rm -fr ${RUNDIR}/*
+
+export TSTEP=60
+ln -sf ${BINDIR}/cy40t1_MASTERODB_WASTL MASTER
+
+# --- get necessary files
+
+ln -s ${CLIMDIR}/clim_arome_oper_new_m${month} const.clim.AROM
+if [[ $gl == 1 ]];then
+   ln -s ${CLIMDIR}/clim_ecmwf_m${month} Const.Clim
+   NAMEL927=${NAMELDIR}/namel_927_CY40T1_2.5km_90L
+   NAMEL927adds=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf
+else
+   ln -s ${CLIMDIR}/const.clim_${month} Const.Clim
+   NAMEL927=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_glob
+   NAMEL927adds=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf_glob
+fi
+
+ln -s ${CLIMDIR}/ecoclimapI_covers_param.bin .
+ln -s ${CLIMDIR}/ecoclimapII_eu_covers_param.bin .
+
+i=$lagg
+k=0
+(( leadtime=$leadtime+$lagg))
+while (( i <= $leadtime )) ; do
+
+  typeset -Z4 j
+  j=$i
+
+  typeset -Z3 l
+  l=$k
+
+  if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]] ; then
+  
+    #---  modifiy namelist
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{neini}/$NEINI/"\
+        -e   "s/{lsprt}/.false./"\
+        -e   "s/{EXPERIMENT}/$EXP/"\
+        -e   "s/{NPROC}/$NPROC/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMEL927adds} > $RUNDIR/fort.4
+
+  else
+
+    #---  modifiy namelist
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{neini}/$NEINI/"\
+        -e   "s/{lsprt}/.false./"\
+        -e   "s/{EXPERIMENT}/$EXP/"\
+        -e   "s/{NPROC}/$NPROC/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMEL927} > $RUNDIR/fort.4
+
+  fi    
+
+  rm -f ICMSHE927INIT
+  ln -s ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${j} ICMSHE927INIT
+
+  status=0
+  aprun -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_${mem}.log 2>&1 
+  status=$?
+
+  if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]]; then
+     
+     addsurf=1   
+     mv PFE927AROM+0000 ${OUTDIR}/ADDSURFAROMALBC000
+     mv NODE.001_01 ${LOGDIR}/NODE_ADDSURF_00${k}_${mem}
+
+  else
+ 
+     mv PFE927AROM+0000 ${OUTDIR}/ELSCFAROMALBC${l}
+     mv NODE.001_01 ${LOGDIR}/NODE_927_${l}_${mem}
+     (( i=$i+$couplfr ))
+     (( k=$k+1 ))
+
+  fi 
+
+  rm ncf* ifs*
+
+
+done
+
+cd ${BASEDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>
+

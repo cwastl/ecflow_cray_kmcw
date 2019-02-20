@@ -1,0 +1,222 @@
+# 4.11.1
+suite claef
+  edit ECF_EXTN '.ecf'
+  edit ACCOUNT 'atlaef'
+  edit ECF_INCLUDE '/home/ms/at/kmcw/ecf/include'
+  edit ECF_JOB_CMD '/usr/local/apps/schedule/1.4/bin/schedule kmcw cca %ECF_JOB% %ECF_JOBOUT%'
+  edit ECF_MICRO '%'
+  edit ECF_LOGHOST 'cca'
+  edit ECF_HOME '/home/ms/at/kmcw/ecf'
+  edit ECF_LOGPORT '36652'
+  edit ECF_OUT '/scratch/ms/at/kmcw/ECF'
+  edit CNF_DEBUG '0'
+  family RUN_06
+    edit VORHI '6'
+    edit LAUF '06'
+    edit DATUM '20170112'
+    edit LEAD '6'
+    family lbc
+      edit GL '1'
+      family MEM_01
+        task getlbc
+          trigger :GL == 0
+          edit NAME 'getlbc01'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'ns'
+          label run ""
+          label status ""
+          label error "ok"
+        task 901
+          trigger :GL == 0 and getlbc == complete
+          edit NAME '90101'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '1'
+          edit CLASS 'ns'
+          label run ""
+          label status ""
+          label error "ok"
+        task getlbc_gl
+          trigger :GL == 1
+          edit NAME 'getlbc_gl01'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'ns'
+          label run ""
+          label status ""
+          label error "ok"
+        task gl
+          trigger :GL == 1 and getlbc_gl == complete
+          edit NAME 'gl01'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '1'
+          edit CLASS 'nf'
+          label run ""
+          label status ""
+          label error "ok"
+      endfamily
+    endfamily
+    family obs
+      edit ASSIM '1'
+      task getobs
+        trigger :ASSIM == 1
+        edit NP '1'
+        edit CLASS 'ns'
+        edit WALLT '01'
+        edit NAME 'getobs'
+        label run ""
+        label status ""
+        label error "ok"
+      task bator
+        trigger :ASSIM == 1 and getobs == complete
+        edit NP '1'
+        edit CLASS 'ns'
+        edit WALLT '01'
+        edit NAME 'bator'
+        label run ""
+        label status ""
+        label error "ok"
+      task bator3D
+        trigger :ASSIM == 1 and getobs == complete
+        edit NP '1'
+        edit CLASS 'ns'
+        edit WALLT '01'
+        edit NAME 'bator3D'
+        label run ""
+        label status ""
+        label error "ok"
+    endfamily
+    family main
+      edit ASSIM '1'
+      edit GL '1'
+      family MEM_01
+        task 927
+          trigger ../../lbc/MEM_01/gl == complete or ../../lbc/MEM_01/901 == complete
+          edit NAME '92701'
+          edit ASSIM '1'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '16'
+          edit CLASS 'np'
+          label run ""
+          label status ""
+          label error "ok"
+        task 927surf
+          trigger ../../lbc/MEM_01/gl == complete or ../../lbc/MEM_01/901 == complete
+          edit NP '1'
+          edit CLASS 'np'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NAME '927surf01'
+          label run ""
+          label status ""
+          label error "ok"
+        task sstex
+          trigger :ASSIM == 1 and 927 == complete
+          edit ASSIMC '6'
+          edit NAME 'sstex01'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'ns'
+          label run ""
+          label status ""
+          label error "ok"
+        task addsurf
+          trigger :ASSIM == 1 and sstex == complete
+          edit ASSIMC '6'
+          edit NAME 'addsurf01'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'ns'
+          label run ""
+          label status ""
+          label error "ok"
+        task screen
+          trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete
+          edit ASSIMC '6'
+          edit EDA '1'
+          edit NAME 'screen01'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '12'
+          edit CLASS 'np'
+          label run ""
+          label status ""
+          label error "ok"
+        task screensurf
+          trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator == complete
+          edit ASSIMC '6'
+          edit NAME 'screensurf01'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label status ""
+          label error "ok"
+        task canari
+          complete :ASSIM == 0
+          trigger :ASSIM == 1 and screensurf == complete
+          edit ASSIMC '6'
+          edit NAME 'canari01'
+          edit MEMBER '01'
+          edit SEDA '1'
+          edit NP '1'
+          edit CLASS 'np'
+          edit WALLT '03'
+          label run ""
+          label status ""
+          label error "ok"
+        task minim
+          complete :ASSIM == 0
+          trigger :ASSIM == 1 and screen == complete
+          edit ENSJK '0'
+          edit ASSIMC '6'
+          edit NAME 'minim01'
+          edit MEMBER '01'
+          edit WALLT '03'
+          edit NP '12'
+          edit CLASS 'np'
+          label run ""
+          label status ""
+          label error "ok"
+        task 001
+          trigger 927 == complete and 927surf == complete and minim == complete and canari == complete
+          edit ASSIMC '6'
+          edit NAME '00101'
+          edit ASSIM '1'
+          edit KOPPLUNG '6'
+          edit MEMBER '01'
+          edit WALLT '06'
+          edit NP '480'
+          edit STOCH '1'
+          edit CLASS 'np'
+          label run ""
+          label status ""
+          label error "ok"
+        task progrid
+          trigger 001  == complete
+          edit NP '1'
+          edit CLASS 'np'
+          edit MEMBER '01'
+          edit WALLT '01'
+          edit NAME 'progrid01'
+          label run ""
+          label status ""
+          label error "ok"
+      endfamily
+    endfamily
+  endfamily
+endsuite
+# enddef
