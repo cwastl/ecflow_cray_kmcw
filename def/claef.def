@@ -10,19 +10,19 @@ suite claef
   edit ECF_LOGPORT '36652'
   edit ECF_OUT '/scratch/ms/at/kmcw/ECF'
   edit CNF_DEBUG '0'
-  family RUN_06
-    edit VORHI '6'
-    edit LAUF '06'
-    edit DATUM '20170112'
+  family RUN_00
+    edit VORHI '0'
+    edit LAUF '00'
+    edit DATUM '20190221'
     edit LEAD '6'
     family lbc
-      edit GL '1'
-      family MEM_01
+      edit GL '0'
+      family MEM_12
         task getlbc
           trigger :GL == 0
-          edit NAME 'getlbc01'
+          edit NAME 'getlbc12'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '01'
           edit NP '1'
           edit CLASS 'ns'
@@ -31,9 +31,9 @@ suite claef
           label error "ok"
         task 901
           trigger :GL == 0 and getlbc == complete
-          edit NAME '90101'
+          edit NAME '901_12'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '1'
           edit CLASS 'ns'
@@ -42,9 +42,9 @@ suite claef
           label error "ok"
         task getlbc_gl
           trigger :GL == 1
-          edit NAME 'getlbc_gl01'
+          edit NAME 'getlbcgl12'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '01'
           edit NP '1'
           edit CLASS 'ns'
@@ -53,9 +53,9 @@ suite claef
           label error "ok"
         task gl
           trigger :GL == 1 and getlbc_gl == complete
-          edit NAME 'gl01'
+          edit NAME 'gl12'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '1'
           edit CLASS 'nf'
@@ -65,7 +65,7 @@ suite claef
       endfamily
     endfamily
     family obs
-      edit ASSIM '1'
+      edit ASSIM '0'
       task getobs
         trigger :ASSIM == 1
         edit NP '1'
@@ -95,15 +95,15 @@ suite claef
         label error "ok"
     endfamily
     family main
-      edit ASSIM '1'
-      edit GL '1'
-      family MEM_01
+      edit ASSIM '0'
+      edit GL '0'
+      family MEM_12
         task 927
-          trigger ../../lbc/MEM_01/gl == complete or ../../lbc/MEM_01/901 == complete
-          edit NAME '92701'
-          edit ASSIM '1'
+          trigger ../../lbc/MEM_12/gl == complete or ../../lbc/MEM_12/901 == complete
+          edit NAME '92712'
+          edit ASSIM '0'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '16'
           edit CLASS 'np'
@@ -111,20 +111,20 @@ suite claef
           label status ""
           label error "ok"
         task 927surf
-          trigger ../../lbc/MEM_01/gl == complete or ../../lbc/MEM_01/901 == complete
+          trigger ../../lbc/MEM_12/gl == complete or ../../lbc/MEM_12/901 == complete
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '01'
-          edit NAME '927surf01'
+          edit NAME '927surf12'
           label run ""
           label status ""
           label error "ok"
         task sstex
           trigger :ASSIM == 1 and 927 == complete
           edit ASSIMC '6'
-          edit NAME 'sstex01'
-          edit MEMBER '01'
+          edit NAME 'sstex12'
+          edit MEMBER '12'
           edit WALLT '01'
           edit NP '1'
           edit CLASS 'ns'
@@ -134,8 +134,8 @@ suite claef
         task addsurf
           trigger :ASSIM == 1 and sstex == complete
           edit ASSIMC '6'
-          edit NAME 'addsurf01'
-          edit MEMBER '01'
+          edit NAME 'addsurf12'
+          edit MEMBER '12'
           edit WALLT '01'
           edit NP '1'
           edit CLASS 'ns'
@@ -146,8 +146,8 @@ suite claef
           trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete
           edit ASSIMC '6'
           edit EDA '1'
-          edit NAME 'screen01'
-          edit MEMBER '01'
+          edit NAME 'screen12'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '12'
           edit CLASS 'np'
@@ -157,8 +157,8 @@ suite claef
         task screensurf
           trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator == complete
           edit ASSIMC '6'
-          edit NAME 'screensurf01'
-          edit MEMBER '01'
+          edit NAME 'screensurf12'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '1'
           edit CLASS 'np'
@@ -169,8 +169,8 @@ suite claef
           complete :ASSIM == 0
           trigger :ASSIM == 1 and screensurf == complete
           edit ASSIMC '6'
-          edit NAME 'canari01'
-          edit MEMBER '01'
+          edit NAME 'canari12'
+          edit MEMBER '12'
           edit SEDA '1'
           edit NP '1'
           edit CLASS 'np'
@@ -183,8 +183,8 @@ suite claef
           trigger :ASSIM == 1 and screen == complete
           edit ENSJK '0'
           edit ASSIMC '6'
-          edit NAME 'minim01'
-          edit MEMBER '01'
+          edit NAME 'minim12'
+          edit MEMBER '12'
           edit WALLT '03'
           edit NP '12'
           edit CLASS 'np'
@@ -194,10 +194,10 @@ suite claef
         task 001
           trigger 927 == complete and 927surf == complete and minim == complete and canari == complete
           edit ASSIMC '6'
-          edit NAME '00101'
-          edit ASSIM '1'
+          edit NAME '001_12'
+          edit ASSIM '0'
           edit KOPPLUNG '6'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '06'
           edit NP '480'
           edit STOCH '1'
@@ -209,9 +209,9 @@ suite claef
           trigger 001  == complete
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '01'
+          edit MEMBER '12'
           edit WALLT '01'
-          edit NAME 'progrid01'
+          edit NAME 'progrid12'
           label run ""
           label status ""
           label error "ok"

@@ -15,28 +15,17 @@ assim=%ASSIM%
 assimc=%ASSIMC%
 stophy=%STOCH%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/001
-CLIMDIR=${MY_DIR}/CLIM
-BINDIR=${MY_DIR}/BIN
-NAMELDIR=${MY_DIR}/NAMEL
-C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
-ASSIMDIR=${MY_DIR}/ASSIM
-
-if [[ $stophy == 1 ]]; then
-   export EXEC=${BINDIR}/cy40t1_MASTERODB_WASTL_sppt_mihaly_ipsrcm_sppturb_all_supmiha+par+ENJK
-elif [[ $stophy == 0 ]]; then
-   export EXEC=${BINDIR}/cy40t1_MASTERODB_WASTL_sppt_mihaly+supmiha+ENJK 
-fi
-
 EXP=AROM
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
+RUNDIR=${C001DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${C001DIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
@@ -75,28 +64,28 @@ export DR_HOOK_IGNORE_SIGNALS=-1
 if [ $assim == 1 ]
 then
 
-    INITFILE_3D=${ASSIMDIR}/MINIMIZATION/${date}/${run}/MEM_${mem}/MXMINI999+0000_blend
-    INITFILE_SURFACE=${C927DIR}/PGD_${EXP}.fa
-    INITFILE_SFX=${ASSIMDIR}/CANARI/${date}/${run}/MEM_${mem}/ICMSHCYCL+0000.sfx
+    INITFILE_3D=${MINIMDIR}/${date}/${run}/MEM_${mem}/MXMINI999+0000_blend
+    INITFILE_SURFACE=${C927DIR}/${date}/${run}/MEM_${mem}/PGD_${EXP}.fa
+    INITFILE_SFX=${CANARIDIR}/${date}/${run}/MEM_${mem}/ICMSHCYCL+0000.sfx
 
 else
 
-    INITFILE_3D=${C927DIR}/ELSCF${EXP}ALBC000
-    INITFILE_SURFACE=${C927DIR}/PGD_${EXP}.fa
-    INITFILE_SFX=${C927DIR}/PFE927${EXP}+0000.sfx
+    INITFILE_3D=${C927DIR}/${date}/${run}/MEM_${mem}/ELSCF${EXP}ALBC000
+    INITFILE_SURFACE=${C927DIR}/${date}/${run}/MEM_${mem}/PGD_${EXP}.fa
+    INITFILE_SFX=${C927DIR}/${date}/${run}/MEM_${mem}/PFE927${EXP}+0000.sfx
 
 fi
 
-cp ${C927DIR}/ELSC*${EXP}* .
+cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSC*${EXP}* .
 cp ${INITFILE_3D} ICMSH${EXP}INIT
 
 cp ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
 cp ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
 cp ${INITFILE_SURFACE} Const.Clim.sfx    #nka
-cp ${CLIMDIR}/clim_arome_oper_new_m${month} ./Const.Clim
+cp ${CLIMFILENAME_AROME}${month} ./Const.Clim
 
-cp ${CLIMDIR}/ecoclimapI_covers_param.bin . #cy40
-cp ${CLIMDIR}/ecoclimapII_eu_covers_param.bin . #cy40
+cp ${ECOCLIMAPI} . #cy40
+cp ${ECOCLIMAPII} . #cy40
 cp ${CLIMDIR}/RADRRTM . #cy40 
 cp ${CLIMDIR}/GCO2CLIM . #cy40 
 cp ${CLIMDIR}/GCH4CLIM . #cy40 
@@ -109,7 +98,7 @@ cp ${CLIMDIR}/C22CLIM . #cy40
 cp ${CLIMDIR}/CCL4CLIM . #cy40 
 
 cp ${CLIMDIR}/RADSRTM . #cy40 
-cp ${NAMELDIR}/namelist_surfex_arome_cy40t1_sha EXSEG1.nam
+cp ${NAMEL001SURFEX} EXSEG1.nam
 
 # run 001
 #-------------------------------------
@@ -133,7 +122,7 @@ then
        -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
        -e   "s/{couplfreq}/${couplfr_s}/"\
        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-       -e   "s/{fcstrange}/${leadtime}/g" ${NAMELDIR}/namel_001_CY40T1_sppt_fpos_saphir_ > $RUNDIR/fort.4
+       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
 else
 
@@ -148,13 +137,13 @@ else
        -e   "s/{nstrout}/$NSTROUT/"\
        -e   "s/{couplfreq}/${couplfr_s}/"\
        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-       -e   "s/{fcstrange}/${leadtime}/g" ${NAMELDIR}/namel_001_CY40T1_sppt_fpos_saphir_ > $RUNDIR/fort.4
+       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
 fi
 
-/usr/bin/time aprun -n $NPROC ${EXEC} > ${MY_DIR}/LOG/MASTERODB_${mem}.log 2>&1
+/usr/bin/time aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_${mem}.log 2>&1
 
-mv NODE.001_01 ${MY_DIR}/LOG/NODE.001_01_${mem} 
+mv NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} 
 
 typeset -Z2 acycle2
 acycle2=${assimc}
@@ -172,7 +161,7 @@ mv ICMSH${EXP}+00${acycle2}.sfx ${OUTDIR}/ICMSH${EXP}+00${acycle2}.sfx
 mv PF${EXP}000+* ${OUTDIR}
 
 rm -f ELSC*${EXP}*
-cd ${BASEDIR}
+cd ${C001DIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

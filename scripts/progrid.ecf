@@ -11,23 +11,19 @@ run=%LAUF%
 mem=%MEMBER%
 leadtime=%LEAD%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/PROGRID
-BINDIR=${MY_DIR}/BIN
-C001DIR=${MY_DIR}/001
-LOGDIR=${MY_DIR}/LOG
-
-EXEC=${BINDIR}/cy40t1_PROGRID
 NSLOTS=$EC_total_tasks
 
 EXP=AROM
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
+RUNDIR=${PROGRIDDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${PROGRIDDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
@@ -61,7 +57,7 @@ while (( $step <= ${leadtime} )) ; do
   if [ ! -s ${OUTDIR}/PF${EXP}000+${cstep}".grb" ] ; then
     cp ${C001DIR}/${date}/${run}/MEM_${mem}/PF${EXP}000+${cstep} fort.11
     status=0
-    /usr/bin/time aprun -n ${NSLOTS} ${EXEC} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
+    /usr/bin/time aprun -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
     status=$?
     mv GRIDBIZARRE ${OUTDIR}/PF${EXP}000+${cstep}".grb"
     rm -f fort.11
@@ -69,7 +65,7 @@ while (( $step <= ${leadtime} )) ; do
   (( step=${step}+1 ))
 done
 
-cd ${BASEDIR}
+cd ${PROGRIDDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

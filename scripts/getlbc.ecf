@@ -13,22 +13,20 @@ leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/COUPL/LBC
-BINDIR=${MY_DIR}/BIN
-LBCDIR=/sc1/tcwork/zat/lb/ecdiss
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 n1run=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
 n1date=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
 n1mm=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 5-6)
 n1dd=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 7-8)
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${LBC901}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${LBC901}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 rm -fr ${RUNDIR}/*
 
@@ -62,9 +60,9 @@ while (( i <= $leadtime )) ; do
      if [[ ${i} -eq 0 ]]
      then
 
-        if [[ -f ${LBCDIR}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
+        if [[ -f ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
         then
-           grib_filter big.rule ${LBCDIR}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
+           grib_filter big.rule ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
            cp 0-sol.pdg.grb_${n1date}${n1run}00+${i} landseamask.grb
            (( WAITCOUNT = 300 ))
         else
@@ -77,9 +75,9 @@ while (( i <= $leadtime )) ; do
      elif [[ ${i} -ge $lagg ]]
      then
 
-         if [[ -f ${LBCDIR}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
+         if [[ -f ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
          then
-             grib_filter big.rule ${LBCDIR}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
+             grib_filter big.rule ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
              (( WAITCOUNT = 300 ))
          else
              echo "ATTENTION: dissemination file does not yet exist!!!"
@@ -148,7 +146,7 @@ while (( i <= $leadtime )) ; do
 
 done
 
-cd ${BASEDIR}
+cd ${LBC901}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

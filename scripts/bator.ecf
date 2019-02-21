@@ -11,17 +11,9 @@ module load cray-snplauncher
 date=%DATUM%
 run=%LAUF%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/BATOR
-OBSDIR=${MY_DIR}/ASSIM/OBS/${date}/${run}
-BINDIR=${MY_DIR}/BIN
-NAMELDIR=${MY_DIR}/NAMEL
-BATORBIN=${BINDIR}/BATOR_cy40t1
-MERGEOBSBIN=${BINDIR}/obsoul_merge_new.pl
-CLIMDIR=${MY_DIR}/CLIM
-SHUFFLEBIN=${BINDIR}/odbtools_cy40t1.x
-MERGEBIN=${BINDIR}/merge_ioassign
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 LNATIONAL=.TRUE.
 LMETAROBS=.FALSE.
@@ -43,6 +35,7 @@ date6=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +3:00 | cut -c 1-8)
 ficleft=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:30 | cut -c 1-12)
 ficright=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:30 | cut -c 1-12)
 
+OBSDIR=${OBSERVDIR}/${date}/${run}
 OBSFILE1=$OBSDIR/obsoul_taw_${date}_${run}0000.asc
 OBSFILE2=$OBSDIR/obsoul_${date}_${run}0000.asc
 OBSFILE3=$OBSDIR/obs_short_${date}${run}.tar
@@ -62,13 +55,13 @@ OBSFILE13=$OBSDIR/obsoul_metar_${date}_${run}0000.asc
 OBSFILE14=$OBSDIR/obsoul_hydro_${date}_${run}0000.asc
 OBSFILE14a=$OBSDIR/obsoul_schiwm_${date}_${run}0000.asc
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${BATORDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-OUTDIR=${BASEDIR}/${date}/${run}
+OUTDIR=${BATORDIR}/${date}/${run}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 cd ${OBSDIR}
@@ -256,12 +249,12 @@ export ODB_ECMA_POOLMASK_FILE=$RUNDIR/$out_BASE/ECMA.poolmask
 # get input data (ELSC*, namelist, binary, etc.)
 cp ${OUTDIR}/OBSFILE ./OBSOUL
 cp ${CLIMDIR}/LISTE_NOIRE_DIAP .
-cp ${BINDIR}/ioassign_cy40t1 ./ioassign
-cp ${NAMELDIR}/namelist_lamflag_cy40t1 ./NAM_lamflag
-cp ${NAMELDIR}/namelist_bator_cy40t1 ./NAMELIST
-cp ${BINDIR}/create_ioassign_cy40t1 ./create_ioassign
+cp ${IOASSIGNBIN} ./ioassign
+cp ${NAMELLAMFLAG} ./NAM_lamflag
+cp ${NAMELBATOR} ./NAMELIST
+cp ${CIOASSIGNBIN} ./create_ioassign
 cp ${OUTDIR}/ficdate ./ficdate
-cp ${CLIMDIR}/param_bator.cfg_cy40t1 param.cfg
+cp ${CLIMFILENAME_BATOR} param.cfg
 cp ${CLIMDIR}/LIST_GPSSOL list_gpssol 
 
 ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL}
@@ -309,7 +302,7 @@ mv ecma_raw.tar $OUTDIR/ecma_raw.tar
 mv ECMA_merged.tar $OUTDIR/ECMA_merged.tar
 cp $out_BASE/ECMA.dd $OUTDIR/ECMA.dd
 
-cd ${BASEDIR}
+cd ${BATORDIR}
 
 rm -rf ${RUNDIR}
 

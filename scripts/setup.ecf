@@ -1,0 +1,110 @@
+#!/bin/ksh
+#
+# Setupfile including paths
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+
+##################Directories#####################
+export MY_DIR=/home/ms/at/kmcw/ECF
+export GLDIR=${MY_DIR}/GL
+export LBCIFS=/sc1/tcwork/zat/lb/ecdiss
+export LBCHIS=/zat2/COUPLING/ARCHIVE_4_LAEFCOUPL
+export COUPLDIR=${MY_DIR}/COUPL
+export LBC901=${COUPLDIR}/LBC
+export LBCGL=${COUPLDIR}/LBC_GL 
+export C901DIR=${MY_DIR}/901
+export C927DIR=${MY_DIR}/927
+export C001DIR=${MY_DIR}/001
+export ASSIMDIR=${MY_DIR}/ASSIM
+export SSTEXDIR=${ASSIMDIR}/SSTEX
+export ADDSURFDIR=${ASSIMDIR}/ADDSURF
+export BATORDIR=${ASSIMDIR}/BATOR
+export BATOR3DIR=${ASSIMDIR}/BATOR3D
+export OBSERVDIR=${ASSIMDIR}/OBS
+export OBSERVDIR3D=${ASSIMDIR}/OBS3D
+export MINIMDIR=${ASSIMDIR}/MINIM
+export CANARIDIR=${ASSIMDIR}/CANARI
+export SCREENDIR=${ASSIMDIR}/SCREENING
+export PROGRIDDIR=${MY_DIR}/PROGRID
+export CLIMDIR=${MY_DIR}/CLIM
+export BINDIR=${MY_DIR}/BIN
+export NAMELDIR=${MY_DIR}/NAMEL
+export LOGDIR=${MY_DIR}/LOG
+###################################################
+
+###################Namelists#######################
+export NAMEL901=${NAMELDIR}/c901_nam36t1
+export NAMELGL=${NAMELDIR}/gl_namel_ecmwf
+export NAMELADDSURFold=${NAMELDIR}/namelist_addsurf_cy36t1
+export NAMELADDSURF=${NAMELDIR}/namelist_addsurf_cy40t1
+export NAMEL927=${NAMELDIR}/namel_927_CY40T1_2.5km_90L
+export NAMEL927_GLO=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_glob
+export NAMEL927ADDS=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf
+export NAMEL927ADDS_GLO=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf_glob
+export NAMEL927SURFEX=${NAMELDIR}/927surfex_CY40T1.nam
+export NAMEL927SURF=${NAMELDIR}/927surf_CY40T1_2.5km.nam
+export NAMEL927SURF_GLO=${NAMELDIR}/927surf_CY40T1_2.5km.nam_glob
+export NAMEL001SURFEX=${NAMELDIR}/namelist_surfex_arome_cy40t1_sha
+export NAMEL001=${NAMELDIR}/namel_001_CY40T1_sppt_fpos_saphir_
+export NAMELLAMFLAG=${NAMELDIR}/namelist_lamflag_cy40t1
+export NAMELBATOR=${NAMELDIR}/namelist_bator_cy40t1
+export BLACKLIST1=${CLIMDIR}/LISTE_NOIRE_DIAP
+export BLACKLIST2=${CLIMDIR}/LISTE_NOIRE_DIAP3D
+export BLACKLIST3=${CLIMDIR}/LISTE_LOC3D
+export NAMELBATOR3D=${NAMELDIR}/namelist_bator3D_cy40t1
+export NAMELIASICHAN=${NAMELDIR}/iasichannels
+export NAMELRGB=${NAMELDIR}/namelist_rgb
+export NAMELLAMFLAG3D=${NAMELDIR}/namelist_lamflag3D_cy40t1
+export NAMELCRISCHAN=${NAMELDIR}/namelist_cris331
+export LIST_GPS=${CLIMDIR}/LIST_GPSSOL
+export NAMELOIMAIN=${NAMELDIR}/namelist_oimain_cy40t1
+export NAMELCANARI=${NAMELDIR}/namelist_canari_cy40t1
+export NAMELMINIM=${NAMELDIR}/namelist_minim_cy40t1
+export NAMELBLEND=${NAMELDIR}/namelist_blend_cy40t1
+export NAMELSCREEN=${NAMELDIR}/namelist_screening_cy40t1
+export NAMELSSTEX1=${NAMELDIR}/namelist_sstexchange1_cy40t1
+export NAMELSSTEX2=${NAMELDIR}/namelist_sstexchange2_cy40t1
+######################################################
+
+#####################Binaries#########################
+export BINGL=${BINDIR}/gl_grib_api_def
+export BINADDSURF=${BINDIR}/ADDSURF_cy40t1
+export BIN901=${BINDIR}/MASTER_901_cy36t1
+export BINMASTER=${BINDIR}/cy40t1_MASTERODB_WASTL
+export BATORBIN=${BINDIR}/BATOR_cy40t1
+export MERGEOBSBIN=${BINDIR}/obsoul_merge_new.pl
+export SHUFFLEBIN=${BINDIR}/odbtools_cy40t1.x
+export MERGEBIN=${BINDIR}/merge_ioassign
+export IOASSIGNBIN=${BINDIR}/ioassign_cy40t1
+export CIOASSIGNBIN=${BINDIR}/create_ioassign_cy40t1
+export BINSNOWGRID3=${BINDIR}/cy40t1_SNOWGRID3
+export BINSNOWGRID4=${BINDIR}/cy40t1_SNOWGRID4
+export BLENDBIN=${BINDIR}/BLEND_cy40t1
+export BLENDSURBIN=${BINDIR}/BLENDSUR_cy40t1
+export PROGRIDBIN=${BINDIR}/cy40t1_PROGRID
+#####################################################
+
+####################Climfiles########################
+export CLIMFILENAME_ECMWF_LAE=${CLIMDIR}/clim_ecmwf_m
+export CLIMFILENAME_ECMWF_GLO=${CLIMDIR}/const.clim_
+export CLIMFILENAME_AROME=${CLIMDIR}/clim_arome_oper_new_m
+export PGDFILE_LFI=${CLIMDIR}/PGD_SHe20Yr02500_589x421.lfi_sha
+export ECOCLIMAPI=${CLIMDIR}/ecoclimapI_covers_param.bin
+export ECOCLIMAPII=${CLIMDIR}/ecoclimapII_eu_covers_param.bin
+export CLIMFILENAME_BATOR=${CLIMDIR}/param_bator.cfg_cy40t1
+export GRIBTABLES=${CLIMDIR}/GRIBTABLES/gribtables
+export GRIBTEMPLATES=${CLIMDIR}/GRIBTABLES/gribtemplates
+export VARBCFILE=${CLIMDIR}/VARBC.cycle
+export BMATRIXFILE1=${ASSIMDIR}/BMATRIX/stabfiltn14.bal
+export BMATRIXFILE2=${ASSIMDIR}/BMATRIX/stabfiltn14.cv
+export BMATRIXFILE3=${ASSIMDIR}/BMATRIX/stabfiltn14.cvt
+export VMATRIXFILE_f=${ASSIMDIR}/VMATRIX/V_forecast_6h_GLdef/stabfiltn42.cvt
+export VMATRIXFILE_a=${ASSIMDIR}/VMATRIX/V_analysis_GLdef/stabfiltn42.cvt
+#######################################################
+
+%include <tail.h>

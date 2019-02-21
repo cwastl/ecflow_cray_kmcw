@@ -15,14 +15,9 @@ couplfr=%KOPPLUNG%
 assim=%ASSIM%
 gl=%GL%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/927
-CLIMDIR=${MY_DIR}/CLIM
-COUPLDIR=${MY_DIR}/COUPL
-BINDIR=${MY_DIR}/BIN
-NAMELDIR=${MY_DIR}/NAMEL
-LOGDIR=${MY_DIR}/LOG
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 NPROMA=-32
 NPROC=$EC_total_tasks
@@ -67,33 +62,33 @@ fi
 
 #--- Set up for 927
 # ---- Create working directory
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${C927DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
 
 export TSTEP=60
-ln -sf ${BINDIR}/cy40t1_MASTERODB_WASTL MASTER
+ln -sf ${BINMASTER} MASTER
 
 # --- get necessary files
 
-ln -s ${CLIMDIR}/clim_arome_oper_new_m${month} const.clim.AROM
+ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
 if [[ $gl == 1 ]];then
-   ln -s ${CLIMDIR}/clim_ecmwf_m${month} Const.Clim
-   NAMEL927=${NAMELDIR}/namel_927_CY40T1_2.5km_90L
-   NAMEL927adds=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf
+   ln -s ${CLIMFILENAME_ECMWF_LAE}${month} Const.Clim
+   NAM=${NAMEL927}
+   NAMADDS=${NAMEL927ADDS}
 else
-   ln -s ${CLIMDIR}/const.clim_${month} Const.Clim
-   NAMEL927=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_glob
-   NAMEL927adds=${NAMELDIR}/namel_927_CY40T1_2.5km_90L_addsurf_glob
+   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
+   NAM=${NAMEL927_GLO}
+   NAMADDS=${NAMEL927ADDS_GLO}
 fi
 
-ln -s ${CLIMDIR}/ecoclimapI_covers_param.bin .
-ln -s ${CLIMDIR}/ecoclimapII_eu_covers_param.bin .
+ln -s ${ECOCLIMAPI} .
+ln -s ${ECOCLIMAPII} .
 
 i=$lagg
 k=0
@@ -119,7 +114,7 @@ while (( i <= $leadtime )) ; do
         -e   "s/{nprtrv}/$NPRTRV/"\
         -e   "s/{nstrin}/$NSTRIN/"\
         -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMEL927adds} > $RUNDIR/fort.4
+        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMADDS} > $RUNDIR/fort.4
 
   else
 
@@ -134,7 +129,7 @@ while (( i <= $leadtime )) ; do
         -e   "s/{nprtrv}/$NPRTRV/"\
         -e   "s/{nstrin}/$NSTRIN/"\
         -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMEL927} > $RUNDIR/fort.4
+        -e   "s/{nprtrw}/$NPRTRW/g" ${NAM} > $RUNDIR/fort.4
 
   fi    
 
@@ -165,7 +160,7 @@ while (( i <= $leadtime )) ; do
 
 done
 
-cd ${BASEDIR}
+cd ${C927DIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

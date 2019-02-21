@@ -11,29 +11,12 @@ module load cray-snplauncher
 date=%DATUM%
 run=%LAUF%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/BATOR3D
-OBSDIR3D=${MY_DIR}/ASSIM/OBS3D/${date}/${run}
-OBSDIR=${MY_DIR}/ASSIM/OBS/${date}/${run}
-BINDIR=${MY_DIR}/BIN
-CLIMDIR=${MY_DIR}/CLIM
-NAMELISTDIR=${MY_DIR}/NAMEL
-MF_OBSDIR=/panfs/panfs.zamg.at/scratch/vhmod/prod/AROME/BACKUP_OPLACE/DATA/${date}_${run}
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
-BLACKLIST1=${CLIMDIR}/LISTE_NOIRE_DIAP
-BLACKLIST2=${CLIMDIR}/LISTE_NOIRE_DIAP3D
-BLACKLIST3=${CLIMDIR}/LISTE_LOC3D
-PARAMFILE=${CLIMDIR}/param_bator.cfg_cy40t1
-LIST_GPS=${CLIMDIR}/LIST_GPSSOL
-
-CREATEBIN=${BINDIR}/create_ioassign_cy40t1
-MERGEOBSBIN=${BINDIR}/obsoul_merge_new.pl
-MERGEBIN=${BINDIR}/merge_ioassign
-SHUFFLEBIN=${BINDIR}/odbtools_cy40t1.x
-IOASSIGNBIN=${BINDIR}/ioassign_cy40t1
-IOASSIGN3DBIN=${BINDIR}/ioassign_cy40t1
-BATOR3DBIN=${BINDIR}/BATOR_cy40t1
+OBSDIR3D=${OBSERVDIR3D}/${date}/${run}
+OBSDIR=${OBSERVDIR}/${date}/${run}
 
 hh1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 9-10)
 date1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 1-8)
@@ -71,11 +54,7 @@ OBSFILE14a=$OBSDIR/obsoul_schiwm_${date}_${run}0000.asc
 OBSFILE18=$OBSDIR3D/"SAFNWC_MSG3_HRW__"${date}${run}"00_EUROPE_______BEUM.buf"
 GPSOBSFILE=$OBSDIR3D/OBSOUL.TU.${date}${run}00.plusproch
 
-NAMELBATOR3D=${NAMELISTDIR}/namelist_bator3D_cy40t1
-NAMELIASICHAN=${NAMELISTDIR}/iasichannels
-NAMELRGB=${NAMELISTDIR}/namelist_rgb
-NAMELLAMFLAG3D=${NAMELISTDIR}/namelist_lamflag3D_cy40t1
-NAMELCRISCHAN=${NAMELISTDIR}/namelist_cris331
+MF_OBSDIR=/panfs/panfs.zamg.at/scratch/vhmod/prod/AROME/BACKUP_OPLACE/DATA/${date}_${run}
 
 RADARSTATIONS="11038 11052 11164 11126 07291" # 11124
 RADARPARAMETER="DBZ VEL"
@@ -99,7 +78,7 @@ export MALLOC_CHECK_=0
 rm -f $OBSDIR3D/*
 cd $OBSDIR3D
 
-OUTDIR=${BASEDIR}/${date}/${run}
+OUTDIR=${BATOR3DIR}/${date}/${run}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 if [ -s $OBSFILE1 ]; then
@@ -495,14 +474,13 @@ export ODB_STATIC_LINKING=1
 export PRINT_TABLE_NAMES=FALSE
 
 # create working directory
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${BATOR3DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
 cp $OUTDIR/ficdate .
-cp $IOASSIGNBIN ./ioassign
 export ODB_FEBINPATH="."
 
 # Environment settings
@@ -546,8 +524,8 @@ do
    cp -f $NAMELLAMFLAG3D NAM_lamflag
    cp -f $NAMELIASICHAN iasichannels
    cp -f $NAMELCRISCHAN crischannels
-   cp -f $PARAMFILE param.cfg
-   cp -f ${CREATEBIN} ./create_ioassign
+   cp -f ${CLIMFILENAME_BATOR} param.cfg
+   cp -f ${CIOASSIGNBIN} ./create_ioassign
    chmod 777 ./create_ioassign
    cp -f $LIST_GPS list_gpssol
    ./create_ioassign -l$ODB_CMA -n${BATOR_NBPOOL} 
@@ -688,8 +666,7 @@ do
    cp $BLACKLIST3 LISTE_LOC
    cp $BLACKLIST2 LISTE_NOIRE_DIAP
 
-#   aprun -n $NPROC $BATOR3DBIN     
-   mpiexec -n $NPROC $BATOR3DBIN     
+   mpiexec -n $NPROC $BATORBIN     
    echo $?
 
    cp IOASSIGN ECMA.${base}/IOASSIGN 
@@ -737,7 +714,7 @@ tar cvf ECMA_merged.tar $out_BASE ECMA.*
 mv ECMA_merged.tar $OUTDIR/ECMA_merged.tar
 cp $out_BASE/ECMA.dd $OUTDIR/ECMA.dd
 
-cd ${BASEDIR}
+cd ${BATOR3DIR}
 
 rm -rf ${RUNDIR}
 

@@ -12,22 +12,17 @@ mem=%MEMBER%
 lagg=%VORHI%
 gl=%GL%
 
-MY_DIR=/home/ms/at/kmcw/ECF 
-BASEDIR=${MY_DIR}/927
-NAMELDIR=${MY_DIR}/NAMEL
-CLIMDIR=${MY_DIR}/CLIM
-LOGDIR=${MY_DIR}/LOG
-COUPLDIR=${MY_DIR}/COUPL/${date}/${run}/MEM_${mem}
-
-export EXEC=${MY_DIR}/BIN/cy40t1_MASTERODB_WASTL
-
 EXP=AROM
 
-RUNDIR=${MY_DIR}/927/$PBS_JOBID
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
+RUNDIR=${C927DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
@@ -62,7 +57,7 @@ export DR_HOOK_SILENT=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 
 
-cp ${NAMELDIR}/927surfex_CY40T1.nam ${RUNDIR}/PRE_REAL1.nam
+cp ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
@@ -76,11 +71,11 @@ lpgdfwr=.TRUE.  # Default is not write PGD (= .FALSE.)
 #
 
 if [[ $gl == 1 ]];then
-   ln -s ${CLIMDIR}/clim_ecmwf_m${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMELDIR}/927surf_CY40T1_2.5km.nam 
+   ln -s ${CLIMFILENAME_ECMWF_LAE}${month} ${RUNDIR}/Const.Clim
+   NAMELSURF=${NAMEL927SURF} 
 else
-   ln -s ${CLIMDIR}/const.clim_${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMELDIR}/927surf_CY40T1_2.5km.nam_glob 
+   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} ${RUNDIR}/Const.Clim
+   NAMELSURF=${NAMEL927SURF_GLO}
 fi
 
 #---  modifiy namelist
@@ -103,20 +98,20 @@ sed -e   "s/{nproma}/${NPROMA}/"\
 #
 #     AROME clim
 #
-cp ${CLIMDIR}/clim_arome_oper_new_m${month} ${RUNDIR}/const.clim.${EXP}
+cp ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
 
 
 #
 #     Databases searching
 #
 
-cp ${CLIMDIR}/ecoclimapI_covers_param.bin ${RUNDIR}/ecoclimapI_covers_param.bin
-cp ${CLIMDIR}/ecoclimapII_eu_covers_param.bin ${RUNDIR}/ecoclimapII_eu_covers_param.bin
+cp ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin
+cp ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin
 
 #
 #     PGD
 #
-cp ${CLIMDIR}/PGD_SHe20Yr02500_589x421.lfi_sha ${RUNDIR}/PGDFILE.lfi
+cp ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
 
 #
 #     COUPLING FILES
@@ -125,12 +120,12 @@ cp ${CLIMDIR}/PGD_SHe20Yr02500_589x421.lfi_sha ${RUNDIR}/PGDFILE.lfi
 typeset -Z4 cstep
 cstep=$lagg
 
-cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
+cp ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
 ln -s ICMSHE927+0000 ${RUNDIR}/ICMSHE927INIT
 
 # --- submit the job ---------------
 status=0
-time  aprun -n ${EC_total_tasks} ${EXEC} > ${RUNDIR}/PGD_Master.log 2>&1
+time  aprun -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
 status=${?}
 # ----------------------------------
 

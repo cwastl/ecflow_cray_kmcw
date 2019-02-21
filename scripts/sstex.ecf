@@ -12,25 +12,21 @@ mem=%MEMBER%
 lagg=%VORHI%
 assimc=%ASSIMC%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/SSTEX
-C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
-C001DIR=${MY_DIR}/001
-NAMELDIR=${MY_DIR}/NAMEL
-BINDIR=${MY_DIR}/BIN
-
 date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
 run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
 date2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 1-8)
 run2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 9-10)
 
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
 # Create working directory
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${SSTEXDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${SSTEXDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -rf $RUNDIR/*
@@ -49,26 +45,26 @@ export DR_HOOK_IGNORE_SIGNALS=-1  # ignores all possible signals
 typeset -Z2 acycle
 acycle=$assimc
 
-cp ${C927DIR}/ELSCFAROMALBC000 ./IFS_ANALYSE
+cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 ./IFS_ANALYSE
 cp ${C001DIR}/${date2}/${run2}/MEM_${mem}/ICMSHAROM+00${acycle} ./AROME_GUESS 
 
 cp AROME_GUESS Blend_sea0
 
 # Copy namelist
-cp ${NAMELDIR}/namelist_sstexchange1_cy40t1 fort.4
+cp ${NAMELSSTEX1} fort.4
 
-mpiexec -n $NPROC ${BINDIR}/BLENDSUR_cy40t1
+mpiexec -n $NPROC ${BLENDSURBIN}
 
 rm -f fort.4
 cp AROME_GUESS AROME_SSTOK
-cp ${NAMELDIR}/namelist_sstexchange2_cy40t1 fort.4
+cp ${NAMELSSTEX2} fort.4
 
-mpiexec -n $NPROC ${BINDIR}/BLENDSUR_cy40t1
+mpiexec -n $NPROC ${BLENDSURBIN}
 
 chmod 666 AROME_SSTOK
 mv AROME_SSTOK ${OUTDIR}/AROME_SSTOK
 
-cd ${BASEDIR}
+cd ${SSTEXDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

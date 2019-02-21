@@ -9,9 +9,9 @@
 date=%DATUM%
 run=%LAUF%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/OBS/${date}/${run}
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -1:00 | cut -c 1-8)
 hh1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -1:00 | cut -c 9-10)
@@ -26,8 +26,8 @@ hh5=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -3:00 | cut -c 9-10)
 date6=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +3:00 | cut -c 1-8)
 hh6=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t +3:00 | cut -c 9-10)
 
-[[ ! -d ${BASEDIR} ]] && mkdir -p ${BASEDIR}
-cd ${BASEDIR}
+[[ ! -d ${OBSERVDIR}/${date}/${run} ]] && mkdir -p ${OBSERVDIR}/${date}/${run}
+cd ${OBSERVDIR}/${date}/${run}
 
 # First get OPLACE data - /ment_arch/aladin/ASSIM/
 fectrans=wastl_eps

@@ -16,29 +16,24 @@ lagg=%VORHI%
 leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/COUPL/901
-LBCDIR=${MY_DIR}/COUPL/LBC/${date}/${run}/MEM_${mem}
-CLIMDIR=${MY_DIR}/CLIM
-BINDIR=${MY_DIR}/BIN
-NAMELDIR=${MY_DIR}/NAMEL
-LOGDIR=${MY_DIR}/LOG
-
 n1run=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
 n1date=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
+RUNDIR=${C901DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${MY_DIR}/COUPL/${date}/${run}/MEM_${mem}
+OUTDIR=${COUPLDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
+LBCDIR=${LBC901}/${date}/${run}/MEM_${mem}
 rm -fr ${RUNDIR}/*
 
-#ln -sf ${BINDIR}/cy40t1_MASTERODB_WASTL MASTER
-ln -sf ${BINDIR}/MASTER_901 MASTER
+ln -sf ${BIN901} MASTER
 
 export OMP_NUM_THREADS=$EC_threads_per_task
 
@@ -57,18 +52,18 @@ while (( i <= $leadtime )) ; do
 
     #--- prepare namelist
     rm -f fort.4
-    #cp ${NAMELDIR}/namelist_901_cy40t1 fort.4
-    cp ${NAMELDIR}/c901_nam36t1 fort.4
+    cp ${NAMEL901} fort.4
 
     TFT=00
     MM_FT=$(echo ${date} | cut -c 5-6)
-    ln -sf ${CLIMDIR}/const.clim_${MM_FT} Const.Clim
+    ln -sf ${CLIMFILENAME_ECMWF_GLO}${MM_FT} Const.Clim
         
     if [[ ! -s ${OUTDIR}/ICMSHBC${mem}+0${ii} ]] && [[ -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ]]
     then
-       ln -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ICMUAa001INIT
-       ln -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ICMSHa001INIT
-       ln -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
+
+       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/atm.pdg.grib_${n1date}${n1run}+${ii} ICMUAa001INIT
+       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/atm.spe.grib_${n1date}${n1run}+${ii} ICMSHa001INIT
+       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
 
       	#-- Run 901
 #	    mpiexec -n $EC_total_tasks MASTER -fd5 -aeul -vecmwf
@@ -87,9 +82,9 @@ while (( i <= $leadtime )) ; do
 
 	   mv CN90xa001INIT fort.11
 	   cp Const.Clim fort.12
-       cp ${NAMELDIR}/nam_addsurf fort.4
+       cp ${NAMELADDSURFold} fort.4
 
-       ln -sf ${BINDIR}/ADDSURF_cy40t1 ADDSURF
+       ln -sf ${BINADDSURF} ADDSURF
 #set +e
        mpiexec -n $EC_total_tasks ADDSURF fort.11 fort.12
 #		aprun -n $EC_total_tasks -d $EC_threads_per_task -cc none ADDSURF fort.11 fort.12
@@ -116,7 +111,7 @@ rm -f ICMUAa001INIT ICMSHa001INIT ICMGGa001INIT
 rm -f CN90xa001INIT
 rm -f Const.Clim
 
-cd ${BASEDIR}
+cd ${C901DIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

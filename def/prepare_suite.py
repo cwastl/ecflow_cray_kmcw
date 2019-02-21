@@ -18,7 +18,7 @@ os.chdir("/home/ms/at/kmcw/ecf/" + suite)
 for r in runs:
 
      if not os.path.exists("RUN_" + r):
-         os.mkdir("RUN_" + r)
+         os.mkdir("RUN_" + r)  
 
      for f in famil:
 

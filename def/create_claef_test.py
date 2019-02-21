@@ -26,16 +26,16 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 
 #ensemble members
 #members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [1]
+members = [12]
 
 # coupling frequency
 couplf = 6
 
 # use GL Tool yes/no, if no - 901 is used
-gl = True
+gl = False
 
 # assimilation switches
-assimi = True   #assimilation yes/no
+assimi = False   #assimilation yes/no
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
@@ -65,14 +65,25 @@ debug = 0;
 
 # user date (default is system date)
 user_date = {
-  'dd'  : '12',
-  'mm'  : '01',
-  'yyyy': '2017'
+  'dd'  : '21',
+  'mm'  : '02',
+  'yyyy': '2019'
 }
 
 ###########################################
 #####define Families and Tasks#############
 ###########################################
+
+def date() :
+
+    if user_date.keys() :
+        print("=> date defined by user\n");
+
+        return Edit(
+                 DD=user_date['dd'],
+                 MM=user_date['mm'],
+                 YYYY=user_date['yyyy'],
+               )
 
 def family_lbc() :
 
@@ -114,7 +125,7 @@ def family_lbc() :
                    CLASS='ns',
                    KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
-                   NAME="901{:02d}".format(mem),
+                   NAME="901_{:02d}".format(mem),
                    WALLT="03",
                 ),
                 Label("run", ""),
@@ -132,7 +143,7 @@ def family_lbc() :
                    CLASS='ns',
                    KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
-                   NAME="getlbc_gl{:02d}".format(mem),
+                   NAME="getlbcgl{:02d}".format(mem),
                    WALLT="01",
                 ),
                 Label("run", ""),
@@ -243,7 +254,7 @@ def family_main():
                      NP=16,
                      CLASS='np',
                      KOPPLUNG=couplf,
-                     NAME="927{:02d}".format(mem),
+                     NAME="927_{:02d}".format(mem),
                      ASSIM=assimi,
                      WALLT="03"                #walltime in hours
                   ),
@@ -422,7 +433,7 @@ def family_main():
                      ASSIM=assimi,
                      ASSIMC=assimc,
                      STOCH=stophy,
-                     NAME="001{:02d}".format(mem),
+                     NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
                   Label("run", ""),
@@ -452,15 +463,6 @@ def family_main():
            ) for mem in members
          ]
        )
-
-def date() :
-    if user_date.keys() :
-        print("=> date defined by user\n");
-        return Edit(
-                 DD=user_date['dd'],
-                 MM=user_date['mm'],
-                 YYYY=user_date['yyyy'],
-               )
 
 ###########################
 ### create C-LAEF suite ###
@@ -497,26 +499,26 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
              ),
 
-#             # Main Runs per day (00, 06, 12, 18)
-#             Family("RUN_00",
-#                Edit( LAUF='00', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-#                VORHI=0, LEAD=6),
-#
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
-
-             Family("RUN_06",
-                Edit( LAUF='06', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-                VORHI=6, LEAD=6),
+             # Main Runs per day (00, 06, 12, 18)
+             Family("RUN_00",
+                Edit( LAUF='00', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
+                VORHI=0, LEAD=6),
 
                 # add suite Families and Tasks
                 family_lbc(),
                 family_obs(),
                 family_main(),
              ),
+
+#             Family("RUN_06",
+#                Edit( LAUF='06', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
+#                VORHI=6, LEAD=6),
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
            )
        )
 

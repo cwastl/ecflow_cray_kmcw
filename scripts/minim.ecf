@@ -15,42 +15,23 @@ assimc=%ASSIMC%
 lagg=%VORHI%
 enjk=%ENSJK%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/MINIMIZATION
-CLIMDIR=${MY_DIR}/CLIM
-BINDIR=${MY_DIR}/BIN
-NAMELDIR=${MY_DIR}/NAMEL
-SCREENDIR=${MY_DIR}/ASSIM/SCREENING/${date}/${run}/MEM_${mem}
-ADDSURFDIR=${MY_DIR}/ASSIM/ADDSURF/${date}/${run}/MEM_${mem}
-C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
-
-GRIBTABLES=$CLIMDIR/GRIBTABLES/gribtables
-GRIBTEMPLATES=$CLIMDIR/GRIBTABLES/gribtemplates
-BMATRIXFILE1=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.bal
-BMATRIXFILE2=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.cv
-BMATRIXFILE3=${MY_DIR}/ASSIM/BMATRIX/stabfiltn14.cvt
-VMATRIXFILE_f=${MY_DIR}/ASSIM/VMATRIX/V_forecast_6h_GLdef/stabfiltn42.cvt
-VMATRIXFILE_a=${MY_DIR}/ASSIM/VMATRIX/V_analysis_GLdef/stabfiltn42.cvt
-NAMELIASICHAN=$NAMELDIR/iasichannels
-NAMELCRISCHAN=$NAMELDIR/namelist_cris331
-NAMELMINIM=${NAMELDIR}/namelist_minim_cy40t1
-NAMELBLEND=${NAMELDIR}/namelist_blend_cy40t1
-BLENDBIN=${BINDIR}/BLEND_cy40t1
-
 INFLATION=.FALSE.       # ECMWF EDA spread will be increased by an inflation factor
 LHYDRO3D=.TRUE.
+
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
 run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${MINIMDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${MINIMDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 # Environmental settings 
@@ -166,10 +147,10 @@ ln -s scat.cmod5.table fort.36
 #cp $SCREENINGDIR/VARBC.cycle ./VARBC.cycle
 typeset -Z2 acycle
 acycle=${assimc}
-cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf ./ICMSHMINIIMIN
-cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf .
-cp $C927DIR/ELSCFAROMALBC000 ./ICMJKMINIINIT 
-cp $SCREENDIR/CCMA.tar CCMA.tar
+cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf ./ICMSHMINIIMIN
+cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf .
+cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 ./ICMJKMINIINIT 
+cp ${SCREENDIR}/${date}/${run}/MEM_${mem}/CCMA.tar CCMA.tar
 
 tar -xvf CCMA.tar
 
@@ -224,9 +205,9 @@ cp ICMSHMINIIMIN ICMRFMINI0000
 
 # ECMWF perturbations inflation
 if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
-  cp $C927DIR/ELSCFAROMALBC000 00-ICMJKMINIINIT 
+  cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 00-ICMJKMINIINIT 
   export DR_HOOK_NOT_MPI="yes"
-  cp $BINDIR/inflating_new.py .
+  cp ${BINDIR}/inflating_new.py .
   python inflating_new.py
   fa_copy -w prefix=S,suffix=TEMPERATURE -f fossil_dyna ICMJKMINIINIT
   fa_copy -w prefix=S,suffix=WIND.U.PHYS -f fossil_dyna ICMJKMINIINIT
@@ -244,7 +225,7 @@ fi
 
 # Run minimization config 131
 #aprun -n $NPROC $MASTERBIN 
-aprun -n $NPROC ${BINDIR}/cy40t1_MASTERODB_WASTL
+aprun -n $NPROC ${BINDMASTER}
 #aprun -n $NPROC ${BINDIR}/MASTERODB_endy
 
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
@@ -281,9 +262,9 @@ then
   mv AldsurfC ${OUTDIR}/MXMINI999+0000_blend
 fi
 
-cp NODE.001_01 ${MY_DIR}/LOG/NODE_MINIMIZATION_${date}${run}_${mem}
+cp NODE.001_01 ${LOGDIR}/NODE_MINIMIZATION_${date}${run}_${mem}
 
-cd ${BASEDIR}
+cd ${MINIMDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

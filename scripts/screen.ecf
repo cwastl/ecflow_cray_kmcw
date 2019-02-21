@@ -12,38 +12,23 @@ mem=%MEMBER%
 assimc=%ASSIMC%
 eda=%EDA%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/ASSIM/SCREENING
-CLIMDIR=${MY_DIR}/CLIM
-NAMELDIR=${MY_DIR}/NAMEL
-BINDIR=${MY_DIR}/BIN
-GRIBTABLES=${CLIMDIR}/GRIBTABLES/gribtables
-GRIBTEMPLATES=${CLIMDIR}/GRIBTABLES/gribtemplates
-IOASSIGNBIN=${BINDIR}/ioassign_cy40t1
-CREATEBIN=${BINDIR}/create_ioassign_cy40t1
-ADDSURFDIR=${MY_DIR}/ASSIM/ADDSURF/${date}/${run}/MEM_${mem}
-BATOR3DODBFILE=${MY_DIR}/ASSIM/BATOR3D/${date}/${run}/ECMA_merged.tar
-
-EXEC=${BINDIR}/cy40t1_MASTERODB_WASTL
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
 # Create working directory
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${SCREENDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${SCREENDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 ODB_DATAPATH_CCMA=${RUNDIR}/CCMA
-VARBCFILE=$CLIMDIR/VARBC.cycle${run}
 ODB_SRCPATH_RSTBIAS=$RUNDIR/RSTBIAS
 ODB_DATAPATH_RSTBIAS=$ODB_SRCPATH_RSTBIAS
-NAMELIASICHAN=$NAMELDIR/iasichannels
-NAMELCRISCHAN=$NAMELDIR/namelist_cris331
-NAMELSCREEN=${NAMELDIR}/namelist_screening_cy40t1
 
 # Obs perturabtion
 xx=$(echo ${mem} | cut -c 1)
@@ -134,8 +119,8 @@ export ODB_SRCPATH_SONDETYPERSTRHBIAS=$RUNDIR/SONDETYPERSTRHBIAS
 export ODB_DATAPATH_SONDETYPERSTRHBIAS=$ODB_SRCPATH_SONDETYPERSTRHBIAS
 
 # Fetching of the input files
-cp $IOASSIGNBIN ./ioassign
-cp $CREATEBIN ./create_ioassign
+cp ${IOASSIGNBIN} ./ioassign
+cp ${CIOASSIGNBIN} ./create_ioassign
 chmod 777 ./create_ioassign
 cp ioassign $ODB_DATAPATH_CCMA/IOASSIGN
 
@@ -151,9 +136,9 @@ typeset -Z2 acycle
 acycle=${assimc}
 
 #cp $CLIMDIR/table? .
-cp $VARBCFILE ./VARBC.cycle
-cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf ICMSHSCREINIT
-cp $BATOR3DODBFILE ./ECMA_merged.tar
+cp ${VARBCFILE}.cycle${run} ./VARBC.cycle
+cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf ICMSHSCREINIT
+cp ${BATOR3DIR}/${date}/${run}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
 
 status0=0
@@ -196,7 +181,7 @@ rm -rf medusa_worm.allsp
 
 # Run screening config 002
 #aprun -n $NPROC $MASTERBIN
-aprun -n $NPROC ${EXEC} #tu je onaj blacklist geowinda popravljen
+aprun -n $NPROC ${BINMASTER} #tu je onaj blacklist geowinda popravljen
 
 (($? != 0 )) && exit 1
 
@@ -206,9 +191,9 @@ tar cvf ECMA_screen.tar ECMA*
 mv ECMA_screen.tar $OUTDIR
 tar cvf CCMA.tar CCMA*
 mv CCMA.tar $OUTDIR
-mv NODE.001_01 ${MY_DIR}/LOG/NODE_SCREEN_${date}${run}_${mem}
+mv NODE.001_01 ${LOGDIR}/NODE_SCREEN_${date}${run}_${mem}
 
-cd ${BASEDIR}
+cd ${SCREENDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

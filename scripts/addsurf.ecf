@@ -13,15 +13,11 @@ run=%LAUF%
 mem=%MEMBER%
 assimc=%ASSIMC%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-SSTEXDIR=${MY_DIR}/ASSIM/SSTEX/${date}/${run}/MEM_${mem}
-BASEDIR=${MY_DIR}/ASSIM/ADDSURF
-C927DIR=${MY_DIR}/927/${date}/${run}/MEM_${mem}
-NAMELDIR=${MY_DIR}/NAMEL
-BINDIR=${MY_DIR}/BIN
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+RUNDIR=${ADDSURFDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
@@ -30,7 +26,7 @@ rm -fr ${RUNDIR}/*
 typeset -Z2 acycle
 acycle=$assimc
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${ADDSURFDIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 NPROC=$EC_total_tasks
@@ -45,17 +41,17 @@ export DR_HOOK_SILENT=0
 export DR_HOOK_IGNORE_SIGNALS=-1
 
 # Get input data (ELSC*, namelist, binary, etc.)
-cp $SSTEXDIR/AROME_SSTOK ./fort.11
-cp $C927DIR/ADDSURFAROMALBC000 ./fort.12
+cp ${SSTEXDIR}/${date}/${run}/MEM_${mem}/AROME_SSTOK ./fort.11
+cp ${C927DIR}/${date}/${run}/MEM_${mem}/ADDSURFAROMALBC000 ./fort.12
 
 # Copy namelist
-cp ${NAMELDIR}/namelist_addsurf_cy40t1 fort.4
+cp ${NAMELADDSURF} fort.4
 
-mpiexec -n $NPROC ${BINDIR}/ADDSURF_cy40t1 
+mpiexec -n $NPROC ${BINADDSURF} 
 
 mv fort.11 $OUTDIR/ICMSHAROM+${acycle}_addsurf
 
-cd ${BASEDIR}
+cd ${ADDSURFDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

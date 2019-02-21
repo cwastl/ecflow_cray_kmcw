@@ -74,6 +74,17 @@ user_date = {
 #####define Families and Tasks#############
 ###########################################
 
+def date() :
+
+    if user_date.keys() :
+        print("=> date defined by user\n");
+
+        return Edit(
+                 DD=user_date['dd'],
+                 MM=user_date['mm'],
+                 YYYY=user_date['yyyy'],
+               )
+
 def family_lbc() :
 
     # Family LBC
@@ -114,7 +125,7 @@ def family_lbc() :
                    CLASS='ns',
                    KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
-                   NAME="901{:02d}".format(mem),
+                   NAME="901_{:02d}".format(mem),
                    WALLT="03",
                 ),
                 Label("run", ""),
@@ -243,7 +254,7 @@ def family_main():
                      NP=16,
                      CLASS='np',
                      KOPPLUNG=couplf,
-                     NAME="927{:02d}".format(mem),
+                     NAME="927_{:02d}".format(mem),
                      ASSIM=assimi,
                      WALLT="03"                #walltime in hours
                   ),
@@ -422,7 +433,7 @@ def family_main():
                      ASSIM=assimi,
                      ASSIMC=assimc,
                      STOCH=stophy,
-                     NAME="001{:02d}".format(mem),
+                     NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
                   Label("run", ""),
@@ -452,15 +463,6 @@ def family_main():
            ) for mem in members
          ]
        )
-
-def date() :
-    if user_date.keys() :
-        print("=> date defined by user\n");
-        return Edit(
-                 DD=user_date['dd'],
-                 MM=user_date['mm'],
-                 YYYY=user_date['yyyy'],
-               )
 
 ###########################
 ### create C-LAEF suite ###

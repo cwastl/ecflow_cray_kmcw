@@ -12,22 +12,17 @@ mem=%MEMBER%
 lagg=%VORHI%
 gl=%GL%
 
-# My Environment
-MY_DIR=/home/ms/at/kmcw/ECF
-BASEDIR=${MY_DIR}/927
-NAMELDIR=${MY_DIR}/NAMEL
-CLIMDIR=${MY_DIR}/CLIM
-LOGDIR=${MY_DIR}/LOG
-COUPLDIR=${MY_DIR}/COUPL/${date}/${run}/MEM_${mem}
-
-EXEC=${MY_DIR}/BIN/cy40t1_MASTERODB_WASTL
 EXP=AROM
 
-RUNDIR=${BASEDIR}/$PBS_JOBID
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+#######################################################
+
+RUNDIR=${C927DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
-OUTDIR=${BASEDIR}/${date}/${run}/MEM_${mem}
+OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
 [[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
@@ -64,7 +59,7 @@ export DR_HOOK_IGNORE_SIGNALS=-1
 
 # create LFI namelist:
 
-cp ${NAMELDIR}/927surfex_CY40T1.nam ${RUNDIR}/PRE_REAL1.nam
+cp ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
@@ -75,13 +70,13 @@ lfmread=.FALSE. # Default is read from LFI (= .TRUE.)
 lhisfwr=.TRUE.  # Default is write historical data (= .TRUE.)
 lpgdfwr=.FALSE. # Default is not write PGD (= .FALSE.)
 
-ln -s ${CLIMDIR}/clim_arome_oper_new_m${month} ${RUNDIR}/const.clim.${EXP}
+ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
 if [[ $gl == 1 ]];then
-   ln -s ${CLIMDIR}/clim_ecmwf_m${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMELDIR}/927surf_CY40T1_2.5km.nam
+   ln -s ${CLIMFILENAME_ECMWF_LAE}${month} ${RUNDIR}/Const.Clim
+   NAMELSURF=${NAMEL927SURF}
 else
-   ln -s ${CLIMDIR}/const.clim_${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMELDIR}/927surf_CY40T1_2.5km.nam_glob
+   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} ${RUNDIR}/Const.Clim
+   NAMELSURF=${NAMEL927SURF_GLO}
 fi
 
 #---  modifiy namelist
@@ -106,24 +101,24 @@ if [[ ! -s ${OUTDIR}/PGD_${EXP}".fa" ]]; then
 fi
 
 ln -s ${OUTDIR}/PGD_${EXP}.fa ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
-ln -s ${CLIMDIR}/ecoclimapI_covers_param.bin ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
-ln -s ${CLIMDIR}/ecoclimapII_eu_covers_param.bin ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
+ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
+ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 
 typeset -Z4 cstep
 cstep=$lagg
 
-cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
+cp ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
 
 # --- submit the job ---------------
 status=0
-time aprun -n ${NPROC} ${EXEC} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
+time aprun -n ${NPROC} ${BINMASTER} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
 status=${?}
 # ----------------------------------
 
 mv NODE.001_01 ${LOGDIR}/NODE_927_000_${EXP}_${mem}
 mv PFE927${EXP}+0000.sfx ${OUTDIR}/PFE927${EXP}+0000.sfx
 
-cd ${BASEDIR}
+cd ${C927DIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>
