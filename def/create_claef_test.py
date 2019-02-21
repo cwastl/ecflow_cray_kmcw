@@ -35,7 +35,7 @@ couplf = 6
 gl = False
 
 # assimilation switches
-assimi = False   #assimilation yes/no
+assimi = True   #assimilation yes/no
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
@@ -499,26 +499,26 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
              ),
 
-             # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00",
-                Edit( LAUF='00', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-                VORHI=0, LEAD=6),
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-#             Family("RUN_06",
-#                Edit( LAUF='06', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-#                VORHI=6, LEAD=6),
+#             # Main Runs per day (00, 06, 12, 18)
+#             Family("RUN_00",
+#                Edit( LAUF='00', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
+#                VORHI=0, LEAD=6),
 #
 #                # add suite Families and Tasks
 #                family_lbc(),
 #                family_obs(),
 #                family_main(),
 #             ),
+
+             Family("RUN_06",
+                Edit( LAUF='06', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
+                VORHI=6, LEAD=6),
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+             ),
            )
        )
 

@@ -481,6 +481,8 @@ cd ${RUNDIR}
 rm -fr ${RUNDIR}/*
 
 cp $OUTDIR/ficdate .
+cp ${IOASSIGNBIN} ./ioassign
+
 export ODB_FEBINPATH="."
 
 # Environment settings
@@ -525,10 +527,10 @@ do
    cp -f $NAMELIASICHAN iasichannels
    cp -f $NAMELCRISCHAN crischannels
    cp -f ${CLIMFILENAME_BATOR} param.cfg
-   cp -f ${CIOASSIGNBIN} ./create_ioassign
+   cp -f ${IOASSIGNBIN} ./create_ioassign
    chmod 777 ./create_ioassign
    cp -f $LIST_GPS list_gpssol
-   ./create_ioassign -l$ODB_CMA -n${BATOR_NBPOOL} 
+   ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} 
 
    case ${base} in 
         "conv")

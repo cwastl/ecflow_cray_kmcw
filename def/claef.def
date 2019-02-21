@@ -10,9 +10,9 @@ suite claef
   edit ECF_LOGPORT '36652'
   edit ECF_OUT '/scratch/ms/at/kmcw/ECF'
   edit CNF_DEBUG '0'
-  family RUN_00
-    edit VORHI '0'
-    edit LAUF '00'
+  family RUN_06
+    edit VORHI '6'
+    edit LAUF '06'
     edit DATUM '20190221'
     edit LEAD '6'
     family lbc
@@ -65,7 +65,7 @@ suite claef
       endfamily
     endfamily
     family obs
-      edit ASSIM '0'
+      edit ASSIM '1'
       task getobs
         trigger :ASSIM == 1
         edit NP '1'
@@ -95,13 +95,13 @@ suite claef
         label error "ok"
     endfamily
     family main
-      edit ASSIM '0'
+      edit ASSIM '1'
       edit GL '0'
       family MEM_12
         task 927
           trigger ../../lbc/MEM_12/gl == complete or ../../lbc/MEM_12/901 == complete
-          edit NAME '92712'
-          edit ASSIM '0'
+          edit NAME '927_12'
+          edit ASSIM '1'
           edit KOPPLUNG '6'
           edit MEMBER '12'
           edit WALLT '03'
@@ -195,7 +195,7 @@ suite claef
           trigger 927 == complete and 927surf == complete and minim == complete and canari == complete
           edit ASSIMC '6'
           edit NAME '001_12'
-          edit ASSIM '0'
+          edit ASSIM '1'
           edit KOPPLUNG '6'
           edit MEMBER '12'
           edit WALLT '06'
