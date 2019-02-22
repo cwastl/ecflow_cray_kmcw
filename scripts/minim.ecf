@@ -225,7 +225,7 @@ fi
 
 # Run minimization config 131
 #aprun -n $NPROC $MASTERBIN 
-aprun -n $NPROC ${BINDMASTER}
+aprun -n $NPROC ${BINMASTER}
 #aprun -n $NPROC ${BINDIR}/MASTERODB_endy
 
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
@@ -253,7 +253,7 @@ if [[ $LHYDRO3D == ".TRUE." ]]
 then
 # Add other 3D fields
   cp MXMINI999+0000 AldsurfA
-  cp $ADDSURFDIR/ICMSHAROM+${acycle}_addsurf AldsurfB
+  cp $ADDSURFDIR/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf AldsurfB
   cp AldsurfA AldsurfC
   cp $NAMELBLEND fort.4
 

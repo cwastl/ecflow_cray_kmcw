@@ -527,7 +527,7 @@ do
    cp -f $NAMELIASICHAN iasichannels
    cp -f $NAMELCRISCHAN crischannels
    cp -f ${CLIMFILENAME_BATOR} param.cfg
-   cp -f ${IOASSIGNBIN} ./create_ioassign
+   cp -f ${CIOASSIGNBIN} ./create_ioassign
    chmod 777 ./create_ioassign
    cp -f $LIST_GPS list_gpssol
    ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} 

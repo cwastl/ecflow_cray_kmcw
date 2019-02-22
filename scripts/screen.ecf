@@ -136,7 +136,7 @@ typeset -Z2 acycle
 acycle=${assimc}
 
 #cp $CLIMDIR/table? .
-cp ${VARBCFILE}.cycle${run} ./VARBC.cycle
+cp ${VARBCFILE}${run} ./VARBC.cycle
 cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf ICMSHSCREINIT
 cp ${BATOR3DIR}/${date}/${run}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
