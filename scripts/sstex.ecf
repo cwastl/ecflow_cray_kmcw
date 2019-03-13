@@ -9,25 +9,22 @@
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
-lagg=%VORHI%
 assimc=%ASSIMC%
 
-date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
-run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
-date2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 1-8)
-run2=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${assimc}:00 | cut -c 9-10)
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 $assimc
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${SSTEXDIR} ]] && mkdir -p ${SSTEXDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 # Create working directory
 RUNDIR=${SSTEXDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${SSTEXDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -rf $RUNDIR/*
 
@@ -42,27 +39,47 @@ export DR_HOOK_SILENT=0           # prints out error messages but doesn't termin
 export DR_HOOK_IGNORE_SIGNALS=-1  # ignores all possible signals
 
 # Get input data (ELSC*, namelist, binary, etc.)
-typeset -Z2 acycle
-acycle=$assimc
+try_guess=1
+found=0
+echo $GUESSFILE1
+while (( $try_guess <= 9 )) && (( $found < 1 )) # loop through all possible guessfiles
+do
 
-cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 ./IFS_ANALYSE
-cp ${C001DIR}/${date2}/${run2}/MEM_${mem}/ICMSHAROM+00${acycle} ./AROME_GUESS 
+  ecflow_client --label=info "Try guess file ${try_guess}"
+  eval "actfile=\$GUESSFILE${try_guess}"
+
+  if [ -s  ${actfile} ]
+  then
+     if (( $? == 0 ))
+     then
+        found=1
+        cp $actfile ./AROME_GUESS
+        try_guess=20
+     fi
+   fi
+   let "try_guess = $try_guess+1"
+
+done
+
+cp ${SSTEXANAFILE} ./IFS_ANALYSE
 
 cp AROME_GUESS Blend_sea0
 
 # Copy namelist
 cp ${NAMELSSTEX1} fort.4
 
+ecflow_client --label=info "Blendsur1"
 mpiexec -n $NPROC ${BLENDSURBIN}
 
 rm -f fort.4
 cp AROME_GUESS AROME_SSTOK
 cp ${NAMELSSTEX2} fort.4
 
+ecflow_client --label=info "Blendsur2"
 mpiexec -n $NPROC ${BLENDSURBIN}
 
 chmod 666 AROME_SSTOK
-mv AROME_SSTOK ${OUTDIR}/AROME_SSTOK
+mv AROME_SSTOK ${SSTEXDIR}/AROME_SSTOK
 
 cd ${SSTEXDIR}
 rm -rf ${RUNDIR}

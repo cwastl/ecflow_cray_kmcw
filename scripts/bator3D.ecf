@@ -12,49 +12,11 @@ date=%DATUM%
 run=%LAUF%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date 999 999 999
 #######################################################
 
-OBSDIR3D=${OBSERVDIR3D}/${date}/${run}
-OBSDIR=${OBSERVDIR}/${date}/${run}
-
-hh1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 9-10)
-date1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 1-8)
-hh2=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:00 | cut -c 9-10)
-date2=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:00 | cut -c 1-8)
-hh3=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -2:00 | cut -c 9-10)
-date3=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -2:00 | cut -c 1-8)
-hh4=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +2:00 | cut -c 9-10)
-date4=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +2:00 | cut -c 1-8)
-hh5=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -3:00 | cut -c 9-10)
-date5=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -3:00 | cut -c 1-8)
-hh6=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +3:00 | cut -c 9-10)
-date6=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +3:00 | cut -c 1-8)
-ficleft=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:30 | cut -c 1-12)
-ficright=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:30 | cut -c 1-12)
-
-OBSFILE1=$OBSDIR/obsoul_taw_${date}_${run}0000.asc
-OBSFILE2=$OBSDIR/obsoul_${date}_${run}0000.asc
-OBSFILE3=$OBSDIR/obs_short_${date}${run}.tar
-OBSFILE3h1=$OBSDIR/obs_short_${date1}${hh1}.tar
-OBSFILE3h2=$OBSDIR/obs_short_${date2}${hh2}.tar
-OBSFILE3h3=$OBSDIR/obs_short_${date3}${hh3}.tar
-OBSFILE3b=$OBSDIR/obs_foreign_${date}${run}.tar
-OBSFILE3bh1=$OBSDIR/obs_foreign_${date1}${hh1}.tar
-OBSFILE3bh2=$OBSDIR/obs_foreign_${date2}${hh2}.tar
-OBSFILE3bh3=$OBSDIR/obs_foreign_${date3}${hh3}.tar
-OBSFILE4=$OBSDIR/obsoul_temp_${date}_${run}0000.asc
-OBSFILE4a=$OBSDIR/obsoul_pseudosounding_${date}_${run}0000.asc
-OBSFILE5=$OBSDIR/obsoul_pilot_${date}_${run}0000.asc
-OBSFILE6=$OBSDIR/obsoul_ship_${date}_${run}0000.asc
-OBSFILE7=$OBSDIR/obsoul_profiler_${date}_${run}0000.asc
-OBSFILE13=$OBSDIR/obsoul_metar_${date}_${run}0000.asc
-OBSFILE14=$OBSDIR/obsoul_hydro_${date}_${run}0000.asc
-OBSFILE14a=$OBSDIR/obsoul_schiwm_${date}_${run}0000.asc
-OBSFILE18=$OBSDIR3D/"SAFNWC_MSG3_HRW__"${date}${run}"00_EUROPE_______BEUM.buf"
-GPSOBSFILE=$OBSDIR3D/OBSOUL.TU.${date}${run}00.plusproch
-
-MF_OBSDIR=/panfs/panfs.zamg.at/scratch/vhmod/prod/AROME/BACKUP_OPLACE/DATA/${date}_${run}
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
 RADARSTATIONS="11038 11052 11164 11126 07291" # 11124
 RADARPARAMETER="DBZ VEL"
@@ -74,23 +36,24 @@ LPSEUDO=.FALSE.     # using pseudosoundings from surface observations in the alp
 export MALLOC_CHECK_=0
 #export MALLOC_CHECK_=3
 
+[[ ! -d ${BATOR3DIR} ]] && mkdir -p ${BATOR3DIR}
 [[ ! -d ${OBSDIR3D} ]] && mkdir -p ${OBSDIR3D}
 rm -f $OBSDIR3D/*
 cd $OBSDIR3D
 
-OUTDIR=${BATOR3DIR}/${date}/${run}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
-
 if [ -s $OBSFILE1 ]; then
   export OBSFILEZAMG=$OBSFILE1
+  ecflow_client --label=info "ZAMG SYNOP+TAWES file there"
 elif [ -s $OBSFILE2 ] ; then
   echo "no ZAMG SYNOP+TAWES file try synop only"
+  ecflow_client --label=info "No ZAMG SYNOP+TAWES file try synop only"
   cp $OBSFILE2 $OBSFILE1
   export OBSFILEZAMG=$OBSFILE1
 else
   touch $OBSFILE1
   export OBSFILEZAMG=$OBSFILE1 
   echo "no ZAMG OBS file at all - try only OPLACE"
+  ecflow_client --label=info "No ZAMG OBS file at all - try only OPLACE"
 fi
 
 flag=0
@@ -112,7 +75,7 @@ if (( $flag>0 )) ; then
 # create bufr_7 files
   export satellite="noaa16 noaa18 noaa19 metop metopb"
   export instrument="hirs amsua amsub mhs iasi"
-
+  ecflow_client --label=info "Get satellite data"
 #rm -rf *metop_*
 
   for INSTR in $instrument; do
@@ -169,9 +132,11 @@ if (( $flag>0 )) ; then
 
 else
   echo "no OPLACE OBS file at all - try only ZAMG OBS" #>> $LOGFILEBATOR 2>&1 
+  ecflow_client --label=info "No OPLACE OBS file - try only ZAMG"
 fi
 
 if [[ $LNATIONAL = ".TRUE." ]]; then
+  ecflow_client --label=info "National OBS files"
   flag=0
   if [ -s ${OBSFILE3b} ]; then
     tar xvf $OBSFILE3b
@@ -204,6 +169,7 @@ rm -f $OBSDIR3D/bufr.ascat
 touch $OBSDIR3D/bufr.ascat
 
 if [ -s $OBSDIR3D/ascat*gz ]; then
+  ecflow_client --label=info "ASCAT"
   gunzip -f  ascat*gz
   for ascat in $(ls $OBSDIR3D/ascat*)
   do
@@ -217,6 +183,7 @@ rm -f $OBSDIR3D/bufr.iasi
 touch $OBSDIR3D/bufr.iasi
 
 if [ -s $OBSDIR3D/*iasi_*gz ]; then
+  ecflow_client --label=info "IASI"
   gunzip -f  *iasi_*gz
   for iasi in $(ls $OBSDIR3D/*iasi_*)
   do
@@ -232,6 +199,7 @@ rm -f $OBSDIR3D/bufr.ssmis
 touch $OBSDIR3D/bufr.ssmis
 
 if [ -s $OBSDIR3D/W_XX-EUMETSAT*gz ]; then
+  ecflow_client --label=info "EUMETSAT"
   gunzip -f  W_XX-EUMETSAT*gz
   for ssmis in $(ls $OBSDIR3D/W_XX-EUMETSAT*)
   do
@@ -243,6 +211,7 @@ fi
 
 # RADAR
 for num in $RADARSTATIONS; do
+  ecflow_client --label=info "Radar data"
   (( num2=$num+1 ))
   touch ${OBSDIR3D:='xxx'}/bufr.$num
   touch ${OBSDIR3D:='xxx'}/bufr.$num2
@@ -286,6 +255,7 @@ done
 # surface observations -> LISTFILE1 -> OBSFILE1
 touch LISTFILE1
 
+ecflow_client --label=info "Surface OBS"
 if [ -s $OBSDIR3D/obsoul_1_xxxxxx_xx_${date}${run} ]; then
   ls $OBSDIR3D/obsoul_1_xxxxxx_xx_${date}${run}  >> LISTFILE1
 elif [ -s $OBSDIR3D/obsoul_1_xxxxxx_xx_${date1}${hh1} ]; then
@@ -312,6 +282,7 @@ fi
 
 # OPLACE national stations
 if [[ $LNATIONAL = ".TRUE." ]]; then
+  ecflow_client --label=info "National surface OBS"
   countries="at cz sk si hu ro cr hr"
   for cc in $countries ; do
     if [ -s obsoul_1_xxxxxy_${cc}_${date}${run} ]; then
@@ -325,6 +296,7 @@ fi
 
 # SCHI-WM stations
 if [[ $LSCHIWMOBS = ".TRUE." ]] && [ -s $OBSFILE14a ]; then
+  ecflow_client --label=info "Ski WM"
   ls $OBSFILE14a >> LISTFILE1
 fi
 
@@ -335,12 +307,14 @@ if [[ $LGPS = ".TRUE." ]]; then
   fi
 fi
 
+ecflow_client --label=info "Merging OBSFILES"
 $MERGEOBSBIN -obsoul  $OBSDIR3D/OBSFILE_1_${date}${run} -files LISTFILE1
 rm -f  $OBSDIR3D/obsoul_1_xxxxxx_xx_*
 
 # radio soundings -> LISTFILE2 -> OBSFILE5 
 touch LISTFILE2
 
+ecflow_client --label=info "Radiosoundings"
 if [ -s $OBSDIR3D/obsoul_5_xxxxxx_xx_${date}${run} ]; then
   ls $OBSDIR3D/obsoul_5_xxxxxx_xx_${date}${run} >> LISTFILE2
 fi
@@ -353,6 +327,7 @@ if [ $LPSEUDO = ".TRUE." ]; then
   fi
 fi
 
+ecflow_client --label=info "Merging OBSFILES radiosoundings"
 $MERGEOBSBIN -obsoul $OBSDIR3D/OBSFILE_5_${date}${run} -files LISTFILE2
 rm -f  $OBSDIR3D/obsoul_5_xxxxxx_xx_*
 
@@ -388,6 +363,7 @@ do
   fi
 done
 
+ecflow_client --label=info "Merging OBSFILES assimilation window"
 ${MERGEOBSBIN} -obsoul $OBSDIR3D/OBSFILE_2_${date}${run} -files LISTFILE3
 rm -f $OBSDIR3D/obsoul_2_xxxxxx_xx_*
 rm -f $OBSDIR3D/obsoul_2_mrar_si_*
@@ -415,6 +391,7 @@ fi
 #  fi
 #done
 
+ecflow_client --label=info "Merging pilot/profiler data"
 $MERGEOBSBIN -obsoul $OBSDIR3D/OBSFILE_6_${date}${run} -files LISTFILE4
 #rm -f  $OBSDIR3D/obsoul_6_xxxxxx_xx_*
 
@@ -426,6 +403,7 @@ touch LISTFILE5
 [ -s $OBSDIR3D/OBSFILE_5_${date}${run} ] && ls  $OBSDIR3D/OBSFILE_5_${date}${run} >>LISTFILE5
 [ -s $OBSDIR3D/OBSFILE_6_${date}${run} ] && ls  $OBSDIR3D/OBSFILE_6_${date}${run} >>LISTFILE5
 
+ecflow_client --label=info "Merging everything"
 $MERGEOBSBIN -obsoul $OBSDIR3D/OBSFILEMERGED_${date}${run} -files LISTFILE5
 rm -f $OBSDIR3D/OBSFILE_1_${date}${run} $OBSDIR3D/OBSFILE_2_${date}${run} $OBSDIR3D/OBSFILE_5_${date}${run} $OBSDIR3D/OBSFILE_6_${date}${run}
 
@@ -444,17 +422,19 @@ fi
 
 if [ ! -s $OBSDIR3D/gribsevfile ]; then
   echo "no MSG-file available - warning 41"
+  ecflow_client --label=info "No MSG-file available"
 fi 
 
 rm -f $OBSDIR3D/grib_7_seviri_xx_*
 
 if [ ! -s OBSFILEMERGED_${date}${run} ]; then
   echo "no obsoul obsfile at all - warning 42"
+  ecflow_client --label=info "No obsoul OBS file available"
 fi
 
-rm -f $OUTDIR/ficdate
-echo "${ficleft}00" > $OUTDIR/ficdate
-echo "${ficright}00" >> $OUTDIR/ficdate
+rm -f ${BATOR3DIR}/ficdate
+echo "${ficleft}00" > ${BATOR3DIR}/ficdate
+echo "${ficright}00" >> ${BATOR3DIR}/ficdate
 
 #types_BASE='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
 #types_BASE='conv ascat geow iasi amsua amsub hirs sevb'
@@ -474,13 +454,14 @@ export ODB_STATIC_LINKING=1
 export PRINT_TABLE_NAMES=FALSE
 
 # create working directory
+
 RUNDIR=${BATOR3DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-cp $OUTDIR/ficdate .
+cp ${BATOR3DIR}/ficdate .
 cp ${IOASSIGNBIN} ./ioassign
 
 export ODB_FEBINPATH="."
@@ -511,6 +492,7 @@ export out_BASE=ECMA
 export ODB_ECMA_CREATE_POOLMASK=1
 export ODB_ECMA_POOLMASK_FILE=$RUNDIR/$out_BASE/ECMA.poolmask
 
+ecflow_client --label=info "Run Bator"
 for base in $types_BASE
 do
    # ODB environment settings for BATOR
@@ -528,6 +510,7 @@ do
    cp -f $NAMELCRISCHAN crischannels
    cp -f ${CLIMFILENAME_BATOR} param.cfg
    cp -f ${CIOASSIGNBIN} ./create_ioassign
+   ecflow_client --label=info "Create IOASSIGN"
    chmod 777 ./create_ioassign
    cp -f $LIST_GPS list_gpssol
    ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} 
@@ -693,6 +676,7 @@ done
 
 cp $MERGEBIN ./merge_ioassign
 
+ecflow_client --label=info "Merge IOASSIGN"
 ./merge_ioassign -d $RUNDIR ${liste} 
 
 unset liste
@@ -709,12 +693,13 @@ nb=1
 
 ln -s $SHUFFLEBIN shuffle
 
+ecflow_client --label=info "Shuffle"
 mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na
 
 # save merged bases (including sub bases)
 tar cvf ECMA_merged.tar $out_BASE ECMA.*
-mv ECMA_merged.tar $OUTDIR/ECMA_merged.tar
-cp $out_BASE/ECMA.dd $OUTDIR/ECMA.dd
+mv ECMA_merged.tar ${BATOR3DODBFILE}
+cp $out_BASE/ECMA.dd ${BATOR3DIR}/ECMA.dd
 
 cd ${BATOR3DIR}
 

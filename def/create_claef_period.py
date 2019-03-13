@@ -12,6 +12,10 @@
 #load modules
 import os
 from ecflow import *
+import datetime
+
+# get current date
+now = datetime.datetime.now()
 
 # ecFlow home and include paths
 home = os.path.join(os.getenv("HOME"),"ecf");
@@ -26,13 +30,13 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 
 #ensemble members
 #members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [12]
+members = [13]
 
 # coupling frequency
 couplf = 6
 
 # use GL Tool yes/no, if no - 901 is used
-gl = False
+gl = True
 
 # assimilation switches
 assimi = True   #assimilation yes/no
@@ -41,7 +45,7 @@ eda = True      #ensemble data assimilation
 seda = True     #surface eda
 
 # use EnJK method of Endy yes/no
-enjk = False
+enjk = True
 
 # use stochastic physics model error representation yes/no
 stophy = True
@@ -54,7 +58,7 @@ logport = 36652;
 
 # main runs time schedule
 timing = {
-  '00' : '13:09',
+  '00' : '02:30',
   '06' : '08:30',
   '12' : '14:30',
   '18' : '20:30',
@@ -64,28 +68,14 @@ timing = {
 debug = 0;
 
 # user date (default is system date)
-user_date = {
-  'dd'  : '21',
-  'mm'  : '02',
-  'yyyy': '2019'
-}
+start_date = 20160702
+end_date = 20160703
 
 ###########################################
 #####define Families and Tasks#############
 ###########################################
-
-def date() :
-
-    if user_date.keys() :
-        print("=> date defined by user\n");
-
-        return Edit(
-                 DD=user_date['dd'],
-                 MM=user_date['mm'],
-                 YYYY=user_date['yyyy'],
-               )
-
-def family_lbc() :
+ 
+def family_lbc():
 
     # Family LBC
     return Family("lbc",
@@ -102,6 +92,7 @@ def family_lbc() :
           [
              Task("getlbc",
                 Trigger(":GL == 0"),
+                Complete(":GL == 1"),
                 Edit(
                    NP=1,
                    CLASS='ns',
@@ -111,8 +102,8 @@ def family_lbc() :
                    WALLT="01",
                 ),
                 Label("run", ""),
-                Label("status", ""),
-                Label("error", "ok"),
+                Label("info", ""),
+                Label("error", ""),
              )
           ],
 
@@ -120,6 +111,7 @@ def family_lbc() :
           [
              Task("901",
                 Trigger(":GL == 0 and getlbc == complete"),
+                Complete(":GL == 1"),
                 Edit(
                    NP=1,
                    CLASS='ns',
@@ -129,8 +121,8 @@ def family_lbc() :
                    WALLT="03",
                 ),
                 Label("run", ""),
-                Label("status", ""),
-                Label("error", "ok"),
+                Label("info", ""),
+                Label("error", ""),
              )
           ],
 
@@ -138,6 +130,7 @@ def family_lbc() :
           [
              Task("getlbc_gl",
                 Trigger(":GL == 1"),
+                Complete(":GL == 0"),
                 Edit(
                    NP=1,
                    CLASS='ns',
@@ -147,8 +140,7 @@ def family_lbc() :
                    WALLT="01",
                 ),
                 Label("run", ""),
-                Label("status", ""),
-                Label("error", "ok"),
+                Label("info", ""),
              )
           ],
 
@@ -156,6 +148,7 @@ def family_lbc() :
           [
              Task("gl",
                 Trigger(":GL == 1 and getlbc_gl == complete"),
+                Complete(":GL == 0"),
                 Edit(
                    MEMBER="{:02d}".format(mem),
                    NP=1,
@@ -165,8 +158,7 @@ def family_lbc() :
                    WALLT="03"               #walltime in hours
                 ),
                 Label("run", ""),
-                Label("status", ""),
-                Label("error", "ok")
+                Label("info", ""),
              )
           ],
 
@@ -186,6 +178,8 @@ def family_obs() :
        [
           Task("getobs",
              Trigger(":ASSIM == 1"),
+             Complete(":ASSIM == 0"),
+             Meter("obsprog", -1, 3, 3),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -193,8 +187,7 @@ def family_obs() :
                 WALLT="01"              #walltime in hours
              ),
              Label("run", ""),
-             Label("status", ""),
-             Label("error", "ok")
+             Label("info", ""),
           )
        ],
 
@@ -202,6 +195,7 @@ def family_obs() :
        [
           Task("bator",
              Trigger(":ASSIM == 1 and getobs == complete"),
+             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -209,8 +203,8 @@ def family_obs() :
                 WALLT="01"               #walltime in hours
              ),
              Label("run", ""),
-             Label("status", ""),
-             Label("error", "ok")
+             Label("info", ""),
+             Label("error", "")
           )
        ],
 
@@ -218,6 +212,7 @@ def family_obs() :
        [
           Task("bator3D",
              Trigger(":ASSIM == 1 and getobs == complete"),
+             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -225,8 +220,7 @@ def family_obs() :
                 WALLT="01"               #walltime in hours
              ),
              Label("run", ""),
-             Label("status", ""),
-             Label("error", "ok")
+             Label("info", ""),
           )
        ],
     )
@@ -247,29 +241,25 @@ def family_main():
             # Task 927atm
             [
                Task("927",
-                  Trigger("../../lbc/MEM_{:02d}/gl == complete or ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=16,
                      CLASS='np',
                      KOPPLUNG=couplf,
                      NAME="927_{:02d}".format(mem),
-                     ASSIM=assimi,
                      WALLT="03"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
 #            # Task 927/PGD
 #            [
 #              Task("pgd",
-#                  Trigger("../../lbc/MEM_{:02d}/gl == complete or ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
 #                 Edit(
-##                    ECF_DUMMY_TASK="", # TEMPORARY DUMMY
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
 #                    CLASS='np',
@@ -277,18 +267,16 @@ def family_main():
 #                    WALLT="01"                #walltime in hours
 #                 ),
 #                 Label("run", ""),
-#                 Label("status", ""),
-#                 Label("error", "ok")
+#                 Label("info", ""),
 #               )
 #            ],
 
             # Task 927/surf
             [
                Task("927surf",
-                  Trigger("../../lbc/MEM_{:02d}/gl == complete or ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
 #                  Trigger("pgd == complete"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
@@ -296,8 +284,7 @@ def family_main():
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -305,8 +292,8 @@ def family_main():
             [
                Task("sstex",
                   Trigger(":ASSIM == 1 and 927 == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
@@ -315,8 +302,7 @@ def family_main():
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -324,8 +310,8 @@ def family_main():
             [
                Task("addsurf",
                   Trigger(":ASSIM == 1 and sstex == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
@@ -334,8 +320,7 @@ def family_main():
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -343,8 +328,8 @@ def family_main():
             [
                Task("screen",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
@@ -354,8 +339,8 @@ def family_main():
                      WALLT="03"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
+                  Label("error", "")
                )
             ],
 
@@ -363,8 +348,8 @@ def family_main():
             [
                Task("screensurf",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
@@ -373,8 +358,8 @@ def family_main():
                      WALLT="03"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
+                  Label("error", "")
                )
             ],
 
@@ -382,9 +367,8 @@ def family_main():
             [
                Task("canari",
                   Trigger(":ASSIM == 1 and screensurf == complete"),
-                  Complete(":ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
@@ -394,8 +378,7 @@ def family_main():
                      WALLT="03"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -403,9 +386,8 @@ def family_main():
             [
                Task("minim",
                   Trigger(":ASSIM == 1 and screen == complete"),
-                  Complete(":ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
@@ -415,8 +397,7 @@ def family_main():
                      WALLT="03"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -425,20 +406,18 @@ def family_main():
                Task("001",
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=480,
                      CLASS='np',
                      KOPPLUNG=couplf,
-                     ASSIM=assimi,
                      ASSIMC=assimc,
                      STOCH=stophy,
                      NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
+                  Label("error", "")
                )
             ],
 
@@ -447,7 +426,6 @@ def family_main():
                Task("progrid",
                   Trigger("001  == complete"),
                   Edit(
-#                     ECF_DUMMY_TASK="", # TEMPORARY DUMMY
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
@@ -455,8 +433,7 @@ def family_main():
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
-                  Label("status", ""),
-                  Label("error", "ok")
+                  Label("info", ""),
                )
             ],
 
@@ -470,14 +447,12 @@ def family_main():
 
 print("\n=> creating suite definition\n");
 
-# user date (if defined)
-date()
-
 defs = Defs().add(
 
           # Suite C-LAEF
-          Suite("claef").add(
+          Suite("claef_2").add(
 
+             RepeatDate("DATUM",start_date,end_date),
              Edit(
 
                 # ecflow configuration
@@ -485,7 +460,8 @@ defs = Defs().add(
                 ECF_EXTN='.ecf',        # ecf files extension
                 ECF_HOME=home,         # ecf root path
                 ECF_INCLUDE=incl,      # ecf include path
-
+                ECF_TRIES=1,           # number of reruns if task aborts
+ 
                 # suite configuration variables
                 ACCOUNT=account,
                 CNF_DEBUG=debug,
@@ -494,32 +470,53 @@ defs = Defs().add(
                 ECF_OUT = '/scratch/ms/at/kmcw/ECF', # jobs output dir on remote host
                 ECF_LOGHOST=host,                     # remote log host
                 ECF_LOGPORT=logport,                  # remote log port
-
+                ECF_LISTS='/home/ms/at/kmcw/ecf/def/perm.list', 
+                
                 # Submit job (remotely)
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
              ),
 
-#             # Main Runs per day (00, 06, 12, 18)
-#             Family("RUN_00",
-#                Edit( LAUF='00', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-#                VORHI=0, LEAD=6),
-#
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
-
-             Family("RUN_06",
-                Edit( LAUF='06', DATUM=user_date['yyyy']+user_date['mm']+user_date['dd'],
-                VORHI=6, LEAD=6),
+             # Main Runs per day (00, 06, 12, 18)
+             Family("RUN_00",
+                Edit( LAUF='00', VORHI=0, LEAD=6),
 
                 # add suite Families and Tasks
                 family_lbc(),
                 family_obs(),
                 family_main(),
              ),
-           )
+
+             Family("RUN_06",
+                Edit( LAUF='06',VORHI=6, LEAD=6),
+                Trigger("RUN_00 == complete"), 
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+             ),
+
+             Family("RUN_12",
+                Edit( LAUF='12',VORHI=0, LEAD=6),
+                Trigger("RUN_06 == complete"), 
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+             ),
+
+             Family("RUN_18",
+                Edit( LAUF='18',VORHI=6, LEAD=6),
+                Trigger("RUN_12 == complete"), 
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+             ),
+             
+          )
        )
 
 ###################################
@@ -528,7 +525,7 @@ defs = Defs().add(
 
 print("=> checking job creation: .ecf -> .job0");
 print(defs.check_job_creation());
-print("=> saving definition to file 'claef.def'\n");
-defs.save_as_defs("claef.def");
+print("=> saving definition to file 'claef_2.def'\n");
+defs.save_as_defs("claef_2.def");
 exit(0);
 

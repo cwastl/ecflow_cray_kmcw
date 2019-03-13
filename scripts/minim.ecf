@@ -12,27 +12,26 @@ date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 assimc=%ASSIMC%
-lagg=%VORHI%
 enjk=%ENSJK%
+
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 $assimc
+#######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
 INFLATION=.FALSE.       # ECMWF EDA spread will be increased by an inflation factor
 LHYDRO3D=.TRUE.
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
-#######################################################
-
-date1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
-run1=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
+[[ ! -d ${MINIMDIR} ]] && mkdir -p ${MINIMDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 RUNDIR=${MINIMDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
-
-OUTDIR=${MINIMDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 # Environmental settings 
 export NPROC=$EC_total_tasks
@@ -78,11 +77,11 @@ export TO_ODB_ECMWF=0
 
 # Jk parameters perturbations
 typeset -i seed seed1 aa
-date2=$(echo $date | cut -c5-8)
-date2=$(echo $date2 | sed 's/^0*//') #remove leading zero if necessary
-date3=$date2$run
-date3=$(($date3 + $mem))
-seed=$mem*$date3
+adate2=$(echo $date | cut -c5-8)
+adate2=$(echo $adate2 | sed 's/^0*//') #remove leading zero if necessary
+adate3=$adate2$run
+adate3=$(($adate3 + $mem))
+seed=$mem*$adate3
 
 if [[ $mem -eq "00" ]]; then
   AT=0.70
@@ -93,23 +92,23 @@ if [[ $mem -eq "00" ]]; then
 fi
 
 if [[ $mem -ne "00" ]]; then
-  aa=$date3*1
+  aa=$adate3*1
   seed1=$(($seed + $aa))
   AT=$(python -c "import random; random.seed($seed1); br=random.randint(2,11)/10.;print(br)")
 
-  aa=$date3*2
+  aa=$adate3*2
   seed1=$(($seed + $aa))
   AV=$(python -c "import random; random.seed($seed1); br=random.randint(3,13)/10.;print(br)")
 
-  aa=$date3*3
+  aa=$adate3*3
   seed1=$(($seed + $aa))
   AD=$(python -c "import random; random.seed($seed1); br=random.randint(7,15)/100.;print(br)")
 
-  aa=$date3*4
+  aa=$adate3*4
   seed1=$(($seed + $aa))
   AQ=$(python -c "import random; random.seed($seed1); br=random.randint(0,7)/100.;print(br)")
 
-  aa=$date3*5
+  aa=$adate3*5
   seed1=$(($seed + $aa))
   AP=$(python -c "import random; random.seed($seed1); br=random.randint(0,2)/2.;print(br)")
 fi
@@ -145,12 +144,10 @@ ln -s scat.cmod5.table fort.36
 
 # Get VARBC file from SCREENING, ODB file from CCMA and first guess
 #cp $SCREENINGDIR/VARBC.cycle ./VARBC.cycle
-typeset -Z2 acycle
-acycle=${assimc}
-cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf ./ICMSHMINIIMIN
-cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf .
-cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 ./ICMJKMINIINIT 
-cp ${SCREENDIR}/${date}/${run}/MEM_${mem}/CCMA.tar CCMA.tar
+cp ${ADDSURFRESULTFILE} ./ICMSHMINIIMIN
+cp ${ADDSURFRESULTFILE} .
+cp ${SSTEXANAFILE} ./ICMJKMINIINIT 
+cp ${SCREENDIR}/CCMA.tar CCMA.tar
 
 tar -xvf CCMA.tar
 
@@ -205,7 +202,8 @@ cp ICMSHMINIIMIN ICMRFMINI0000
 
 # ECMWF perturbations inflation
 if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
-  cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSCFAROMALBC000 00-ICMJKMINIINIT 
+  ecflow_client --label=info "Perturbation inflation"
+  cp ${C927DIR}/ELSCFAROMALBC000 00-ICMJKMINIINIT 
   export DR_HOOK_NOT_MPI="yes"
   cp ${BINDIR}/inflating_new.py .
   python inflating_new.py
@@ -217,6 +215,7 @@ if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
 fi
 
 if [[ $INFLATION == ".FALSE." && $LEJK == ".TRUE." ]]; then
+  ecflow_client --label=info "Change humidity to spectral"
   fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMJKMINIINIT fossil_dyna
   fa_gp2sp.py fossil_dyna
   fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna.allsp ICMJKMINIINIT
@@ -225,18 +224,21 @@ fi
 
 # Run minimization config 131
 #aprun -n $NPROC $MASTERBIN 
+ecflow_client --label=info "Run Minimization"
 aprun -n $NPROC ${BINMASTER}
 #aprun -n $NPROC ${BINDIR}/MASTERODB_endy
 
+ecflow_client --label=info "Change humidity to gridpoint"
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
 fa_sp2gp.py golem_sentry
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f golem_sentry.allgp MXMINI999+0000
 rm -rf golem_sentry.allgp
 
 # Correction of humidity errors due to SP<->GP conversions
+ecflow_client --label=info "Correction of humidity errors"
 export DR_HOOK_NOT_MPI="yes"
 cp $BINDIR/corrections_ecf.py .
-python corrections_ecf.py ${acycle}
+python corrections_ecf.py ${assimc1}
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f block_dragon MXMINI999+0000
 rm -rf block_dragon
 
@@ -245,21 +247,22 @@ rm -rf block_dragon
 #mv VARBC.cycle $MINIMIZATIONDIR
 
 tar cvf CCMA_minim.tar CCMA*
-mv CCMA_minim.tar ${OUTDIR}/CCMA_minim.tar
-cp MXMINI999+0000 ${OUTDIR}/MXMINI999+0000
+mv CCMA_minim.tar ${MINIMDIR}/CCMA_minim.tar
+cp MXMINI999+0000 ${MINIMDIR}/MXMINI999+0000
 
 # BLEND hydrometeors with first guess file
 if [[ $LHYDRO3D == ".TRUE." ]]
 then
+  ecflow_client --label=info "Blend hydrometeors"
 # Add other 3D fields
   cp MXMINI999+0000 AldsurfA
-  cp $ADDSURFDIR/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf AldsurfB
+  cp ${ADDSURFRESULTFILE} AldsurfB
   cp AldsurfA AldsurfC
   cp $NAMELBLEND fort.4
 
   aprun -n 1 $BLENDBIN
 
-  mv AldsurfC ${OUTDIR}/MXMINI999+0000_blend
+  mv AldsurfC ${MINIMRESULTFILE}
 fi
 
 cp NODE.001_01 ${LOGDIR}/NODE_MINIMIZATION_${date}${run}_${mem}

@@ -28,9 +28,6 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 ### top level suite settings ###
 ################################
 
-#suite name
-suite_name = "claef"
-
 #ensemble members
 members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 #members = [13]
@@ -61,7 +58,6 @@ logport = 36652;
 
 # main runs time schedule
 timing = {
-  'comp' : '02:00',
   '00' : '02:30',
   '06' : '08:30',
   '12' : '14:30',
@@ -71,15 +67,28 @@ timing = {
 # debug mode (1 - yes, 0 - no)
 debug = 0;
 
-# date to start the suite
-start_date = int(now.strftime('%Y%m%d'))
-#start_date = 20190312
-end_date = 20191231
+# user date (default is system date)
+user_date = {
+  'dd'  : '13',
+  'mm'  : '03',
+  'yyyy': '2019'
+}
 
 ###########################################
 #####define Families and Tasks#############
 ###########################################
 
+def date():
+
+    try: 
+       user_date
+       print("=> date defined by user\n")
+       return user_date['yyyy'] + user_date['mm'] + user_date['dd']
+
+    except NameError:
+       print("=> current date")
+       return now.strftime('%Y%m%d')
+          
 def family_lbc():
 
     # Family LBC
@@ -455,16 +464,17 @@ print("\n=> creating suite definition\n");
 defs = Defs().add(
 
           # Suite C-LAEF
-          Suite(suite_name).add(
+          Suite("claef_2").add(
 
-             RepeatDate("DATUM",start_date,end_date),
              Edit(
+
                 # ecflow configuration
                 ECF_MICRO='%',         # ecf micro-character
                 ECF_EXTN='.ecf',        # ecf files extension
                 ECF_HOME=home,         # ecf root path
                 ECF_INCLUDE=incl,      # ecf include path
                 ECF_TRIES=1,           # number of reruns if task aborts
+                DATUM=date(),
 
                 # suite configuration variables
                 ACCOUNT=account,
@@ -480,49 +490,41 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
              ),
 
-             # Task complete if something went wrong on the previous day
-             Task("complete", Time(timing['comp']),
-                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01" ),
-                Label("run", ""),
-                Label("info", ""),
-             ),
-            
-             # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00", Time(timing['00']),
-                Edit( LAUF='00', VORHI=12, LEAD=48 ),
+#             # Main Runs per day (00, 06, 12, 18)
+#             Family("RUN_00",
+#                Edit( LAUF='00', VORHI=0, LEAD=6),
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
 
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-             Family("RUN_06", Time(timing['06']),
+             Family("RUN_06",
                 Edit( LAUF='06',VORHI=6, LEAD=6),
 
                 # add suite Families and Tasks
                 family_lbc(),
                 family_obs(),
                 family_main(),
-             ),
+              ),
 
-             Family("RUN_12", Time(timing['12']),
-                Edit( LAUF='12',VORHI=12, LEAD=48),
+#             Family("RUN_12",
+#                Edit( LAUF='12',VORHI=6, LEAD=6),
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
 
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-             Family("RUN_18", Time(timing['18']),
-                Edit( LAUF='18',VORHI=6, LEAD=6),
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+#             Family("RUN_18",
+#                Edit( LAUF='18',VORHI=6, LEAD=6),
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
              
           )
        )
@@ -533,7 +535,7 @@ defs = Defs().add(
 
 print("=> checking job creation: .ecf -> .job0");
 print(defs.check_job_creation());
-print("=> saving definition to file " + suite_name + ".def\n");
-defs.save_as_defs(suite_name + ".def");
+print("=> saving definition to file 'claef_2.def'\n");
+defs.save_as_defs("claef_2.def");
 exit(0);
 

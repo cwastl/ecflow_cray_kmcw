@@ -14,20 +14,19 @@ mem=%MEMBER%
 assimc=%ASSIMC%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 $assimc
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${ADDSURFDIR} ]] && mkdir -p ${ADDSURFDIR}
 
 RUNDIR=${ADDSURFDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
-
-typeset -Z2 acycle
-acycle=$assimc
-
-OUTDIR=${ADDSURFDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 NPROC=$EC_total_tasks
 
@@ -41,15 +40,16 @@ export DR_HOOK_SILENT=0
 export DR_HOOK_IGNORE_SIGNALS=-1
 
 # Get input data (ELSC*, namelist, binary, etc.)
-cp ${SSTEXDIR}/${date}/${run}/MEM_${mem}/AROME_SSTOK ./fort.11
-cp ${C927DIR}/${date}/${run}/MEM_${mem}/ADDSURFAROMALBC000 ./fort.12
+cp ${SSTEXDIR}/AROME_SSTOK ./fort.11
+cp ${C927DIR}/ADDSURFAROMALBC000 ./fort.12
 
 # Copy namelist
 cp ${NAMELADDSURF} fort.4
 
+ecflow_client --label=info "Addsurf"
 mpiexec -n $NPROC ${BINADDSURF} 
 
-mv fort.11 $OUTDIR/ICMSHAROM+${acycle}_addsurf
+mv fort.11 ${ADDSURFRESULTFILE}
 
 cd ${ADDSURFDIR}
 rm -rf ${RUNDIR}

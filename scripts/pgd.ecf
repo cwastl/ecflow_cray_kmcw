@@ -12,18 +12,19 @@ mem=%MEMBER%
 lagg=%VORHI%
 gl=%GL%
 
-EXP=AROM
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
 #######################################################
 
-RUNDIR=${C927DIR}/$PBS_JOBID
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${C927SURFDIR} ]] && mkdir -p ${C927SURFDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
+RUNDIR=${C927SURFDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
 
@@ -38,7 +39,7 @@ NSTROUT=1
 NEINI=0
 
 # MPI, openMP env, etc.
-export export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
+export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
 export MPI_IB_RAILS=1
 export MPI_DSM_DISTRIBUTE=1
 export MPI_DSM_VERBOSE=1
@@ -120,9 +121,10 @@ cp ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
 typeset -Z4 cstep
 cstep=$lagg
 
-cp ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
+cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
 ln -s ICMSHE927+0000 ${RUNDIR}/ICMSHE927INIT
 
+ecflow_client --label=info "Create PGD-File"
 # --- submit the job ---------------
 status=0
 time  aprun -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
@@ -134,9 +136,10 @@ ls -l
 cat NODE*
 cp NODE.001_01 ${LOGDIR}/PGD_NODE.001_01_${mem}
 cp ${RUNDIR}/PGD_Master.log /home/ms/at/kmcw/LOG/PGD_Master_${mem}.log
-cp PFE927${EXP}+0000.sfx ${OUTDIR}/PGD_${EXP}.fa
-cd ..
-rm -r ${RUNDIR}
+cp PFE927${EXP}+0000.sfx ${PGDFILE_FA}
+
+cd ${C927SURFDIR}
+rm -rf ${RUNDIR}
 
 %include <tail.h>
 

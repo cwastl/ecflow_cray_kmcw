@@ -9,8 +9,9 @@ import ecflow
 
 try:
     ci = ecflow.Client()
-    ci.suspend("/claef")  # so that we can resume manually in ecflow_ui
-    ci.replace("/claef", "claef.def")
+#    ci.load("claef_2.def")
+    ci.suspend("/claef_2")  # so that we can resume manually in ecflow_ui
+    ci.replace("/claef_2", "claef_2.def")
 
 except RuntimeError as e:
     print "(!) Failed:",   e

@@ -13,18 +13,19 @@ leadtime=%LEAD%
 
 NSLOTS=$EC_total_tasks
 
-EXP=AROM
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 999
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${PROGRIDDIR} ]] && mkdir -p ${PROGRIDDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 RUNDIR=${PROGRIDDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${PROGRIDDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
 
@@ -54,12 +55,13 @@ while (( $step <= ${leadtime} )) ; do
   typeset -Z4 cstep
   cstep=$step
 
-  if [ ! -s ${OUTDIR}/PF${EXP}000+${cstep}".grb" ] ; then
-    cp ${C001DIR}/${date}/${run}/MEM_${mem}/PF${EXP}000+${cstep} fort.11
+  if [ ! -s ${PROGRIDDIR}/CLAEF000+${cstep}".grb" ] ; then
+    cp ${C001DIR}/PF${EXP}000+${cstep} fort.11
     status=0
+    ecflow_client --label=info "Prepare CLAEF000+${cstep}.grb"
     /usr/bin/time aprun -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
     status=$?
-    mv GRIDBIZARRE ${OUTDIR}/PF${EXP}000+${cstep}".grb"
+    mv GRIDBIZARRE ${PROGRIDDIR}/CLAEF000+${cstep}".grb"
     rm -f fort.11
   fi
   (( step=${step}+1 ))

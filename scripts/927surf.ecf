@@ -12,18 +12,19 @@ mem=%MEMBER%
 lagg=%VORHI%
 gl=%GL%
 
-EXP=AROM
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
 #######################################################
 
-RUNDIR=${C927DIR}/$PBS_JOBID
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${C927SURFDIR} ]] && mkdir -p ${C927SURFDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
+RUNDIR=${C927SURFDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
 
@@ -39,7 +40,7 @@ NEINI=0
 
 # MPI, openMP env, etc.
 
-export export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
+export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
 export MPI_IB_RAILS=1
 export MPI_DSM_DISTRIBUTE=1
 export MPI_DSM_VERBOSE=1
@@ -96,19 +97,20 @@ sed -e   "s/{nproma}/$NPROMA/"\
     -e   "s/{lhisfwr}/${lhisfwr}/"\
     -e   "s/{lpgdfwr}/${lpgdfwr}/g" ${NAMELSURF} > ${RUNDIR}/fort.4
  
-if [[ ! -s ${OUTDIR}/PGD_${EXP}".fa" ]]; then
-   ln -s ${CLIMDIR}/PGD_${EXP}.fa ${OUTDIR}/PGD_${EXP}.fa
+if [[ ! -s ${PGDFILE_FA} ]]; then
+   ln -s ${CLIMDIR}/PGD_${EXP}.fa ${PGDFILE_FA}
 fi
 
-ln -s ${OUTDIR}/PGD_${EXP}.fa ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
+ln -s ${PGDFILE_FA} ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
 ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
 ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 
 typeset -Z4 cstep
 cstep=$lagg
 
-cp ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
+cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
 
+ecflow_client --label=info "creating PFE927${EXP}+0000.sfx"
 # --- submit the job ---------------
 status=0
 time aprun -n ${NPROC} ${BINMASTER} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
@@ -116,9 +118,9 @@ status=${?}
 # ----------------------------------
 
 mv NODE.001_01 ${LOGDIR}/NODE_927_000_${EXP}_${mem}
-mv PFE927${EXP}+0000.sfx ${OUTDIR}/PFE927${EXP}+0000.sfx
+mv PFE927${EXP}+0000.sfx ${C927SURFDIR}/PFE927${EXP}+0000.sfx
 
-cd ${C927DIR}
+cd ${C927SURFDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

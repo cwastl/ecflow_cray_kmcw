@@ -16,22 +16,19 @@ lagg=%VORHI%
 leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 
-n1run=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 9-10)
-n1date=$(/home/ms/at/kmcw/bin/datecalc ${date}${run} -f -t -${lagg}:00 | cut -c 1-8)
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
 #######################################################
 
-RUNDIR=${C901DIR}/$PBS_JOBID
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${COUPLDIR} ]] && mkdir -p ${COUPLDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
+RUNDIR=${COUPLDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${COUPLDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
-
-LBCDIR=${LBC901}/${date}/${run}/MEM_${mem}
-rm -fr ${RUNDIR}/*
 
 ln -sf ${BIN901} MASTER
 
@@ -58,13 +55,14 @@ while (( i <= $leadtime )) ; do
     MM_FT=$(echo ${date} | cut -c 5-6)
     ln -sf ${CLIMFILENAME_ECMWF_GLO}${MM_FT} Const.Clim
         
-    if [[ ! -s ${OUTDIR}/ICMSHBC${mem}+0${ii} ]] && [[ -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ]]
+    if [[ ! -s ${COUPLDIR}/ICMSHBC${mem}+0${ii} ]] && [[ -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ]] && [[ -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ]]
     then
 
-       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/atm.pdg.grib_${n1date}${n1run}+${ii} ICMUAa001INIT
-       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/atm.spe.grib_${n1date}${n1run}+${ii} ICMSHa001INIT
-       ln -s ${LBC901}/${date}/${run}/MEM_${mem}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
+       ln -s ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${ii} ICMUAa001INIT
+       ln -s ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${ii} ICMSHa001INIT
+       ln -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
 
+       ecflow_client --label=info "901"
       	#-- Run 901
 #	    mpiexec -n $EC_total_tasks MASTER -fd5 -aeul -vecmwf
        mpiexec -n $EC_total_tasks MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
@@ -74,6 +72,7 @@ while (( i <= $leadtime )) ; do
        if (( ${CODEREP} !=0 ))
        then
           echo "901 for ${ii} failed"
+          ecflow_client --label=error "901 for ${ii} failed"
           mv 901.out ${LOGDIR}/${mem}-901.out.${ii}
           mv 901.err ${LOGDIR}/${mem}-901.err.${ii}
           mv NODE.001_01 ${d_LOG}/${mem}-901.node.${ii}
@@ -85,20 +84,27 @@ while (( i <= $leadtime )) ; do
        cp ${NAMELADDSURFold} fort.4
 
        ln -sf ${BINADDSURF} ADDSURF
+       ecflow_client --label=info "ADDSURF"
 #set +e
        mpiexec -n $EC_total_tasks ADDSURF fort.11 fort.12
 #		aprun -n $EC_total_tasks -d $EC_threads_per_task -cc none ADDSURF fort.11 fort.12
 #set -e
        CODEREP=$?
-       mv fort.11 ${OUTDIR}/ICMSHBC${mem}+0${ii}
+       mv fort.11 ${COUPLDIR}/ICMSHBC${mem}+0${ii}
 
        if (( ${CODEREP} !=0 ))
        then
           echo "ADDSURF for ${ii} failed"
+          ecflow_client --label=error "ADDSURF for ${ii} failed"
 	      mv addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii}
           mv addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii}
 	      exit 1
        fi
+   
+    else
+
+       ecflow_client --label=info "Couplingfile already there or something is missing"
+
     fi
 
     (( i=$i+$couplfr ))
@@ -111,7 +117,7 @@ rm -f ICMUAa001INIT ICMSHa001INIT ICMGGa001INIT
 rm -f CN90xa001INIT
 rm -f Const.Clim
 
-cd ${C901DIR}
+cd ${COUPLDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

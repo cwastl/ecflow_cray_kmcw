@@ -18,18 +18,20 @@ leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
-RUNDIR=${GLDIR}/$PBS_JOBID
+[[ ! -d ${COUPLDIR} ]] && mkdir -p ${COUPLDIR}
+
+RUNDIR=${COUPLDIR}/$PBS_JOBID
 [[ ! -d $RUNDIR ]] && mkdir -p $RUNDIR
 cd $RUNDIR
 rm -rf $RUNDIR/*
-
-OUTDIR=${COUPLDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 export MALLOC_CHECK_=0
 export DR_HOOK=0                 #turn off dr_hook
@@ -40,7 +42,7 @@ LQGP=FALSE    #if true, humidity is gridpoint in output
 NHYD=TRUE    #if true, nonhydrostatic fields will be produced in output
 
 # ECMWF files and AROME climate file
-cp ${LBCGL}/${date}/${run}/MEM_${mem}/ECMWF_$mem.grb .
+cp ${LBCDIR}/ECMWF_$mem.grb .
 ln -sf ${CLIMFILENAME_ECMWF_LAE}${month} ./climate_aladin
 # Extract z, ci and sst
 grib_copy -w shortName=z/ci/sst ECMWF_$mem.grb CONST.grb
@@ -55,9 +57,10 @@ do
     typeset -Z2 jj
     jj=$j
 
-    if [ ! -s ${OUTDIR}/ICMSHBC${mem}+00${jj} ]
+    if [ ! -s ${COUPLDIR}/ICMSHBC${mem}+00${jj} ]
     then
    
+       ecflow_client --label=info "Run GL for ICMSHBC${mem}+00${jj}"
        grib_copy -w stepRange=$j ECMWF_$mem.grb ECMWF_${mem}_small.grb
 
        # Handling of the surface fields
@@ -77,11 +80,12 @@ do
        # Running the GL
        mpiexec -n 1 ${BINGL} -lbc ifs ECMWF_${mem}_small.grb -o ELSCFAROMALBC0${jj} -d -s -n gl_namel
 
-       mv ELSCFAROMALBC0${jj} ${OUTDIR}/ICMSHBC${mem}+00${jj}
+       mv ELSCFAROMALBC0${jj} ${COUPLDIR}/ICMSHBC${mem}+00${jj}
 
     else
 
        echo "File already there"
+       ecflow_client --label=info "Couplingfile already there"
 
     fi
 
@@ -89,7 +93,7 @@ do
 
 done
 
-cd ${GLDIR}
+cd ${COUPLDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>

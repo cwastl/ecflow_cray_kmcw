@@ -9,24 +9,25 @@
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
+lagg=%VORHI%
 leadtime=%LEAD%
 couplfr=%KOPPLUNG%
-assim=%ASSIM%
 assimc=%ASSIMC%
 stophy=%STOCH%
 
-EXP=AROM
-
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg $assimc
 #######################################################
 
-RUNDIR=${C001DIR}/$PBS_JOBID
-[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
-cd ${RUNDIR}
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
-OUTDIR=${C001DIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
+[[ ! -d ${C001DIR} ]] && mkdir -p ${C001DIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
+RUNDIR=${C001DIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
+cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
@@ -61,22 +62,39 @@ export DR_HOOK_IGNORE_SIGNALS=-1
 
 # fetch input files 
 
-if [ $assim == 1 ]
-then
-
-    INITFILE_3D=${MINIMDIR}/${date}/${run}/MEM_${mem}/MXMINI999+0000_blend
-    INITFILE_SURFACE=${C927DIR}/${date}/${run}/MEM_${mem}/PGD_${EXP}.fa
-    INITFILE_SFX=${CANARIDIR}/${date}/${run}/MEM_${mem}/ICMSHCYCL+0000.sfx
-
+if [ -s ${MINIMRESULTFILE} ] ; then
+   INITFILE_3D=${MINIMRESULTFILE}
+   ecflow_client --label=info "Use minimization file"
+elif [ -s ${SSTEXANAFILE} ] ; then     # use ECMWF/ARPEGE as init
+   INITFILE_3D=${SSTEXANAFILE}
+   ecflow_client --label=info "Use ECMWF file"
 else
-
-    INITFILE_3D=${C927DIR}/${date}/${run}/MEM_${mem}/ELSCF${EXP}ALBC000
-    INITFILE_SURFACE=${C927DIR}/${date}/${run}/MEM_${mem}/PGD_${EXP}.fa
-    INITFILE_SFX=${C927DIR}/${date}/${run}/MEM_${mem}/PFE927${EXP}+0000.sfx
-
+   echo "No INITFILE_3D found"
+   ecflow_client --label=error "No INITFILE_3D found"
+   exit 90
 fi
 
-cp ${C927DIR}/${date}/${run}/MEM_${mem}/ELSC*${EXP}* .
+if [ -s ${CANARIANAFILESURF} ] ; then            # if CANARI output is available
+   INITFILE_SFX=${CANARIANAFILESURF}
+   ecflow_client --label=info "Use canari file"
+elif [ -s ${SOILGUESSFILE1} ] ; then
+   INITFILE_SFX=${SOILGUESSFILE1}
+   ecflow_client --label=info "Use old soil file 1"
+elif [ -s ${SOILGUESSFILE2} ] ; then
+   INITFILE_SFX=${SOILGUESSFILE2}
+   ecflow_client --label=info "Use old soil file 2"
+elif [ -s ${C927SURFDIR}/PFE927${EXP}+0000.sfx ] ; then
+   INITFILE_SFX=${C927SURFDIR}/PFE927${EXP}+0000.sfx
+   ecflow_client --label=info "Use ECMWF soil"
+else
+   echo "No INITFILE_SFX found"
+   ecflow_client --label=error "No INITFILE_SFX found"
+   exit 91
+fi
+
+INITFILE_SURFACE=${PGDFILE_FA}
+
+cp ${C927DIR}/ELSC*${EXP}* .
 cp ${INITFILE_3D} ICMSH${EXP}INIT
 
 cp ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
@@ -140,13 +158,10 @@ else
        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
 fi
-
+ecflow_client --label=info "Run 001"
 /usr/bin/time aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_${mem}.log 2>&1
 
 mv NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} 
-
-typeset -Z2 acycle2
-acycle2=${assimc}
 
 #ii = 0                        #For B-Matrix calculation
 #while [ $ii -le 6 ]
@@ -155,10 +170,17 @@ acycle2=${assimc}
 #   let "ii = $ii + 1"
 #done
 
-mv ICMSH${EXP}+00${acycle2} ${OUTDIR}/ICMSH${EXP}+00${acycle2}
-mv ICMSH${EXP}+00${acycle2}.sfx ${OUTDIR}/ICMSH${EXP}+00${acycle2}.sfx
+ii=${assimc}                       #For assimilation cycle
+while [ $ii -le ${leadtime} ]
+do
+   typeset -Z2 jj
+   jj=$ii
+   cp ICMSH${EXP}+00${jj} ${C001DIR}
+   cp ICMSH${EXP}+00${jj}.sfx ${C001DIR}
+   let "ii = $ii + $assimc"
+done
 
-mv PF${EXP}000+* ${OUTDIR}
+mv PF${EXP}000+* ${C001DIR}
 
 rm -f ELSC*${EXP}*
 cd ${C001DIR}

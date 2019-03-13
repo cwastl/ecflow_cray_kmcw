@@ -16,8 +16,11 @@ assim=%ASSIM%
 gl=%GL%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999 
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
 NPROMA=-32
 NPROC=$EC_total_tasks
@@ -29,14 +32,13 @@ NSTRIN=1
 NSTROUT=1
 
 NEINI=0
-EXP=AROM
 
 addsurf=0
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
 # MPI, openMP env, etc.
 
-export export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
+export GRIB_SAMPLES_PATH=/usr/local/apps/grib_api/1.10.0/INTEL/140/ifs_samples/grib1
 export MPI_IB_RAILS=1
 export MPI_DSM_DISTRIBUTE=1
 export MPI_DSM_VERBOSE=1
@@ -62,12 +64,13 @@ fi
 
 #--- Set up for 927
 # ---- Create working directory
+
+[[ ! -d ${C927DIR} ]] && mkdir -p ${C927DIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
 RUNDIR=${C927DIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
-
-OUTDIR=${C927DIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 rm -fr ${RUNDIR}/*
 
@@ -100,6 +103,8 @@ while (( i <= $leadtime )) ; do
 
   typeset -Z3 l
   l=$k
+
+  ecflow_client --label=info "Creating ELSCFAROMALBC${l}"
 
   if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]] ; then
   
@@ -134,7 +139,8 @@ while (( i <= $leadtime )) ; do
   fi    
 
   rm -f ICMSHE927INIT
-  ln -s ${COUPLDIR}/${date}/${run}/MEM_${mem}/ICMSHBC${mem}+${j} ICMSHE927INIT
+  ln -s ${COUPLDIR}/ICMSHBC${mem}+${j} ICMSHE927INIT
+ 
 
   status=0
   aprun -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_${mem}.log 2>&1 
@@ -143,12 +149,12 @@ while (( i <= $leadtime )) ; do
   if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]]; then
      
      addsurf=1   
-     mv PFE927AROM+0000 ${OUTDIR}/ADDSURFAROMALBC000
+     mv PFE927AROM+0000 ${C927DIR}/ADDSURFAROMALBC000
      mv NODE.001_01 ${LOGDIR}/NODE_ADDSURF_00${k}_${mem}
 
   else
  
-     mv PFE927AROM+0000 ${OUTDIR}/ELSCFAROMALBC${l}
+     mv PFE927AROM+0000 ${C927DIR}/ELSCFAROMALBC${l}
      mv NODE.001_01 ${LOGDIR}/NODE_927_${l}_${mem}
      (( i=$i+$couplfr ))
      (( k=$k+1 ))

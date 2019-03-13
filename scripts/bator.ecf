@@ -12,48 +12,18 @@ date=%DATUM%
 run=%LAUF%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date 999 999 999
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
 
 LNATIONAL=.TRUE.
 LMETAROBS=.FALSE.
 LHYDROOBS=.FALSE.
 LSCHIWMOBS=.TRUE.
 
-hh1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 9-10)
-date1=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:00 | cut -c 1-8)
-hh2=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:00 | cut -c 9-10)
-date2=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:00 | cut -c 1-8)
-hh3=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -2:00 | cut -c 9-10)
-date3=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -2:00 | cut -c 1-8)
-hh4=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +2:00 | cut -c 9-10)
-date4=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +2:00 | cut -c 1-8)
-hh5=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -3:00 | cut -c 9-10)
-date5=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -3:00 | cut -c 1-8)
-hh6=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +3:00 | cut -c 9-10)
-date6=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +3:00 | cut -c 1-8)
-ficleft=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t -1:30 | cut -c 1-12)
-ficright=$(/home/ms/at/kmcw/bin/datecalc $date$run -f -t +1:30 | cut -c 1-12)
-
-OBSDIR=${OBSERVDIR}/${date}/${run}
-OBSFILE1=$OBSDIR/obsoul_taw_${date}_${run}0000.asc
-OBSFILE2=$OBSDIR/obsoul_${date}_${run}0000.asc
-OBSFILE3=$OBSDIR/obs_short_${date}${run}.tar
-OBSFILE3h1=$OBSDIR/obs_short_${date1}${hh1}.tar
-OBSFILE3h2=$OBSDIR/obs_short_${date2}${hh2}.tar
-OBSFILE3h3=$OBSDIR/obs_short_${date3}${hh3}.tar
-OBSFILE3b=$OBSDIR/obs_foreign_${date}${run}.tar
-OBSFILE3bh1=$OBSDIR/obs_foreign_${date1}${hh1}.tar
-OBSFILE3bh2=$OBSDIR/obs_foreign_${date2}${hh2}.tar
-OBSFILE3bh3=$OBSDIR/obs_foreign_${date3}${hh3}.tar
-OBSFILE4=$OBSDIR/obsoul_temp_${date}_${run}0000.asc
-OBSFILE4a=$OBSDIR/obsoul_pseudosounding_${date}_${run}0000.asc
-OBSFILE5=$OBSDIR/obsoul_pilot_${date}_${run}0000.asc
-OBSFILE6=$OBSDIR/obsoul_ship_${date}_${run}0000.asc
-OBSFILE7=$OBSDIR/obsoul_profiler_${date}_${run}0000.asc
-OBSFILE13=$OBSDIR/obsoul_metar_${date}_${run}0000.asc
-OBSFILE14=$OBSDIR/obsoul_hydro_${date}_${run}0000.asc
-OBSFILE14a=$OBSDIR/obsoul_schiwm_${date}_${run}0000.asc
+[[ ! -d ${BATORDIR} ]] && mkdir -p ${BATORDIR}
 
 RUNDIR=${BATORDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
@@ -61,21 +31,22 @@ cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-OUTDIR=${BATORDIR}/${date}/${run}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
-
 cd ${OBSDIR}
 
 if [ -s $OBSFILE1 ] ; then
   export OBSFILEZAMG=$OBSFILE1
+  ecflow_client --label=info "ZAMG SYNOP+TAWES file there"
 elif [ -s ${OBSFILE2} ] ; then
   echo "no ZAMG SYNOP+TAWES file try synop only"
+  ecflow_client --label=info "No ZAMG SYNOP+TAWES file try synop only"
   cp ${OBSFILE2} $OBSFILE1
   export OBSFILEZAMG=$OBSFILE1
 else
   touch $OBSFILE1
   export OBSFILEZAMG=$OBSFILE1
   echo "no ZAMG OBS file at all"
+  ecflow_client --label=info "No ZAMG OBS file at all - try only OPLACE"
+  
 fi
 
 if [ -s $OBSFILE3 ] ;then
@@ -113,16 +84,19 @@ if [ -s $OBSFILE3 ] ;then
     touch ${OBSDIR}/obsoul_1_xxxxxx_xx_${date}${run}
     export OBSFILEOPLACE=${OBSDIR}/obsoul_1_xxxxxx_xx_${date}${run}
     echo "no proper OPLACE OBS file"
+    ecflow_client --label=info "No proper OPLACE OBS file"
   fi
 
 else
   echo "no OPLACE OBS file at all"
+  ecflow_client --label=info "No OPLACE file at all"
   touch ${OBSDIR}/obsoul_1_xxxxxx_xx_${date}${run}
   export OBSFILEOPLACE=${OBSDIR}/obsoul_1_xxxxxx_xx_${date}${run}
 fi
 
 ###merge observation files if both available###########
 if [ -s ${OBSFILEOPLACE} ] && [ -s ${OBSFILEZAMG} ] ; then
+  ecflow_client --label=info "Merging OBSFILES"
   ls ${OBSFILEOPLACE} > LISTFILE
   ls ${OBSFILEZAMG} >> LISTFILE
 
@@ -156,22 +130,23 @@ if [ -s ${OBSFILEOPLACE} ] && [ -s ${OBSFILEZAMG} ] ; then
   rm -f LISTFILE
   rm -f ${OBSDIR:="xxx"}/obsoul_1_xxxxxx_xx_*
 
-  mv OBSFILE ${OUTDIR}/
+  mv OBSFILE ${BATORDIR}/
 
 elif [ -s $OBSFILEZAMG ] ; then
-  cp ${OBSFILEZAMG} ${OUTDIR}/OBSFILE
+  cp ${OBSFILEZAMG} ${BATORDIR}/OBSFILE
 elif [ -s ${OBSFILEOPLACE} ] ; then
-  cp ${OBSFILEOPLACE} ${OUTDIR}/OBSFILE
+  cp ${OBSFILEOPLACE} ${BATORDIR}/OBSFILE
 else
   echo "no obsfile at all - exit 44"
+  ecflow_client --label=error "No obsfile at all"
   exit 44
 fi
 
 ##########################################################
 ###create ficdatefile with assimilation window ##########
-rm -f ${OUTDIR}/ficdate
-echo "${ficleft}00" > ${OUTDIR}/ficdate
-echo "${ficright}00" >> ${OUTDIR}/ficdate
+rm -f ${BATORDIR}/ficdate
+echo "${ficleft}00" > ${BATORDIR}/ficdate
+echo "${ficright}00" >> ${BATORDIR}/ficdate
 ##########################################################
 
 cd ${RUNDIR}
@@ -247,16 +222,17 @@ export ODB_ECMA_CREATE_POOLMASK=1
 export ODB_ECMA_POOLMASK_FILE=$RUNDIR/$out_BASE/ECMA.poolmask
 
 # get input data (ELSC*, namelist, binary, etc.)
-cp ${OUTDIR}/OBSFILE ./OBSOUL
+cp ${BATORDIR}/OBSFILE ./OBSOUL
 cp ${CLIMDIR}/LISTE_NOIRE_DIAP .
 cp ${IOASSIGNBIN} ./ioassign
 cp ${NAMELLAMFLAG} ./NAM_lamflag
 cp ${NAMELBATOR} ./NAMELIST
 cp ${CIOASSIGNBIN} ./create_ioassign
-cp ${OUTDIR}/ficdate ./ficdate
+cp ${BATORDIR}/ficdate ./ficdate
 cp ${CLIMFILENAME_BATOR} param.cfg
 cp ${CLIMDIR}/LIST_GPSSOL list_gpssol 
 
+ecflow_client --label=info "Create IOASSIGN"
 ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL}
 
 mpiexec -n $NPROC $BATORBIN 
@@ -276,6 +252,7 @@ liste=${liste}" -t "conv
 
 cp $MERGEBIN ./merge_ioassign
 
+ecflow_client --label=info "Merge IOASSIGN"
 ./merge_ioassign -d $RUNDIR ${liste}
 
 unset liste
@@ -293,14 +270,15 @@ nb=1
 ln -s $SHUFFLEBIN shuffle
 
 #aprun -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na
+ecflow_client --label=info "Shuffle"
 mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na
 
 # save merged bases (including sub bases)
 tar cvf ECMA_merged.tar $out_BASE ECMA.*
 
-mv ecma_raw.tar $OUTDIR/ecma_raw.tar
-mv ECMA_merged.tar $OUTDIR/ECMA_merged.tar
-cp $out_BASE/ECMA.dd $OUTDIR/ECMA.dd
+mv ecma_raw.tar ${BATORODBFILE}
+mv ECMA_merged.tar ${BATORDIR}/ECMA_merged.tar
+cp $out_BASE/ECMA.dd ${BATORDIR}/ECMA.dd
 
 cd ${BATORDIR}
 

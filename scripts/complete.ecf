@@ -1,0 +1,43 @@
+#!/bin/ksh
+#
+# Script to set suite to complete if date is old
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+sname=%SUITENAME%
+
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh 999 $date 999 999 999
+#######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date}"
+
+curdate=$(date +%%Y%%m%%d)           #current day
+
+# link TODAY directory
+rm -f ${MY_DIR}/DATA/TODAY
+[[ ! -d ${MY_DIR}/DATA/${curdate} ]] && mkdir -p ${MY_DIR}/DATA/${curdate}
+ln -sf ${MY_DIR}/DATA/${curdate} ${MY_DIR}/DATA/TODAY
+
+if [ ${date} -eq ${curdate} ]
+then
+
+   echo "Everything ok"
+   ecflow_client --label=info "Everything ok"
+
+else
+
+   echo "date wrong - set suite "  ${sname} " complete"
+   ecflow_client --label=info "date wrong - set suite " $sname " complete"
+   ecflow_client --force=complete recursive /${sname}/RUN_00
+   ecflow_client --force=complete recursive /${sname}/RUN_06
+   ecflow_client --force=complete recursive /${sname}/RUN_12
+   ecflow_client --force=complete recursive /${sname}/RUN_18
+
+fi
+
+%include <tail.h>

@@ -1,29 +1,19 @@
 #!/bin/ksh
 
-date=20190207
-run=00
-lagg=6
-couplfr=6
-leadtime=30
-mem=01
+date=20190312
+curdate=$(date +%Y%m%d)
+sname=claef
 
-actdate=$(date '+%Y%m%d');
-actdate1=$(/home/ms/at/kmcw/bin/datecalc ${actdate} -f -t -1 | cut -c 1-8)
+echo $curdate $date
 
-echo $actdate
-echo $actdate1
-
-echo $date
-
-if [[ $date == $actdate || $date == $actdate1 ]]
+if [ ${date} -eq ${curdate} ]
 then
 
-   HIST=.FALSE.
+   echo "Everything ok"
 
 else
 
-   HIST=.TRUE.
+   echo "date wrong - set suite"  ${sname} "complete" 
 
 fi
 
-echo $HIST

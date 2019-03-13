@@ -6,6 +6,7 @@ suite = "claef"
 runs = ["00","06","12","18"]
 famil = ["lbc","obs","main"]
 members = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"]
+tasks_comp = ["complete"]
 tasks_lbc = ["getlbc","901","getlbc_gl","gl"]
 tasks_obs = ["getobs","bator","bator3D"]
 tasks_main = ["927","pgd","927surf","sstex","addsurf","screen", "screensurf","canari","minim","001","progrid"]
@@ -14,6 +15,11 @@ if not os.path.exists("/home/ms/at/kmcw/ecf/" + suite):
     os.mkdir("/home/ms/at/kmcw/ecf/" + suite)
 
 os.chdir("/home/ms/at/kmcw/ecf/" + suite)
+
+for t in tasks_comp:
+
+    if not os.path.lexists(t + ".ecf"):
+        os.symlink("/home/ms/at/kmcw/ecf/scripts/" + t + ".ecf", t + ".ecf")
 
 for r in runs:
 

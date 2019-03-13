@@ -12,8 +12,14 @@ mem=%MEMBER%
 assimc=%ASSIMC%
 
 ###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 $assimc
 #######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${SCREENDIR} ]] && mkdir -p ${SCREENDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 # Create working directory
 RUNDIR=${SCREENDIR}/$PBS_JOBID
@@ -21,9 +27,6 @@ RUNDIR=${SCREENDIR}/$PBS_JOBID
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
-
-OUTDIR=${SCREENDIR}/${date}/${run}/MEM_${mem}
-[[ ! -d ${OUTDIR} ]] && mkdir -p ${OUTDIR}
 
 ODB_DATAPATH_CCMA=${RUNDIR}/CCMA
 ODB_SRCPATH_RSTBIAS=$RUNDIR/RSTBIAS
@@ -125,18 +128,14 @@ cp rtcoef_noaa_17_hirs.bin rtcoef_noaa_18_hirs.bin
 ln -s scat.cmod5.table fort.36
 cp errgrib_scr errgrib
 
-typeset -Z2 acycle
-acycle=${assimc}
-
 #cp $CLIMDIR/table? .
 cp ${VARBCFILE}${run} ./VARBC.cycle
-cp ${ADDSURFDIR}/${date}/${run}/MEM_${mem}/ICMSHAROM+${acycle}_addsurf ICMSHSCREINIT
-cp ${BATORDIR}/${date}/${run}/ECMA_merged.tar ./ECMA_merged.tar
+cp ${ADDSURFRESULTFILE} ICMSHSCREINIT
+cp ${BATORDIR}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
 
-status0=0
+ecflow_client --label=info "Create IOASSIGN"
 ./create_ioassign -lCCMA -n$NPROC
-status0=$?
 cp CCMA.IOASSIGN ./CCMA/CCMA.IOASSIGN
 ln -s CCMA.IOASSIGN ./CCMA/IOASSIGN.CCMA
 cp ./CCMA/CCMA.IOASSIGN ./CCMA/IOASSIGN
@@ -166,6 +165,7 @@ sed -e "s/{NBPROC}/${NPROC}/" \
     -e "s/{NPRGPNS}/${NPRGPNS}/" $NAMELSCREEN > fort.4
 
 # Humidity -> spectral (because of LSPRT)
+ecflow_client --label=info "Change humidity to spectral"
 module load python/2.7.12-01
 fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
 fa_gp2sp.py medusa_worm
@@ -174,13 +174,17 @@ rm -rf medusa_worm.allsp
 
 # Run screening config 002
 #aprun -n $NPROC $MASTERBIN
+ecflow_client --label=info "Screensurf"
 aprun -n $NPROC ${BINMASTER} #tu je onaj blacklist geowinda popravljen
 
-(($? != 0 )) && exit 1
+if (($? != 0 ))then
+  ecflow_client --label=error "Error screening"
+  exit 1
+fi
 
 # Distribute output (log files, NODE file, ODB file, VARBC file)
 tar cvf ECMA_surf.tar ECMA*
-mv ECMA_surf.tar ${OUTDIR}
+mv ECMA_surf.tar ${SCREENSURFRESULTFILE}
 mv NODE.001_01 ${LOGDIR}/NODE_SCREEN_SURF_${date}${run}_${mem}
 
 cd ${SCREENDIR}
