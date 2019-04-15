@@ -7,7 +7,7 @@ suite claef_2
   edit ECF_LOGHOST 'cca'
   edit ECF_MICRO '%'
   edit ECF_JOB_CMD '/usr/local/apps/schedule/1.4/bin/schedule kmcw cca %ECF_JOB% %ECF_JOBOUT%'
-  edit DATUM '20190313'
+  edit DATUM '20190411'
   edit ECF_HOME '/home/ms/at/kmcw/ecf'
   edit ECF_LOGPORT '36652'
   edit ECF_OUT '/scratch/ms/at/kmcw/ECF'
@@ -24,9 +24,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc01'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '01'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -48,6 +49,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl01'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '01'
           edit WALLT '01'
@@ -72,9 +74,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc02'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '02'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -96,6 +99,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl02'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '02'
           edit WALLT '01'
@@ -120,9 +124,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc03'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '03'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -144,6 +149,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl03'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '03'
           edit WALLT '01'
@@ -168,9 +174,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc04'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '04'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -192,6 +199,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl04'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '04'
           edit WALLT '01'
@@ -216,9 +224,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc05'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '05'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -240,6 +249,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl05'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '05'
           edit WALLT '01'
@@ -264,9 +274,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc06'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '06'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -288,6 +299,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl06'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '06'
           edit WALLT '01'
@@ -312,9 +324,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc07'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '07'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -336,6 +349,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl07'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '07'
           edit WALLT '01'
@@ -360,9 +374,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc08'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '08'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -384,6 +399,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl08'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '08'
           edit WALLT '01'
@@ -408,9 +424,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc09'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '09'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -432,6 +449,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl09'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '09'
           edit WALLT '01'
@@ -456,9 +474,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc10'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '10'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -480,6 +499,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl10'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '10'
           edit WALLT '01'
@@ -504,9 +524,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc11'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '11'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -528,6 +549,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl11'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '11'
           edit WALLT '01'
@@ -552,9 +574,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc12'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '12'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -576,6 +599,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl12'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '12'
           edit WALLT '01'
@@ -600,9 +624,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc13'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '13'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -624,6 +649,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl13'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '13'
           edit WALLT '01'
@@ -648,9 +674,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc14'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '14'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -672,6 +699,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl14'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '14'
           edit WALLT '01'
@@ -696,9 +724,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc15'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '15'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -720,6 +749,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl15'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '15'
           edit WALLT '01'
@@ -744,9 +774,10 @@ suite claef_2
           complete :GL == 1
           trigger :GL == 0
           edit NAME 'getlbc16'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '16'
-          edit WALLT '01'
+          edit WALLT '02'
           edit NP '1'
           edit CLASS 'ns'
           label run ""
@@ -768,6 +799,7 @@ suite claef_2
           complete :GL == 0
           trigger :GL == 1
           edit NAME 'getlbcgl16'
+          edit SUITENAME 'claef_2'
           edit KOPPLUNG '6'
           edit MEMBER '16'
           edit WALLT '01'
@@ -823,6 +855,7 @@ suite claef_2
     family main
       edit ASSIM '1'
       edit GL '0'
+      edit LEADT '48'
       family MEM_01
         task 927
           trigger :GL == 1 and ../../lbc/MEM_01/gl == complete or :GL == 0 and ../../lbc/MEM_01/901 == complete
@@ -920,22 +953,37 @@ suite claef_2
           edit NAME '001_01'
           edit KOPPLUNG '6'
           edit MEMBER '01'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid01'
+          edit MEMBER '01'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '01'
-          edit WALLT '01'
-          edit NAME 'progrid01'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib01'
+          edit MEMBER '01'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_02
         task 927
@@ -1034,22 +1082,37 @@ suite claef_2
           edit NAME '001_02'
           edit KOPPLUNG '6'
           edit MEMBER '02'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid02'
+          edit MEMBER '02'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '02'
-          edit WALLT '01'
-          edit NAME 'progrid02'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib02'
+          edit MEMBER '02'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_03
         task 927
@@ -1148,22 +1211,37 @@ suite claef_2
           edit NAME '001_03'
           edit KOPPLUNG '6'
           edit MEMBER '03'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid03'
+          edit MEMBER '03'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '03'
-          edit WALLT '01'
-          edit NAME 'progrid03'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib03'
+          edit MEMBER '03'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_04
         task 927
@@ -1262,22 +1340,37 @@ suite claef_2
           edit NAME '001_04'
           edit KOPPLUNG '6'
           edit MEMBER '04'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid04'
+          edit MEMBER '04'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '04'
-          edit WALLT '01'
-          edit NAME 'progrid04'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib04'
+          edit MEMBER '04'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_05
         task 927
@@ -1376,22 +1469,37 @@ suite claef_2
           edit NAME '001_05'
           edit KOPPLUNG '6'
           edit MEMBER '05'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid05'
+          edit MEMBER '05'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '05'
-          edit WALLT '01'
-          edit NAME 'progrid05'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib05'
+          edit MEMBER '05'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_06
         task 927
@@ -1490,22 +1598,37 @@ suite claef_2
           edit NAME '001_06'
           edit KOPPLUNG '6'
           edit MEMBER '06'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid06'
+          edit MEMBER '06'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '06'
-          edit WALLT '01'
-          edit NAME 'progrid06'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib06'
+          edit MEMBER '06'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_07
         task 927
@@ -1604,22 +1727,37 @@ suite claef_2
           edit NAME '001_07'
           edit KOPPLUNG '6'
           edit MEMBER '07'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid07'
+          edit MEMBER '07'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '07'
-          edit WALLT '01'
-          edit NAME 'progrid07'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib07'
+          edit MEMBER '07'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_08
         task 927
@@ -1718,22 +1856,37 @@ suite claef_2
           edit NAME '001_08'
           edit KOPPLUNG '6'
           edit MEMBER '08'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid08'
+          edit MEMBER '08'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '08'
-          edit WALLT '01'
-          edit NAME 'progrid08'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib08'
+          edit MEMBER '08'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_09
         task 927
@@ -1832,22 +1985,37 @@ suite claef_2
           edit NAME '001_09'
           edit KOPPLUNG '6'
           edit MEMBER '09'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid09'
+          edit MEMBER '09'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '09'
-          edit WALLT '01'
-          edit NAME 'progrid09'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib09'
+          edit MEMBER '09'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_10
         task 927
@@ -1946,22 +2114,37 @@ suite claef_2
           edit NAME '001_10'
           edit KOPPLUNG '6'
           edit MEMBER '10'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid10'
+          edit MEMBER '10'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '10'
-          edit WALLT '01'
-          edit NAME 'progrid10'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib10'
+          edit MEMBER '10'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_11
         task 927
@@ -2060,22 +2243,37 @@ suite claef_2
           edit NAME '001_11'
           edit KOPPLUNG '6'
           edit MEMBER '11'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid11'
+          edit MEMBER '11'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '11'
-          edit WALLT '01'
-          edit NAME 'progrid11'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib11'
+          edit MEMBER '11'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_12
         task 927
@@ -2174,22 +2372,37 @@ suite claef_2
           edit NAME '001_12'
           edit KOPPLUNG '6'
           edit MEMBER '12'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid12'
+          edit MEMBER '12'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '12'
-          edit WALLT '01'
-          edit NAME 'progrid12'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib12'
+          edit MEMBER '12'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_13
         task 927
@@ -2288,22 +2501,37 @@ suite claef_2
           edit NAME '001_13'
           edit KOPPLUNG '6'
           edit MEMBER '13'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid13'
+          edit MEMBER '13'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '13'
-          edit WALLT '01'
-          edit NAME 'progrid13'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib13'
+          edit MEMBER '13'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_14
         task 927
@@ -2402,22 +2630,37 @@ suite claef_2
           edit NAME '001_14'
           edit KOPPLUNG '6'
           edit MEMBER '14'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid14'
+          edit MEMBER '14'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '14'
-          edit WALLT '01'
-          edit NAME 'progrid14'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib14'
+          edit MEMBER '14'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_15
         task 927
@@ -2516,22 +2759,37 @@ suite claef_2
           edit NAME '001_15'
           edit KOPPLUNG '6'
           edit MEMBER '15'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid15'
+          edit MEMBER '15'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '15'
-          edit WALLT '01'
-          edit NAME 'progrid15'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib15'
+          edit MEMBER '15'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
       family MEM_16
         task 927
@@ -2630,22 +2888,37 @@ suite claef_2
           edit NAME '001_16'
           edit KOPPLUNG '6'
           edit MEMBER '16'
+          edit STEPS15 '0'
           edit WALLT '06'
           edit NP '480'
-          edit STOCH '1'
+          edit STOCH '0'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
         task progrid
+          complete :LEAD < :LEADT
           trigger 001  == complete
+          edit NAME 'progrid16'
+          edit MEMBER '16'
+          edit STEPS15 '0'
+          edit WALLT '01'
           edit NP '1'
           edit CLASS 'np'
-          edit MEMBER '16'
-          edit WALLT '01'
-          edit NAME 'progrid16'
           label run ""
           label info ""
+        task addgrib
+          complete :LEAD < :LEADT
+          trigger progrid  == complete
+          edit NAME 'addgrib16'
+          edit MEMBER '16'
+          edit STEPS15 '0'
+          edit WALLT '01'
+          edit NP '1'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
     endfamily
   endfamily

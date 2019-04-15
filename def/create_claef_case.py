@@ -28,12 +28,21 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 ### top level suite settings ###
 ################################
 
+#suite name
+suite_name = "claef_2"
+
 #ensemble members
 members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 #members = [13]
 
+# forecasting range
+fcst = 48
+
 # coupling frequency
 couplf = 6
+
+# use 15min output for precipitation
+step15 = False
 
 # use GL Tool yes/no, if no - 901 is used
 gl = False
@@ -48,7 +57,7 @@ seda = True     #surface eda
 enjk = True
 
 # use stochastic physics model error representation yes/no
-stophy = True
+stophy = False
 
 # SBU account, cluster and user name, logport
 account = "atlaef";
@@ -56,23 +65,16 @@ host    = "cca";
 user    = "kmcw";
 logport = 36652;
 
-# main runs time schedule
-timing = {
-  '00' : '02:30',
-  '06' : '08:30',
-  '12' : '14:30',
-  '18' : '20:30',
-}
-
 # debug mode (1 - yes, 0 - no)
 debug = 0;
 
+anzmem = len(members)
 # user date (default is system date)
-user_date = {
-  'dd'  : '13',
-  'mm'  : '03',
-  'yyyy': '2019'
-}
+#user_date = {
+#  'dd'  : '05',
+#  'mm'  : '07',
+#  'yyyy': '2016'
+#}
 
 ###########################################
 #####define Families and Tasks#############
@@ -88,7 +90,7 @@ def date():
     except NameError:
        print("=> current date")
        return now.strftime('%Y%m%d')
-          
+
 def family_lbc():
 
     # Family LBC
@@ -111,9 +113,10 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbc{:02d}".format(mem),
-                   WALLT="01",
+                   WALLT="02",
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -149,6 +152,7 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
                    WALLT="01",
@@ -246,7 +250,8 @@ def family_main():
 
       Edit(
          ASSIM=assimi,
-         GL=gl),
+         GL=gl,
+         LEADT=fcst),
 
       # Family MEMBER
       [
@@ -426,6 +431,7 @@ def family_main():
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
                      STOCH=stophy,
+                     STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
@@ -439,15 +445,36 @@ def family_main():
             [
                Task("progrid",
                   Trigger("001  == complete"),
+                  Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
+                     STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
                   Label("info", ""),
+               )
+            ],
+
+            # Task ADDGRIB
+            [
+               Task("addgrib",
+                  Trigger("progrid  == complete"),
+                  Complete(":LEAD < :LEADT"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='np',
+                     STEPS15=step15,
+                     NAME="addgrib{:02d}".format(mem),
+                     WALLT="01"                #walltime in hours
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+                  Label("error", ""),
                )
             ],
 
@@ -464,7 +491,7 @@ print("\n=> creating suite definition\n");
 defs = Defs().add(
 
           # Suite C-LAEF
-          Suite("claef_2").add(
+          Suite(suite_name).add(
 
              Edit(
 
@@ -490,35 +517,36 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
              ),
 
-#             # Main Runs per day (00, 06, 12, 18)
+             # Main Runs per day (00, 06, 12, 18)
 #             Family("RUN_00",
-#                Edit( LAUF='00', VORHI=0, LEAD=6),
+#                Edit( LAUF='00', VORHI=0, LEAD=fcst),
 #
-#                # add suite Families and Tasks
+#                # add suite Families and Task
 #                family_lbc(),
 #                family_obs(),
 #                family_main(),
 #             ),
 
              Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=6),
+                Edit( LAUF='06',VORHI=6, LEAD=assimc),
 
-                # add suite Families and Tasks
+               # add suite Families and Tasks
                 family_lbc(),
                 family_obs(),
                 family_main(),
               ),
 
 #             Family("RUN_12",
-#                Edit( LAUF='12',VORHI=6, LEAD=6),
+#                Edit( LAUF='12',VORHI=00, LEAD=fcst),
 #
 #                # add suite Families and Tasks
 #                family_lbc(),
 #                family_obs(),
 #                family_main(),
+#                ),
 
 #             Family("RUN_18",
-#                Edit( LAUF='18',VORHI=6, LEAD=6),
+#                Edit( LAUF='18',VORHI=6, LEAD=assimc),
 #
 #                # add suite Families and Tasks
 #                family_lbc(),
@@ -535,7 +563,7 @@ defs = Defs().add(
 
 print("=> checking job creation: .ecf -> .job0");
 print(defs.check_job_creation());
-print("=> saving definition to file 'claef_2.def'\n");
-defs.save_as_defs("claef_2.def");
+print("=> saving definition to file " + suite_name + ".def\n");
+defs.save_as_defs(suite_name + ".def");
 exit(0);
 

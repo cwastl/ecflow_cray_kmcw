@@ -9,6 +9,8 @@
 date=%DATUM%
 run=%LAUF%
 
+set +e
+
 ###########Run setup script for environment############
 . /home/ms/at/kmcw/SCR/setup.ksh $run $date 999 999 999
 #######################################################
@@ -61,7 +63,7 @@ ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../mo
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date1}/obsoul_amdar_${date1}_${hh1}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date2}/obsoul_amdar_${date2}_${hh2}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date3}/obsoul_amdar_${date3}_${hh3}0000.asc -overwrite -verbose 
-ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
+#ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_pilot_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_schiwm_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_ship_${date}_${run}0000.asc -overwrite -verbose 

@@ -96,7 +96,7 @@ ln -s ${ECOCLIMAPII} .
 i=$lagg
 k=0
 (( leadtime=$leadtime+$lagg))
-while (( i <= $leadtime )) ; do
+while (( $i <= $leadtime )) ; do
 
   typeset -Z4 j
   j=$i
@@ -149,25 +149,24 @@ while (( i <= $leadtime )) ; do
   if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]]; then
      
      addsurf=1   
-     mv PFE927AROM+0000 ${C927DIR}/ADDSURFAROMALBC000
-     mv NODE.001_01 ${LOGDIR}/NODE_ADDSURF_00${k}_${mem}
+     rename PFE927AROM+0000 ${C927DIR}/ADDSURFAROMALBC000 PFE927AROM+0000
+     rename NODE.001_01 ${LOGDIR}/NODE_ADDSURF_00${k}_${mem} NODE.001_01
 
   else
  
-     mv PFE927AROM+0000 ${C927DIR}/ELSCFAROMALBC${l}
-     mv NODE.001_01 ${LOGDIR}/NODE_927_${l}_${mem}
+     rename PFE927AROM+0000 ${C927DIR}/ELSCFAROMALBC${l} PFE927AROM+0000
+     rename NODE.001_01 ${LOGDIR}/NODE_927_${l}_${mem} NODE.001_01
      (( i=$i+$couplfr ))
      (( k=$k+1 ))
 
   fi 
 
-  rm ncf* ifs*
+  rm -f ncf* ifs*
 
 
 done
 
 cd ${C927DIR}
-rm -rf ${RUNDIR}
 
 %include <tail.h>
 

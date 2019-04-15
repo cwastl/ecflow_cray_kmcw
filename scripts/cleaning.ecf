@@ -1,0 +1,62 @@
+#!/bin/ksh
+#
+# Script for cleaning
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+amem=%ANZMEMB%
+assimc=%ASSIMC%
+
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date 999 999 $assimc
+#######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
+
+   ecflow_client --label=info "Date/run exists"
+   cd ${MY_DIR}/DATA/${p1date}/${p1run}
+   rm -rf BATOR BATOR3D OBSERVATIONS 
+
+   i=1
+   while (( ${i} <= ${amem} )) ; do
+
+      typeset -Z2 ii
+      ii=$i
+
+      if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii} ] ; then
+
+         cd ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}
+         rm -rf 927 927SURF ADDSURF CANARI COUPL LBC MINIMIZATION PROGRID SCREENING SSTEX
+      
+         if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}/001 ] ; then
+ 
+            cd ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}/001
+            find . -mindepth 1 ! -name "ICMSH*" | xargs rm -rf
+        
+         fi 
+
+      fi
+
+      (( i=${i}+1 ))   
+
+   done
+
+else
+
+   ecflow_client --label=info "Date/run does not exist"
+
+fi
+
+
+[[ -d ${MY_DIR}/DATA/${p9date}/${p9run} ]] && rm -rf ${MY_DIR}/DATA/${p9date}/${p9run}
+
+[[ -d ${MY_DIR}/DATA/${psdate} ]] && rm -rf ${MY_DIR}/DATA/${psdate}
+
+%include <tail.h>

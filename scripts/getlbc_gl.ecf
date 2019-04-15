@@ -12,6 +12,7 @@ lagg=%VORHI%
 leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
+sname=%SUITENAME%
 
 ###########Run setup script for environment############
 . /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
@@ -19,6 +20,11 @@ mem=%MEMBER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [[ ${run} == "00" ]]                 #set complete task complete
+then
+   ecflow_client --force=complete recursive /${sname}/complete
+fi
 
 [[ ! -d ${LBCDIR} ]] && mkdir -p ${LBCDIR}
 
@@ -40,7 +46,7 @@ fi
  
 i=${lagg}
 (( leadtime=$leadtime+$lagg ))
-while (( i <= $leadtime )) ; do
+while (( $i <= $leadtime )) ; do
   
    actmm=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
    actdd=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)

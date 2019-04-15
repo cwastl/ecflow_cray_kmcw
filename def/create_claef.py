@@ -35,8 +35,14 @@ suite_name = "claef"
 members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 #members = [13]
 
+# forecasting range
+fcst = 48
+
 # coupling frequency
 couplf = 6
+
+# use 15min output for precipitation
+step15 = False
 
 # use GL Tool yes/no, if no - 901 is used
 gl = False
@@ -51,7 +57,7 @@ seda = True     #surface eda
 enjk = True
 
 # use stochastic physics model error representation yes/no
-stophy = True
+stophy = False
 
 # SBU account, cluster and user name, logport
 account = "atlaef";
@@ -61,24 +67,46 @@ logport = 36652;
 
 # main runs time schedule
 timing = {
-  'comp' : '02:00',
-  '00' : '02:30',
-  '06' : '08:30',
-  '12' : '14:30',
-  '18' : '20:30',
+  'comp' : '01:00',
+  '00' : '01:15',
+  '06' : '07:15',
+  '12' : '13:15',
+  '18' : '19:15',
+  'o00' : '01:35',
+  'o06' : '07:35',
+  'o12' : '13:35',
+  'o18' : '19:35',
+  
 }
 
 # debug mode (1 - yes, 0 - no)
 debug = 0;
 
+anzmem = len(members)
 # date to start the suite
-start_date = int(now.strftime('%Y%m%d'))
-#start_date = 20190312
+#start_date = int(now.strftime('%Y%m%d'))
+start_date = 20190411
 end_date = 20191231
 
 ###########################################
 #####define Families and Tasks#############
 ###########################################
+
+def family_cleaning():
+
+   return Task("cleaning",
+             Edit(
+                NP=1,
+                CLASS='ns',
+                NAME="cleaning",
+                WALLT="01",                #walltime in hours
+                ASSIMC=assimc,
+                ANZMEMB=anzmem,
+             ),
+             Label("run", ""),
+             Label("info", ""),
+
+          )
 
 def family_lbc():
 
@@ -102,9 +130,10 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbc{:02d}".format(mem),
-                   WALLT="01",
+                   WALLT="02",
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -140,6 +169,7 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
                    WALLT="01",
@@ -172,7 +202,7 @@ def family_lbc():
       ]
     )
 
-def family_obs() :
+def family_obs(startp) :
 
     # Family OBS
     return Family("obs",
@@ -184,6 +214,7 @@ def family_obs() :
           Task("getobs",
              Trigger(":ASSIM == 1"),
              Complete(":ASSIM == 0"),
+             Time(startp), 
              Meter("obsprog", -1, 3, 3),
              Edit(
                 NP=1,
@@ -237,7 +268,8 @@ def family_main():
 
       Edit(
          ASSIM=assimi,
-         GL=gl),
+         GL=gl,
+         LEADT=fcst),
 
       # Family MEMBER
       [
@@ -417,6 +449,7 @@ def family_main():
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
                      STOCH=stophy,
+                     STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
@@ -430,11 +463,50 @@ def family_main():
             [
                Task("progrid",
                   Trigger("001  == complete"),
+                  Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
+                     STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
+                     WALLT="01"                #walltime in hours
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+               )
+            ],
+
+            # Task ADDGRIB
+            [
+               Task("addgrib",
+                  Trigger("progrid  == complete"),
+                  Complete(":LEAD < :LEADT"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='np',
+                     STEPS15=step15,
+                     NAME="addgrib{:02d}".format(mem),
+                     WALLT="01"                #walltime in hours
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+                  Label("error", ""),
+               )
+            ],
+
+            # Task Transfer 
+            [
+               Task("transfer",
+                  Trigger("addgrib  == complete"),
+                  Complete(":LEAD < :LEADT"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='ns',
+                     STEPS15=step15,
+                     NAME="transfer{:02d}".format(mem),
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
@@ -486,41 +558,45 @@ defs = Defs().add(
                 Label("run", ""),
                 Label("info", ""),
              ),
-            
+          
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00", Time(timing['00']),
-                Edit( LAUF='00', VORHI=12, LEAD=48 ),
+                Edit( LAUF='00', VORHI=12, LEAD=fcst ),
 
                 # add suite Families and Tasks
+                family_cleaning(),
                 family_lbc(),
-                family_obs(),
+                family_obs(timing['o00']),
                 family_main(),
              ),
 
              Family("RUN_06", Time(timing['06']),
-                Edit( LAUF='06',VORHI=6, LEAD=6),
+                Edit( LAUF='06',VORHI=6, LEAD=assimc),
 
                 # add suite Families and Tasks
+                family_cleaning(),
                 family_lbc(),
-                family_obs(),
+                family_obs(timing['o06']),
                 family_main(),
              ),
 
              Family("RUN_12", Time(timing['12']),
-                Edit( LAUF='12',VORHI=12, LEAD=48),
+                Edit( LAUF='12',VORHI=12, LEAD=fcst),
 
                 # add suite Families and Tasks
+                family_cleaning(),
                 family_lbc(),
-                family_obs(),
+                family_obs(timing['o12']),
                 family_main(),
              ),
 
              Family("RUN_18", Time(timing['18']),
-                Edit( LAUF='18',VORHI=6, LEAD=6),
+                Edit( LAUF='18',VORHI=6, LEAD=assimc),
 
                 # add suite Families and Tasks
+                family_cleaning(),
                 family_lbc(),
-                family_obs(),
+                family_obs(timing['o18']),
                 family_main(),
              ),
              

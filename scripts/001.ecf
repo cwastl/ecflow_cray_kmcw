@@ -14,6 +14,7 @@ leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 assimc=%ASSIMC%
 stophy=%STOCH%
+step15=%STEPS15%
 
 ###########Run setup script for environment############
 . /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg $assimc
@@ -64,9 +65,11 @@ export DR_HOOK_IGNORE_SIGNALS=-1
 
 if [ -s ${MINIMRESULTFILE} ] ; then
    INITFILE_3D=${MINIMRESULTFILE}
+   INHYDRO=1
    ecflow_client --label=info "Use minimization file"
 elif [ -s ${SSTEXANAFILE} ] ; then     # use ECMWF/ARPEGE as init
    INITFILE_3D=${SSTEXANAFILE}
+   INHYDRO=-1 
    ecflow_client --label=info "Use ECMWF file"
 else
    echo "No INITFILE_3D found"
@@ -94,29 +97,29 @@ fi
 
 INITFILE_SURFACE=${PGDFILE_FA}
 
-cp ${C927DIR}/ELSC*${EXP}* .
-cp ${INITFILE_3D} ICMSH${EXP}INIT
+ln -sf ${C927DIR}/ELSC*${EXP}* .
+ln -sf ${INITFILE_3D} ICMSH${EXP}INIT
 
-cp ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
-cp ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
-cp ${INITFILE_SURFACE} Const.Clim.sfx    #nka
-cp ${CLIMFILENAME_AROME}${month} ./Const.Clim
+ln -sf ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
+ln -sf ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
+ln -sf ${INITFILE_SURFACE} Const.Clim.sfx    #nka
+ln -sf ${CLIMFILENAME_AROME}${month} Const.Clim
 
-cp ${ECOCLIMAPI} . #cy40
-cp ${ECOCLIMAPII} . #cy40
-cp ${CLIMDIR}/RADRRTM . #cy40 
-cp ${CLIMDIR}/GCO2CLIM . #cy40 
-cp ${CLIMDIR}/GCH4CLIM . #cy40 
-cp ${CLIMDIR}/N2OCLIM . #cy40 
-cp ${CLIMDIR}/NO2CLIM . #cy40 
-cp ${CLIMDIR}/C11CLIM . #cy40 
-cp ${CLIMDIR}/C12CLIM . #cy40 
-cp ${CLIMDIR}/GOZOCLIM . #cy40 
-cp ${CLIMDIR}/C22CLIM . #cy40 
-cp ${CLIMDIR}/CCL4CLIM . #cy40 
+ln -sf ${ECOCLIMAPI} . #cy40
+ln -sf ${ECOCLIMAPII} . #cy40
+ln -sf ${CLIMDIR}/RADRRTM . #cy40 
+ln -sf ${CLIMDIR}/GCO2CLIM . #cy40 
+ln -sf ${CLIMDIR}/GCH4CLIM . #cy40 
+ln -sf ${CLIMDIR}/N2OCLIM . #cy40 
+ln -sf ${CLIMDIR}/NO2CLIM . #cy40 
+ln -sf ${CLIMDIR}/C11CLIM . #cy40 
+ln -sf ${CLIMDIR}/C12CLIM . #cy40 
+ln -sf ${CLIMDIR}/GOZOCLIM . #cy40 
+ln -sf ${CLIMDIR}/C22CLIM . #cy40 
+ln -sf ${CLIMDIR}/CCL4CLIM . #cy40 
 
-cp ${CLIMDIR}/RADSRTM . #cy40 
-cp ${NAMEL001SURFEX} EXSEG1.nam
+ln -sf ${CLIMDIR}/RADSRTM . #cy40 
+ln -sf ${NAMEL001SURFEX} EXSEG1.nam
 
 # run 001
 #-------------------------------------
@@ -125,48 +128,141 @@ couplfr_s=`expr ${couplfr} \* 3600`
 date2=$( echo $date | cut -c7-8 )
 seedm=`expr ${mem} \* ${date2}`
 
-if [[ $mem == "00" || $stophy == 0 ]]
+
+if [[ ${step15} == 1 ]]
 then 
+
+  # create links and inline fpos xtt
+  typeset -i act_step_dd act_step_hh act_step_min
+  act_step_hh=0
+  act_step_hh2=0
+  act_step_min=0
+  act_step_dd=0
+
+  while (( ${act_step_hh2} <= ${leadtime} ))
+  do
+
+    cact_step_hh=$(echo ${act_step_hh} | awk '{ printf "%%02d",$1*1}')
+    cact_step_min=$(echo ${act_step_min} | awk '{ printf "%%02d",$1*1}')
+    cact_step_dd=$(echo ${act_step_dd} | awk '{ printf "%%04d",$1*1}')
+    cact_step="${cact_step_dd}${cact_step_hh}$cact_step_min"
+
+    if [[ "$cact_step_min" == "00" ]]
+    then
+
+      ln -sf ${NAMELSELECT} ${RUNDIR}/xxt$cact_step
+
+      if [[ "$cact_step_hh" == "00" ]]
+      then
+
+        grep -v $RUNDIR/CLCFU xxt00000000  >  $RUNDIR/xxt00000000_
+        grep -v $RUNDIR/CLDCFU xxt00000000_ > $RUNDIR/xxt00000000__
+        rename  $RUNDIR/xxt00000000__  $RUNDIR/xxt00000000 $RUNDIR/xxt00000000__
+
+      fi
+
+    else
+
+      ln -sf ${NAMELSELECT15} $RUNDIR/xxt$cact_step
+
+    fi
+
+    act_step_min=$act_step_min+15
+    (( $act_step_min == 60 )) && { act_step_hh=$act_step_hh+1; act_step_min=0; act_step_hh2=$act_step_hh2+1; }
+    (( $act_step_hh == 24 )) && { act_step_dd=$act_step_dd+1; act_step_hh=0; }
+    (( $act_step_hh2 == ${leadtime} && $act_step_min > 0 )) && break
+
+  done
+
+  if [[ $mem == "00" || $stophy == 0 ]]
+  then 
    
-   sed -e   "s/{nproma}/$NPROMA/"\
-       -e   "s/{experiment}/${EXP}/"\
-       -e   "s/{nproc}/$NPROC/"\
-       -e   "s/{nprgpns}/$NPRGPNS/"\
-       -e   "s/{nprgpew}/$NPRGPEW/"\
-       -e   "s/{nprtrv}/$NPRTRV/"\
-       -e   "s/{nprtrw}/$NPRTRW/"\
-       -e   "s/{nstrin}/$NSTRIN/"\
-       -e   "s/{nstrout}/$NSTROUT/"\
-       -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
-       -e   "s/{couplfreq}/${couplfr_s}/"\
-       -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{experiment}/${EXP}/"\
+        -e   "s/{nproc}/$NPROC/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nprtrw}/$NPRTRW/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
+        -e   "s/{couplfreq}/${couplfr_s}/"\
+        -e   "s/{inhydro}/${INHYDRO}/"\
+        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+        -e   "s/NFRPOS=60,/NFRPOS=15,/"\
+        -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
+        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+
+  else
+
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{experiment}/${EXP}/"\
+        -e   "s/{nproc}/$NPROC/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nprtrw}/$NPRTRW/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/{couplfreq}/${couplfr_s}/"\
+        -e   "s/{inhydro}/${INHYDRO}/"\
+        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+        -e   "s/NFRPOS=60,/NFRPOS=15,/"\
+        -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
+        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+
+  fi
 
 else
 
-   sed -e   "s/{nproma}/$NPROMA/"\
-       -e   "s/{experiment}/${EXP}/"\
-       -e   "s/{nproc}/$NPROC/"\
-       -e   "s/{nprgpns}/$NPRGPNS/"\
-       -e   "s/{nprgpew}/$NPRGPEW/"\
-       -e   "s/{nprtrv}/$NPRTRV/"\
-       -e   "s/{nprtrw}/$NPRTRW/"\
-       -e   "s/{nstrin}/$NSTRIN/"\
-       -e   "s/{nstrout}/$NSTROUT/"\
-       -e   "s/{couplfreq}/${couplfr_s}/"\
-       -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+  if [[ $mem == "00" || $stophy == 0 ]]
+  then 
+   
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{experiment}/${EXP}/"\
+        -e   "s/{nproc}/$NPROC/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nprtrw}/$NPRTRW/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
+        -e   "s/{couplfreq}/${couplfr_s}/"\
+        -e   "s/{inhydro}/${INHYDRO}/"\
+        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+
+  else
+
+    sed -e   "s/{nproma}/$NPROMA/"\
+        -e   "s/{experiment}/${EXP}/"\
+        -e   "s/{nproc}/$NPROC/"\
+        -e   "s/{nprgpns}/$NPRGPNS/"\
+        -e   "s/{nprgpew}/$NPRGPEW/"\
+        -e   "s/{nprtrv}/$NPRTRV/"\
+        -e   "s/{nprtrw}/$NPRTRW/"\
+        -e   "s/{nstrin}/$NSTRIN/"\
+        -e   "s/{nstrout}/$NSTROUT/"\
+        -e   "s/{couplfreq}/${couplfr_s}/"\
+        -e   "s/{inhydro}/${INHYDRO}/"\
+        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+ 
+  fi
 
 fi
+
 ecflow_client --label=info "Run 001"
 /usr/bin/time aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_${mem}.log 2>&1
 
-mv NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} 
+rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
 
 #ii = 0                        #For B-Matrix calculation
 #while [ $ii -le 6 ]
 #do
-#   cp ICMSH${EXP}+000${ii} ${BASEDIR}/ICMSH${EXP}+000${ii}_${mem}
+#   rename ICMSH${EXP}+000${ii}:00 ${C001DIR}/ICMSH${EXP}+000${ii} ICMSH${EXP}+000${ii}:00
 #   let "ii = $ii + 1"
 #done
 
@@ -175,15 +271,13 @@ while [ $ii -le ${leadtime} ]
 do
    typeset -Z2 jj
    jj=$ii
-   cp ICMSH${EXP}+00${jj} ${C001DIR}
-   cp ICMSH${EXP}+00${jj}.sfx ${C001DIR}
+   rename ICMSH${EXP}+00${jj}:00 ${C001DIR}/ICMSH${EXP}+00${jj} ICMSH${EXP}+00${jj}:00
+   rename ICMSH${EXP}+00${jj}:00.sfx ${C001DIR}/ICMSH${EXP}+00${jj}.sfx ICMSH${EXP}+00${jj}:00.sfx
    let "ii = $ii + $assimc"
 done
 
-mv PF${EXP}000+* ${C001DIR}
+rename PF ${C001DIR}/PF PF${EXP}${EXP}+*
 
-rm -f ELSC*${EXP}*
 cd ${C001DIR}
-rm -rf ${RUNDIR}
 
 %include <tail.h>

@@ -60,7 +60,7 @@ export DR_HOOK_IGNORE_SIGNALS=-1
 
 # create LFI namelist:
 
-cp ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
+ln -sf ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
@@ -108,7 +108,7 @@ ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 typeset -Z4 cstep
 cstep=$lagg
 
-cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
+ln -sf ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
 
 ecflow_client --label=info "creating PFE927${EXP}+0000.sfx"
 # --- submit the job ---------------
@@ -117,8 +117,8 @@ time aprun -n ${NPROC} ${BINMASTER} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
 status=${?}
 # ----------------------------------
 
-mv NODE.001_01 ${LOGDIR}/NODE_927_000_${EXP}_${mem}
-mv PFE927${EXP}+0000.sfx ${C927SURFDIR}/PFE927${EXP}+0000.sfx
+rename NODE.001_01 ${LOGDIR}/NODE_927_000_${EXP}_${mem} NODE.001_01
+rename PFE927${EXP}+0000.sfx ${C927SURFDIR}/PFE927${EXP}+0000.sfx PFE927${EXP}+0000.sfx
 
 cd ${C927SURFDIR}
 rm -rf ${RUNDIR}

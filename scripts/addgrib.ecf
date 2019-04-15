@@ -1,0 +1,190 @@
+#!/bin/ksh
+#
+# Script to run programs for addgrib
+
+%include <pbs.h>
+
+%include <head.h>
+
+date=%DATUM%
+run=%LAUF%
+mem=%MEMBER%
+leadtime=%LEAD%
+step15=%STEPS15%
+
+###########Run setup script for environment############
+. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 999
+#######################################################
+
+# report to ecflow
+ecflow_client --label=run "The date is now ${date} ${run}"
+
+[[ ! -d ${ADDGRIBDIR} ]] && mkdir -p ${ADDGRIBDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+
+# Create working directory
+RUNDIR=${ADDGRIBDIR}/$PBS_JOBID
+[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
+cd ${RUNDIR}
+
+rm -rf $RUNDIR/*
+
+# Environmental settings
+NPROC=$EC_total_tasks
+
+step=0
+while (( $step <= ${leadtime} )) ; do
+
+  typeset -Z4 cstep
+  cstep=$step
+
+  if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
+  then
+
+    my_min="00 15 30 45"
+
+  else
+ 
+    my_min="00"
+
+  fi
+
+  for min in ${my_min[*]}
+  do
+
+    INFILE=$PROGRIDDIR/CLAEF000+${cstep}:${min}".grb"
+    OUTFILE=$ADDGRIBDIR/CLAEF000+${cstep}:${min}".grb"
+
+    if [ ${min} == "00" ] ; then
+ 
+      if [ ! -s ${OUTFILE} ] ; then
+
+        cp ${INFILE} ${OUTFILE}
+
+        ###############################################
+        # add the snowline to grib file ###############
+        ###############################################
+
+        SNOWGRIB=${ADDGRIBDIR}/snow+${cstep}:00.grb
+        ln -sf ${BINDIR}/aromesnowline .
+        echo "Calculate snowline for CLAEF000+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate snowline for CLAEF000+${cstep}:00.grb"
+        ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}:00.log 2>&1
+ 
+        if (( $? != 0 ))then
+          ecflow_client --label=error"Snowline not ok" 
+          echo "Snowline not ok"
+          exit 1
+        fi
+        cat ${SNOWGRIB} >> ${OUTFILE}
+        rm -f ${SNOWGRIB:="xxx"}
+ 
+        ##############################################
+        # Add Showalter Index to the grib ############
+        ##############################################
+ 
+        SHOWGRIB=${ADDGRIBDIR}/show+${cstep}.grb
+        ln -sf ${BINDIR}/alashowalter .
+        echo "Calculate showalter for CLAEF000+" ${cstep} ":00.grb"
+        ./alashowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+ 
+        if (( $? != 0 ))then
+          ecflow_client --label=error"Showalter not ok" 
+          echo "Showalter not ok"
+          exit 1
+        fi
+        cat ${SHOWGRIB} >> ${OUTFILE}
+        rm -f ${SHOWGRIB:="xxx"}
+ 
+        ###############################################
+        # Add Total precipitation to the grib:
+        ##############################################
+
+        if [ ${step} != "0" ]
+        then
+
+          APCPGRIB=${ADDGRIBDIR}/apcp+${cstep}.grb
+          ln -sf ${BINDIR}/arometotalprec .
+          echo "Calculate total prec for CLAEF000+" ${cstep} ":00.grb"
+          ecflow_client --label=info "Calculate total prec for CLAEF000+${cstep}:00.grb"
+          ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+  
+          if (( $? != 0 ))then
+            ecflow_client --label=error"Total prec not ok" 
+            echo "Total prec not ok"
+            exit 1
+          fi
+          cat ${APCPGRIB} >> ${OUTFILE}
+          rm -f ${APCPGRIB:="xxx"}
+
+        fi
+
+        ######################################################
+        # Add convective initiation temperature to the grib: #
+        #####################################################
+ 
+        LCLTGRIB=${ADDGRIBDIR}/lclt+${cstep}.grb
+        ln -sf  ${BINDIR}/aromettrigger .
+        echo "Calculate init T for CLAEF000+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate init T for CLAEF000+${cstep}.grb"
+        ./aromettrigger ${OUTFILE} ${LCLTGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+ 
+        if (( $? != 0 ))then
+          ecflow_client --label=error"Init T not ok" 
+          echo "Init T not ok"
+          exit 1
+        fi
+
+        cat ${LCLTGRIB} >> ${OUTFILE}
+        rm -f ${LCLTGRIB:="xxx"}
+
+      else 
+ 
+        echo ${OUTFILE} " already there" 
+        ecflow_client --label=info "${OUTFILE} already there"
+    
+      fi
+
+    else
+
+      ###############################################
+      # Add Total precipitation to the grib:
+      ##############################################
+
+      if [ ! -s ${OUTFILE} ] ; then
+
+        cp ${INFILE} ${OUTFILE}
+     
+        APCPGRIB=${ADDGRIBDIR}/apcp+${cstep}.grb
+        ln -sf ${BINDIR}/arometotalprec .
+        echo "Calculate total prec for CLAEF000+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate total prec for CLAEF000+${cstep}:00.grb"
+        ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+  
+        if (( $? != 0 ))then
+          ecflow_client --label=error"Total prec not ok" 
+          echo "Total prec not ok"
+          exit 1
+        fi
+          cat ${APCPGRIB} >> ${OUTFILE}
+          rm -f ${APCPGRIB:="xxx"}
+
+      else 
+ 
+        echo ${OUTFILE} " already there" 
+        ecflow_client --label=info "${OUTFILE} already there"
+       
+      fi
+
+    fi
+     
+  done
+
+  (( step=${step}+1 ))
+ 
+done
+
+cd ${ADDGRIBDIR}
+rm -rf ${RUNDIR}
+
+%include <tail.h>

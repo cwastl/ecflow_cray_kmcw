@@ -58,7 +58,7 @@ export DR_HOOK_SILENT=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 
 
-cp ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
+ln -sf ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
@@ -99,20 +99,20 @@ sed -e   "s/{nproma}/${NPROMA}/"\
 #
 #     AROME clim
 #
-cp ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
+ln -sf ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
 
 
 #
 #     Databases searching
 #
 
-cp ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin
-cp ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin
+ln -sf ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin
+ln -sf ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin
 
 #
 #     PGD
 #
-cp ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
+ln -sf ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
 
 #
 #     COUPLING FILES
@@ -135,7 +135,7 @@ ls -l
 
 cat NODE*
 cp NODE.001_01 ${LOGDIR}/PGD_NODE.001_01_${mem}
-cp ${RUNDIR}/PGD_Master.log /home/ms/at/kmcw/LOG/PGD_Master_${mem}.log
+cp ${RUNDIR}/PGD_Master.log ${LOGDIR}/PGD_Master_${mem}.log
 cp PFE927${EXP}+0000.sfx ${PGDFILE_FA}
 
 cd ${C927SURFDIR}

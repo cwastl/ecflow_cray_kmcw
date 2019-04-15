@@ -28,12 +28,21 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 ### top level suite settings ###
 ################################
 
+#suite name
+suite_name = "claef_2"
+
 #ensemble members
 #members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 members = [13]
 
+# forecasting range
+fcst = 48
+
 # coupling frequency
 couplf = 6
+
+# use 15min output for precipitation
+step15 = True 
 
 # use GL Tool yes/no, if no - 901 is used
 gl = True
@@ -56,14 +65,6 @@ host    = "cca";
 user    = "kmcw";
 logport = 36652;
 
-# main runs time schedule
-timing = {
-  '00' : '02:30',
-  '06' : '08:30',
-  '12' : '14:30',
-  '18' : '20:30',
-}
-
 # debug mode (1 - yes, 0 - no)
 debug = 0;
 
@@ -74,7 +75,7 @@ end_date = 20160703
 ###########################################
 #####define Families and Tasks#############
 ###########################################
- 
+
 def family_lbc():
 
     # Family LBC
@@ -97,9 +98,10 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbc{:02d}".format(mem),
-                   WALLT="01",
+                   WALLT="02",
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -135,6 +137,7 @@ def family_lbc():
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
+                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
                    WALLT="01",
@@ -232,7 +235,8 @@ def family_main():
 
       Edit(
          ASSIM=assimi,
-         GL=gl),
+         GL=gl,
+         LEADT=fcst),
 
       # Family MEMBER
       [
@@ -407,11 +411,12 @@ def family_main():
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=480,
+                     NP=576,
                      CLASS='np',
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
                      STOCH=stophy,
+                     STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
                      WALLT="06"                #walltime in hours
                   ),
@@ -425,15 +430,36 @@ def family_main():
             [
                Task("progrid",
                   Trigger("001  == complete"),
+                  Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
+                     STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
                      WALLT="01"                #walltime in hours
                   ),
                   Label("run", ""),
                   Label("info", ""),
+               )
+            ],
+
+            # Task ADDGRIB
+            [
+               Task("addgrib",
+                  Trigger("progrid  == complete"),
+                  Complete(":LEAD < :LEADT"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='np',
+                     STEPS15=step15,
+                     NAME="addgrib{:02d}".format(mem),
+                     WALLT="01"                #walltime in hours
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+                  Label("error", ""),
                )
             ],
 
@@ -450,7 +476,7 @@ print("\n=> creating suite definition\n");
 defs = Defs().add(
 
           # Suite C-LAEF
-          Suite("claef_2").add(
+          Suite(suite_name).add(
 
              RepeatDate("DATUM",start_date,end_date),
              Edit(
@@ -478,7 +504,7 @@ defs = Defs().add(
 
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00",
-                Edit( LAUF='00', VORHI=0, LEAD=6),
+                Edit( LAUF='00', VORHI=0, LEAD=fcst),
 
                 # add suite Families and Tasks
                 family_lbc(),
@@ -487,7 +513,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=6),
+                Edit( LAUF='06',VORHI=6, LEAD=assimc),
                 Trigger("RUN_00 == complete"), 
 
                 # add suite Families and Tasks
@@ -497,7 +523,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_12",
-                Edit( LAUF='12',VORHI=0, LEAD=6),
+                Edit( LAUF='12',VORHI=0, LEAD=fcst),
                 Trigger("RUN_06 == complete"), 
 
                 # add suite Families and Tasks
@@ -507,7 +533,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_18",
-                Edit( LAUF='18',VORHI=6, LEAD=6),
+                Edit( LAUF='18',VORHI=6, LEAD=assimc),
                 Trigger("RUN_12 == complete"), 
 
                 # add suite Families and Tasks
@@ -525,7 +551,7 @@ defs = Defs().add(
 
 print("=> checking job creation: .ecf -> .job0");
 print(defs.check_job_creation());
-print("=> saving definition to file 'claef_2.def'\n");
-defs.save_as_defs("claef_2.def");
+print("=> saving definition to file " + suite_name + ".def\n");
+defs.save_as_defs(suite_name + ".def");
 exit(0);
 

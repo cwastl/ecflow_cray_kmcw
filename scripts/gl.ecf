@@ -80,7 +80,7 @@ do
        # Running the GL
        mpiexec -n 1 ${BINGL} -lbc ifs ECMWF_${mem}_small.grb -o ELSCFAROMALBC0${jj} -d -s -n gl_namel
 
-       mv ELSCFAROMALBC0${jj} ${COUPLDIR}/ICMSHBC${mem}+00${jj}
+       rename ELSCFAROMALBC0${jj} ${COUPLDIR}/ICMSHBC${mem}+00${jj} ELSCFAROMALBC0${jj}
 
     else
 

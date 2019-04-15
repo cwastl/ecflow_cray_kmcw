@@ -36,7 +36,7 @@ export OMP_NUM_THREADS=$EC_threads_per_task
 
 i=$lagg
 (( leadtime=$leadtime+$lagg ))
-while (( i <= $leadtime )) ; do
+while (( $i <= $leadtime )) ; do
 
     typeset -Z3 ii
     ii=$i
@@ -49,7 +49,7 @@ while (( i <= $leadtime )) ; do
 
     #--- prepare namelist
     rm -f fort.4
-    cp ${NAMEL901} fort.4
+    ln -sf ${NAMEL901} fort.4
 
     TFT=00
     MM_FT=$(echo ${date} | cut -c 5-6)
@@ -73,31 +73,29 @@ while (( i <= $leadtime )) ; do
        then
           echo "901 for ${ii} failed"
           ecflow_client --label=error "901 for ${ii} failed"
-          mv 901.out ${LOGDIR}/${mem}-901.out.${ii}
-          mv 901.err ${LOGDIR}/${mem}-901.err.${ii}
-          mv NODE.001_01 ${d_LOG}/${mem}-901.node.${ii}
+          rename 901.out ${LOGDIR}/${mem}-901.out.${ii} 901.out
+          rename 901.err ${LOGDIR}/${mem}-901.err.${ii} 901.err
+          rename NODE.001_01 ${d_LOG}/${mem}-901.node.${ii} NODE.001_01
           exit 1
        fi
 
-	   mv CN90xa001INIT fort.11
-	   cp Const.Clim fort.12
-       cp ${NAMELADDSURFold} fort.4
+       rename CN90xa001INIT fort.11 CN90xa001INIT
+       ln -sf Const.Clim fort.12
+       ln -sf ${NAMELADDSURFold} fort.4
 
        ln -sf ${BINADDSURF} ADDSURF
        ecflow_client --label=info "ADDSURF"
-#set +e
        mpiexec -n $EC_total_tasks ADDSURF fort.11 fort.12
 #		aprun -n $EC_total_tasks -d $EC_threads_per_task -cc none ADDSURF fort.11 fort.12
-#set -e
        CODEREP=$?
-       mv fort.11 ${COUPLDIR}/ICMSHBC${mem}+0${ii}
+       rename fort.11 ${COUPLDIR}/ICMSHBC${mem}+0${ii} fort.11
 
        if (( ${CODEREP} !=0 ))
        then
           echo "ADDSURF for ${ii} failed"
           ecflow_client --label=error "ADDSURF for ${ii} failed"
-	      mv addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii}
-          mv addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii}
+	      rename addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii} addArpClim.out
+          rename addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii} addArpClim.err
 	      exit 1
        fi
    
@@ -110,12 +108,6 @@ while (( i <= $leadtime )) ; do
     (( i=$i+$couplfr ))
 
 done
-
-#-- Cleaning
-rm -f fort.4 MASTER
-rm -f ICMUAa001INIT ICMSHa001INIT ICMGGa001INIT
-rm -f CN90xa001INIT
-rm -f Const.Clim
 
 cd ${COUPLDIR}
 rm -rf ${RUNDIR}

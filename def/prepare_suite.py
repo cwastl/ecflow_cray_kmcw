@@ -2,29 +2,37 @@
 
 import os
 
-suite = "claef"
+suite = "claef_3"
 runs = ["00","06","12","18"]
 famil = ["lbc","obs","main"]
 members = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"]
 tasks_comp = ["complete"]
+tasks_clean = ["cleaning"]
 tasks_lbc = ["getlbc","901","getlbc_gl","gl"]
 tasks_obs = ["getobs","bator","bator3D"]
-tasks_main = ["927","pgd","927surf","sstex","addsurf","screen", "screensurf","canari","minim","001","progrid"]
+tasks_main = ["927","pgd","927surf","sstex","addsurf","screen", "screensurf","canari","minim","001","progrid","addgrib","transfer"]
 
-if not os.path.exists("/home/ms/at/kmcw/ecf/" + suite):
-    os.mkdir("/home/ms/at/kmcw/ecf/" + suite)
+hpath="/home/ms/at/kmcw/ecf/"
 
-os.chdir("/home/ms/at/kmcw/ecf/" + suite)
+if not os.path.exists(hpath + suite):
+    os.mkdir(hpath + suite)
+
+os.chdir(hpath + suite)
 
 for t in tasks_comp:
 
     if not os.path.lexists(t + ".ecf"):
-        os.symlink("/home/ms/at/kmcw/ecf/scripts/" + t + ".ecf", t + ".ecf")
+        os.symlink(hpath + "scripts/" + t + ".ecf", t + ".ecf")
 
 for r in runs:
 
      if not os.path.exists("RUN_" + r):
          os.mkdir("RUN_" + r)  
+
+     for t in tasks_clean:
+
+         if not os.path.lexists("RUN_" + r + "/" + t + ".ecf"):
+             os.symlink(hpath + "scripts/" + t + ".ecf", "RUN_" + r + "/" + t + ".ecf")
 
      for f in famil:
 
@@ -41,14 +49,14 @@ for r in runs:
                  for t in tasks_lbc:
 
                      if not os.path.lexists("RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf"):
-                        os.symlink("/home/ms/at/kmcw/ecf/scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf")
+                        os.symlink(hpath + "scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf")
 
           if f == "obs":
 
              for t in tasks_obs:
 
                  if not os.path.lexists("RUN_" + r + "/" + f + "/" + t + ".ecf"):
-                     os.symlink("/home/ms/at/kmcw/ecf/scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/" + t + ".ecf")
+                     os.symlink(hpath + "scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/" + t + ".ecf")
 
           if f == "main":
 
@@ -60,7 +68,7 @@ for r in runs:
                  for t in tasks_main:
  
                      if not os.path.lexists("RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf"):
-                        os.symlink("/home/ms/at/kmcw/ecf/scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf")
+                        os.symlink(hpath + "scripts/" + t + ".ecf", "RUN_" + r + "/" + f + "/MEM_" + m + "/" + t + ".ecf")
    
 
 
