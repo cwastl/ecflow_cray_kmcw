@@ -12,10 +12,12 @@ date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 assimc=%ASSIMC%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 $assimc
-#######################################################
+
+#################Run setup script for environment####################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
+#####################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"

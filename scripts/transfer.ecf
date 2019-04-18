@@ -11,10 +11,11 @@ run=%LAUF%
 mem=%MEMBER%
 leadtime=%LEAD%
 step15=%STEPS15%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 999
-#######################################################
+############################Run setup script for environment#####
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 999 $user
+#################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -75,10 +76,33 @@ while (( $step <= $leadtime )) ; do
 
 done
 
-filen=CLAEF_${date}${run}_${mem}.tar.gz
-ecflow_client --label=info "Copying ${filen}"
+filen=CLAEF_${run}_${mem}.tar.gz
 tar -czvf ${filen} *.grb 
-ectrans -gateway zaaecm.zamg.ac.at -remote wastl_eps -put -overwrite -source ${RUNDIR}/${filen} -target ${filen}
+
+(( CHECKTRANS = 1 ))
+
+while (( ${CHECKTRANS} <= 5 ))
+do
+
+
+   ecflow_client --label=info "Copying ${filen}"
+   ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${RUNDIR}/${filen} -target /${run}/MEM_${mem}/${filen} -overwrite -verbose -mailto clemens.wastl@zamg.ac.at -onfailure
+
+   CODEREP=$?
+   if (( ${CODEREP} !=0 ))
+   then
+
+      ecflow_client --label=info "Copying ${filen} failed, ${CHECKTRANS}"
+      (( CHECKTRANS = ${CHECKTRANS} + 1 ))
+      sleep 300
+
+   else
+
+      (( CHECKTRANS = 10 ))
+
+   fi
+
+done
 
 cd ${ADDGRIBDIR}
 rm -rf ${RUNDIR}

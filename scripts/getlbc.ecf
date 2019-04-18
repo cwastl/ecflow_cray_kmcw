@@ -1,6 +1,6 @@
 #!/bin/ksh
 #
-#Script to run getlbc to get couplinfiles from ECMWF
+#Script to run getlbc to get couplingfiles from ECMWF
 
 %include <pbs.h>
 
@@ -13,18 +13,19 @@ leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
 sname=%SUITENAME%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
-#######################################################
+###################Run setup script for environment################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
+###################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
-if [[ ${run} == "06" ]]                 #set complete task complete
-then
-   ecflow_client --force=complete recursive /${sname}/complete
-fi
+#if [[ ${run} == "06" ]]                 #set complete task complete
+#then
+#   ecflow_client --force=complete recursive /${sname}/complete
+#fi
 
 [[ ! -d ${LBCDIR} ]] && mkdir -p ${LBCDIR}
 
@@ -52,9 +53,9 @@ while (( $i <= $leadtime )) ; do
    typeset -Z3 FT
    FT=$i
 
-   actmm=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
-   actdd=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)
-   acthh=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 9-10)
+   actmm=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
+   actdd=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)
+   acthh=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 9-10)
 
    (( WAITCOUNT = 0 ))
 
@@ -64,9 +65,9 @@ while (( $i <= $leadtime )) ; do
      if [[ ${i} -eq 0 ]]
      then
 
-        if [[ -f ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
+        if [[ -f ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
         then
-           grib_filter big.rule ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
+           grib_filter big.rule ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
            cp 0-sol.pdg.grb_${n1date}${n1run}00+${i} landseamask.grb
            (( WAITCOUNT = 300 ))
         else
@@ -79,9 +80,9 @@ while (( $i <= $leadtime )) ; do
      elif [[ ${i} -ge $lagg ]]
      then
 
-         if [[ -f ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
+         if [[ -f ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ]]
          then
-             grib_filter big.rule ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
+             grib_filter big.rule ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
              (( WAITCOUNT = 300 ))
          else
              echo "ATTENTION: dissemination file does not yet exist!!!"
@@ -118,8 +119,8 @@ while (( $i <= $leadtime )) ; do
        #-- filenames ith "[STEP]", we replace it with %%03d
        #-- filenames with "[NUMBER]", we replace it with %%02d
 
-      for av in $(ls ${amem}-*.*.grb_${n1date}*+${i})
-      do
+       for av in $(ls ${amem}-*.*.grb_${n1date}*+${i})
+       do
           i1=$(echo $av |cut -d "-" -f 1 | awk '{printf "%%02d",$1}')
           i2=$(echo $av |cut -d "-" -f 2)
           [[ ! -f ${i1}-${i2} ]] && rename ${av} ${i1}-${i2} ${av}

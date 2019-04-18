@@ -13,10 +13,11 @@ leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
 sname=%SUITENAME%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg 999
-#######################################################
+####################Run setup script for environment###############
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
+###################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -31,7 +32,7 @@ fi
 cd ${LBCDIR}
 
 actdate=$(date '+%%Y%%m%%d');
-actdate1=$(/home/ms/at/kmcw/bin/datecalc ${actdate} -f -t -1 | cut -c 1-8)
+actdate1=$(/home/ms/at/${user}/bin/datecalc ${actdate} -f -t -1 | cut -c 1-8)
 
 if [[ $date == $actdate || $date == $actdate1 ]]
 then
@@ -48,9 +49,9 @@ i=${lagg}
 (( leadtime=$leadtime+$lagg ))
 while (( $i <= $leadtime )) ; do
   
-   actmm=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
-   actdd=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)
-   acthh=$(/home/ms/at/kmcw/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 9-10)
+   actmm=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
+   actdd=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)
+   acthh=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 9-10)
 
    if [[ ${HIST} == .TRUE. ]]
    then
@@ -73,7 +74,7 @@ while (( $i <= $leadtime )) ; do
    else
 
       ecflow_client --label=info "Current case"
-      cp ${LBCIFS}/EAE${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ${LBCDIR}     
+      cp ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001 ${LBCDIR}     
 
    fi
 

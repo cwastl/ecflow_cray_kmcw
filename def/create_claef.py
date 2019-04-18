@@ -39,7 +39,7 @@ members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 fcst = 48
 
 # coupling frequency
-couplf = 6
+couplf = 3
 
 # use 15min output for precipitation
 step15 = False
@@ -83,9 +83,10 @@ timing = {
 debug = 0;
 
 anzmem = len(members)
+
 # date to start the suite
-#start_date = int(now.strftime('%Y%m%d'))
-start_date = 20190411
+start_date = int(now.strftime('%Y%m%d'))
+#start_date = 20190411
 end_date = 20191231
 
 ###########################################
@@ -99,9 +100,10 @@ def family_cleaning():
                 NP=1,
                 CLASS='ns',
                 NAME="cleaning",
-                WALLT="01",                #walltime in hours
+                WALLT="01",
                 ASSIMC=assimc,
                 ANZMEMB=anzmem,
+                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -134,6 +136,7 @@ def family_lbc():
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbc{:02d}".format(mem),
                    WALLT="02",
+                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -153,6 +156,7 @@ def family_lbc():
                    MEMBER="{:02d}".format(mem),
                    NAME="901_{:02d}".format(mem),
                    WALLT="03",
+                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -173,6 +177,7 @@ def family_lbc():
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
                    WALLT="01",
+                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -190,7 +195,8 @@ def family_lbc():
                    CLASS='nf',
                    KOPPLUNG=couplf,
                    NAME="gl{:02d}".format(mem),
-                   WALLT="03"               #walltime in hours
+                   WALLT="03",
+                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -220,7 +226,8 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="getobs",
-                WALLT="01"              #walltime in hours
+                WALLT="01",
+                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -236,7 +243,8 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="bator",
-                WALLT="01"               #walltime in hours
+                WALLT="01",
+                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -253,7 +261,8 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="bator3D",
-                WALLT="01"               #walltime in hours
+                WALLT="01",
+                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -285,7 +294,8 @@ def family_main():
                      CLASS='np',
                      KOPPLUNG=couplf,
                      NAME="927_{:02d}".format(mem),
-                     WALLT="03"                #walltime in hours
+                     WALLT="03",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -301,7 +311,8 @@ def family_main():
 #                    NP=1,
 #                    CLASS='np',
 #                    NAME="pgd{:02d}".format(mem),
-#                    WALLT="01"                #walltime in hours
+#                    WALLT="01",
+#                    USER=user
 #                 ),
 #                 Label("run", ""),
 #                 Label("info", ""),
@@ -318,7 +329,8 @@ def family_main():
                      NP=1,
                      CLASS='np',
                      NAME="927surf{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -336,7 +348,8 @@ def family_main():
                      CLASS='ns',
                      ASSIMC=assimc,
                      NAME="sstex{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -354,7 +367,8 @@ def family_main():
                      CLASS='ns',
                      ASSIMC=assimc,
                      NAME="addsurf{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -373,7 +387,8 @@ def family_main():
                      ASSIMC=assimc,
                      EDA=eda,
                      NAME="screen{:02d}".format(mem),
-                     WALLT="03"                #walltime in hours
+                     WALLT="03",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -392,7 +407,8 @@ def family_main():
                      CLASS='np',
                      ASSIMC=assimc,
                      NAME="screensurf{:02d}".format(mem),
-                     WALLT="03"                #walltime in hours
+                     WALLT="03",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -412,7 +428,8 @@ def family_main():
                      ASSIMC=assimc,
                      SEDA=seda,
                      NAME="canari{:02d}".format(mem),
-                     WALLT="03"                #walltime in hours
+                     WALLT="03",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -431,7 +448,8 @@ def family_main():
                      ASSIMC=assimc,
                      ENSJK=enjk,
                      NAME="minim{:02d}".format(mem),
-                     WALLT="03"                #walltime in hours
+                     WALLT="03",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -444,14 +462,15 @@ def family_main():
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=480,
+                     NP=396,
                      CLASS='np',
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
                      STOCH=stophy,
                      STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
-                     WALLT="06"                #walltime in hours
+                     WALLT="06",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -470,7 +489,8 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -488,7 +508,8 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -507,7 +528,8 @@ def family_main():
                      CLASS='ns',
                      STEPS15=step15,
                      NAME="transfer{:02d}".format(mem),
-                     WALLT="01"                #walltime in hours
+                     WALLT="01",
+                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -543,10 +565,10 @@ defs = Defs().add(
                 CNF_DEBUG=debug,
 
                 # Running jobs remotely on HPCF
-                ECF_OUT = '/scratch/ms/at/kmcw/ECF', # jobs output dir on remote host
+                ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
                 ECF_LOGHOST=host,                     # remote log host
                 ECF_LOGPORT=logport,                  # remote log port
-                ECF_LISTS='/home/ms/at/kmcw/ecf/def/perm.list', 
+                ECF_LISTS='/home/ms/at/' + user + '/ecf/include/perm.list', 
 
                 # Submit job (remotely)
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
@@ -554,14 +576,14 @@ defs = Defs().add(
 
              # Task complete if something went wrong on the previous day
              Task("complete", Time(timing['comp']),
-                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01" ),
+                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01", USER=user ),
                 Label("run", ""),
                 Label("info", ""),
              ),
           
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00", Time(timing['00']),
-                Edit( LAUF='00', VORHI=12, LEAD=fcst ),
+                Edit( LAUF='00', VORHI=6, LEAD=fcst ),
 
                 # add suite Families and Tasks
                 family_cleaning(),
@@ -581,7 +603,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_12", Time(timing['12']),
-                Edit( LAUF='12',VORHI=12, LEAD=fcst),
+                Edit( LAUF='12',VORHI=6, LEAD=fcst),
 
                 # add suite Families and Tasks
                 family_cleaning(),

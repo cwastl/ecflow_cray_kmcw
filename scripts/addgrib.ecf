@@ -11,10 +11,11 @@ run=%LAUF%
 mem=%MEMBER%
 leadtime=%LEAD%
 step15=%STEPS15%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 999
-#######################################################
+#################Run setup script for environment################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 999 $user
+#################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -61,6 +62,24 @@ while (( $step <= ${leadtime} )) ; do
 
         cp ${INFILE} ${OUTFILE}
 
+
+        #######################################################
+        # change perturbation numer and data Type  ############
+        #######################################################
+
+        cp ${GRIBFILTER} filter.tmp
+        sed -e "s/{NUMBER}/${mem}/g" filter.tmp > filt.tmp1
+
+        if [[ ${mem} -eq 00 ]]
+        then
+            sed -e "s/{TYPE}/10/g" filt.tmp1 > rule.filter
+        else
+            sed -e "s/{TYPE}/11/g" filt.tmp1 > rule.filter
+        fi
+
+        grib_filter rule.filter ${OUTFILE}
+        mv output.grb ${OUTFILE}
+      
         ###############################################
         # add the snowline to grib file ###############
         ###############################################

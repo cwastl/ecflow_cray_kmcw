@@ -11,12 +11,11 @@ run=%LAUF%
 mem=%MEMBER%
 leadtime=%LEAD%
 step15=%STEPS15%
+user=%USER%
 
-NSLOTS=$EC_total_tasks
-
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem 999 999
-#######################################################
+################Run setup script for environment#################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 999 $user
+#################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -29,6 +28,8 @@ RUNDIR=${PROGRIDDIR}/$PBS_JOBID
 cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
+
+NSLOTS=$EC_total_tasks
 
 # MPI, openMP env, etc.
 

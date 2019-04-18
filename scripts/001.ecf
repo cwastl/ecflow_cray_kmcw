@@ -15,10 +15,11 @@ couplfr=%KOPPLUNG%
 assimc=%ASSIMC%
 stophy=%STOCH%
 step15=%STEPS15%
+user=%USER%
 
-###########Run setup script for environment############
-. /home/ms/at/kmcw/SCR/setup.ksh $run $date $mem $lagg $assimc
-#######################################################
+#####################Run setup script for environment##################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg $assimc $user
+#######################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -32,14 +33,14 @@ cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-NPROMA=-32
+NPROMA=-20
 NPROC=$EC_total_tasks
-NPRGPNS=30
-NPRGPEW=16
+NPRGPNS=22
+NPRGPEW=18
 NPRTRV=$NPRGPEW
 NPRTRW=$NPRGPNS
 NSTRIN=$NPROC
-NSTROUT=`expr $NPROC \/ 2`
+NSTROUT=$NPROC
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
