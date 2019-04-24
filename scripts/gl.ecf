@@ -11,7 +11,6 @@ date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 lagg=%VORHI%
-leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 user=%USER%
 
@@ -21,6 +20,13 @@ user=%USER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [[ ${mem} == "00" ]]
+then
+   leadtime=%LEAD%
+else
+   leadtime=%LEADCTL%
+fi
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 

@@ -9,7 +9,6 @@
 date=%DATUM%
 run=%LAUF%
 lagg=%VORHI%
-leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
 sname=%SUITENAME%
@@ -21,6 +20,13 @@ user=%USER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [[ ${mem} == "00" ]]
+then
+   leadtime=%LEAD%
+else
+   leadtime=%LEADCTL%
+fi
 
 #if [[ ${run} == "06" ]]                 #set complete task complete
 #then

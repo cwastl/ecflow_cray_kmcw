@@ -32,11 +32,14 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 suite_name = "claef"
 
 #ensemble members
-members = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 #members = [13]
 
 # forecasting range
 fcst = 48
+
+# forecasting range control member
+fcstctl = 12
 
 # coupling frequency
 couplf = 3
@@ -127,7 +130,7 @@ def family_lbc():
           [
              Task("getlbc",
                 Trigger(":GL == 0"),
-                Complete(":GL == 1"),
+                Complete(":GL == 1 or :MEMBER == 00"),
                 Edit(
                    NP=1,
                    CLASS='ns',
@@ -148,7 +151,7 @@ def family_lbc():
           [
              Task("901",
                 Trigger(":GL == 0 and getlbc == complete"),
-                Complete(":GL == 1"),
+                Complete(":GL == 1 or :MEMBER == 00"),
                 Edit(
                    NP=1,
                    CLASS='ns',
@@ -568,7 +571,6 @@ defs = Defs().add(
                 ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
                 ECF_LOGHOST=host,                     # remote log host
                 ECF_LOGPORT=logport,                  # remote log port
-                ECF_LISTS='/home/ms/at/' + user + '/ecf/include/perm.list', 
 
                 # Submit job (remotely)
                 ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
@@ -583,7 +585,7 @@ defs = Defs().add(
           
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00", Time(timing['00']),
-                Edit( LAUF='00', VORHI=6, LEAD=fcst ),
+                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 
                 # add suite Families and Tasks
                 family_cleaning(),
@@ -593,7 +595,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_06", Time(timing['06']),
-                Edit( LAUF='06',VORHI=6, LEAD=assimc),
+                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
                 # add suite Families and Tasks
                 family_cleaning(),
@@ -603,7 +605,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_12", Time(timing['12']),
-                Edit( LAUF='12',VORHI=6, LEAD=fcst),
+                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst ),
 
                 # add suite Families and Tasks
                 family_cleaning(),
@@ -613,7 +615,7 @@ defs = Defs().add(
              ),
 
              Family("RUN_18", Time(timing['18']),
-                Edit( LAUF='18',VORHI=6, LEAD=assimc),
+                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
                 # add suite Families and Tasks
                 family_cleaning(),

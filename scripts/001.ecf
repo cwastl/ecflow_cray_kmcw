@@ -10,7 +10,6 @@ date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 lagg=%VORHI%
-leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 assimc=%ASSIMC%
 stophy=%STOCH%
@@ -24,6 +23,13 @@ user=%USER%
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
+if [[ ${mem} == "00" ]]
+then
+   leadtime=%LEAD%
+else
+   leadtime=%LEADCTL%
+fi
+
 [[ ! -d ${C001DIR} ]] && mkdir -p ${C001DIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
@@ -33,10 +39,10 @@ cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-NPROMA=-20
+NPROMA=-16
 NPROC=$EC_total_tasks
-NPRGPNS=22
-NPRGPEW=18
+NPRGPNS=18
+NPRGPEW=20
 NPRTRV=$NPRGPEW
 NPRTRW=$NPRGPNS
 NSTRIN=$NPROC
@@ -46,17 +52,9 @@ month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
 # MPI, openMP env, etc.
 
-export MALLOC_CHECK_=0
-export MPI_IB_RAILS=1
-export MPI_DSM_DISTRIBUTE=1
-export MPI_DSM_VERBOSE=1
-export MPI_VERBOSE=1
-export MPI_BUFS_PER_PROC=256
-export MPI_BUFS_PER_HOST=4096
-export MPI_BUFFER_MAX=20000000
-export OMP_NUM_THREADS=1
-export KMP_STACKSIZE=500m
-export KMP_MONITOR_STACKSIZE=500m
+#export OMP_NUM_THREADS=1
+#export KMP_STACKSIZE=500m
+#export KMP_MONITOR_STACKSIZE=500m
 
 export DR_HOOK=0
 export DR_HOOK_SILENT=1

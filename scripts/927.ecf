@@ -10,7 +10,6 @@ date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 lagg=%VORHI%
-leadtime=%LEAD%
 couplfr=%KOPPLUNG%
 assim=%ASSIM%
 gl=%GL%
@@ -22,6 +21,13 @@ user=%USER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [[ ${mem} == "00" ]]
+then
+   leadtime=%LEAD%
+else
+   leadtime=%LEADCTL%
+fi
 
 NPROMA=-32
 NPROC=$EC_total_tasks
@@ -86,9 +92,15 @@ if [[ $gl == 1 ]];then
    NAM=${NAMEL927}
    NAMADDS=${NAMEL927ADDS}
 else
-   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
-   NAM=${NAMEL927_GLO}
-   NAMADDS=${NAMEL927ADDS_GLO}
+   if [[ ${mem} == "00" ]];then
+      ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
+      NAM=${NAMEL927}
+      NAMADDS=${NAMEL927ADDS}
+   else
+      ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
+      NAM=${NAMEL927_GLO}
+      NAMADDS=${NAMEL927ADDS_GLO}
+   fi
 fi
 
 ln -s ${ECOCLIMAPI} .
@@ -101,6 +113,9 @@ while (( $i <= $leadtime )) ; do
 
   typeset -Z4 j
   j=$i
+
+  typeset -Z3 jj
+  jj=$i
 
   typeset -Z3 l
   l=$k
@@ -140,8 +155,34 @@ while (( $i <= $leadtime )) ; do
   fi    
 
   rm -f ICMSHE927INIT
-  ln -s ${COUPLDIR}/ICMSHBC${mem}+${j} ICMSHE927INIT
- 
+
+  (( WAITCOUNT = 0 ))
+  if [[ ${mem} == "00" ]]
+  then
+     while [[ ${WAITCOUNT} -le 120 ]]
+     do
+        if [[ -f ${LBCIFS}/ffei${n1date}_${n1run}00+${jj} ]]
+        then
+           ln -s ${LBCIFS}/ffei${n1date}_${n1run}00+${jj} ICMSHE927INIT
+           (( WAITCOUNT = 300 ))
+        else 
+           echo "ATTENTION: dissemination file does not yet exist!!!"
+           ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
+           (( WAITCOUNT = ${WAITCOUNT} + 1 ))
+           sleep 60
+        fi
+     done      
+  else
+     ln -s ${COUPLDIR}/ICMSHBC${mem}+${j} ICMSHE927INIT
+     (( WAITCOUNT = 300 ))
+  fi 
+
+  if [[ ${WAITCOUNT} -le 120 ]]
+  then
+     echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+     ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+     exit 999
+  fi
 
   status=0
   aprun -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_${mem}.log 2>&1 

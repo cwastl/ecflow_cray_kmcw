@@ -9,7 +9,6 @@
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
-leadtime=%LEAD%
 step15=%STEPS15%
 user=%USER%
 
@@ -19,6 +18,13 @@ user=%USER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+if [[ ${mem} == "00" ]]
+then
+   leadtime=%LEAD%
+else
+   leadtime=%LEADCTL%
+fi
 
 [[ ! -d ${PROGRIDDIR} ]] && mkdir -p ${PROGRIDDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
