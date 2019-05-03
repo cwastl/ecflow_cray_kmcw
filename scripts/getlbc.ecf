@@ -8,49 +8,25 @@
 
 date=%DATUM%
 run=%LAUF%
+leadtime=%LEAD%
 lagg=%VORHI%
 couplfr=%KOPPLUNG%
-mem=%MEMBER%
-sname=%SUITENAME%
 user=%USER%
 
-###################Run setup script for environment################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
+##################Run setup script for environment#################
+. /home/ms/at/${user}/SCR/setup.ksh $run $date 999 $lagg 999 $user
 ###################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
-if [[ ${mem} == "00" ]]
-then
-   leadtime=%LEAD%
-else
-   leadtime=%LEADCTL%
-fi
+[[ ! -d ${LBCGET} ]] && mkdir -p ${LBCGET}
 
-#if [[ ${run} == "06" ]]                 #set complete task complete
-#then
-#   ecflow_client --force=complete recursive /${sname}/complete
-#fi
+cd ${LBCGET}
 
-[[ ! -d ${LBCDIR} ]] && mkdir -p ${LBCDIR}
-
-RUNDIR=${LBCDIR}/$PBS_JOBID
-[[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
-cd ${RUNDIR}
-
-rm -fr ${RUNDIR}/*
+rm -fr ${LBCGET}/*
 
 ln -sf ${BINDIR}/big.rule big.rule
-ln -sf ${BINDIR}/app_lsm.filter app_lsm.filter
-ln -sf ${BINDIR}/app_z.filter app_z.filter
-
-if [[ ${mem} -lt 10 ]]
-then
-   amem=$(echo $mem | cut -c 2-2)
-else
-   amem=$mem
-fi
 
 i=0  
 (( leadtime=$leadtime+$lagg ))
@@ -80,7 +56,7 @@ while (( $i <= $leadtime )) ; do
            echo "ATTENTION: dissemination file does not yet exist!!!"
            ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
            (( WAITCOUNT = ${WAITCOUNT} + 1 ))
-          sleep 60
+           sleep 60
         fi 
      
      elif [[ ${i} -ge $lagg ]]
@@ -109,81 +85,45 @@ while (( $i <= $leadtime )) ; do
 
    if [[ ${WAITCOUNT} -le 120 ]]
    then
-       echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
-       ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
-       exit 999
+      echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+      ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+      exit 999
 
    elif [[ ${WAITCOUNT} -gt 300 ]]
    then 
-       echo "File +" ${FT} " not necessary"
-       ecflow_client --label=info "File +" ${FT} " not necessary"
-       (( i=$i+$couplfr ))
+      echo "File +" ${FT} " not necessary"
+      ecflow_client --label=info "File +" ${FT} " not necessary"
 
    else 
+      echo "File +" ${FT} " copied"
+      ecflow_client --label=info "File +" ${FT} " copied"
 
-       #-- Rename grib files. MARS use %%d format for the
-       #-- filenames ith "[STEP]", we replace it with %%03d
-       #-- filenames with "[NUMBER]", we replace it with %%02d
+      #-- Rename grib files. MARS use %%d format for the
+      #-- filenames ith "[STEP]", we replace it with %%03d
+      #-- filenames with "[NUMBER]", we replace it with %%02d
 
-       for av in $(ls ${amem}-*.*.grb_${n1date}*+${i})
-       do
-          i1=$(echo $av |cut -d "-" -f 1 | awk '{printf "%%02d",$1}')
-          i2=$(echo $av |cut -d "-" -f 2)
-          [[ ! -f ${i1}-${i2} ]] && rename ${av} ${i1}-${i2} ${av}
-       done
+      for av in $(ls *-*.*.grb_${n1date}*+${i})
+      do
+         i1=$(echo $av |cut -d "-" -f 1 | awk '{printf "%%02d",$1}')
+         i2=$(echo $av |cut -d "-" -f 2)
+        [[ ! -f ${i1}-${i2} ]] && rename ${av} ${i1}-${i2} ${av}
+      done
 
-       for av in $(ls ${mem}-*.*.grb_${n1date}*+${i})
-       do
-          i1=$(echo $av |cut -d "+" -f 1)
-          i2=$(echo $av |cut -d "+" -f 2 | awk '{printf "%%03d",$1}')
-          rename ${av} ${i1}+${i2} ${av}
-       done
+      for av in $(ls *-*.*.grb_${n1date}*+${i})
+      do
+         i1=$(echo $av |cut -d "+" -f 1)
+         i2=$(echo $av |cut -d "+" -f 2 | awk '{printf "%%03d",$1}')
+         rename ${av} ${i1}+${i2} ${av}
+      done
 
-       at_=$(echo ${FT} | awk '{printf "%%03d",$1}')
-       actf=${mem}-atm.pdg.grb_${n1date}${n1run}00+${at_}
-       if [[ ! -f ${actf} ]]
-       then
-          ecflow_client --label=error "${mem}-atm.pdg.grb_${n1date}${n1run}00+${at_} not available"
-          exit 1
-       fi
-       actf=${mem}-atm.spe.grb_${n1date}${n1run}00+${at_}
-       if [[ ! -f ${actf} ]]
-       then
-          ecflow_client --label=error "${mem}-atm.spe.grb_${n1date}${n1run}00+${at_} not available"
-          exit 1
-       fi
-       actf=${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_}
-       if [[ ! -f ${actf} ]]
-       then
-          ecflow_client --label=error "${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_} not available"
-          exit 1
-       fi
+   fi 
 
-       if [[ ${FT} -ne 000 ]]
-       then
-           grib_filter -o ${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_} app_lsm.filter landseamask.grb 
-           grib_filter -o ${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_} app_z.filter landseamask.grb
-       else
-           if [[ ${mem} -ne 00 ]]
-           then
-                grib_filter -o ${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_} app_lsm.filter landseamask.grb 
-           fi
-       fi
-
-       grib_copy -B "level:l asc" ${mem}-atm.pdg.grb_${n1date}${n1run}00+${at_} ${LBCDIR}/atm.pdg.grib_${n1date}${n1run}+${at_}
-       grib_copy -B "level:l asc" ${mem}-atm.spe.grb_${n1date}${n1run}00+${at_} ${LBCDIR}/atm.spe.grib_${n1date}${n1run}+${at_}
-       rename ${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_} ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${at_} ${mem}-sol.pdg.grb_${n1date}${n1run}00+${at_}
-
-       rm -f ${mem}-atm.pdg.grb_${n1date}${n1run}00+${at_} ${mem}-atm.spe.grb_${n1date}${n1run}00+${at_}
-
-       (( i=$i+$couplfr ))
-       
-   fi
+   ecflow_client --event=a
+   (( i=$i+$couplfr ))
 
 done
 
-cd ${LBCDIR}
-rm -rf ${RUNDIR}
+rm -f big.rule
 
 %include <tail.h>
 

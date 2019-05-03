@@ -21,9 +21,9 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 
 if [[ ${mem} == "00" ]]
 then
-   leadtime=%LEAD%
-else
    leadtime=%LEADCTL%
+else
+   leadtime=%LEAD%
 fi
 
 [[ ! -d ${ADDGRIBDIR} ]] && mkdir -p ${ADDGRIBDIR}
@@ -59,8 +59,8 @@ while (( $step <= ${leadtime} )) ; do
   for min in ${my_min[*]}
   do
 
-    INFILE=$PROGRIDDIR/CLAEF000+${cstep}:${min}".grb"
-    OUTFILE=$ADDGRIBDIR/CLAEF000+${cstep}:${min}".grb"
+    INFILE=$PROGRIDDIR/CLAEF${mem}+${cstep}:${min}".grb"
+    OUTFILE=$ADDGRIBDIR/CLAEF${mem}+${cstep}:${min}".grb"
 
     if [ ${min} == "00" ] ; then
  
@@ -92,8 +92,8 @@ while (( $step <= ${leadtime} )) ; do
 
         SNOWGRIB=${ADDGRIBDIR}/snow+${cstep}:00.grb
         ln -sf ${BINDIR}/aromesnowline .
-        echo "Calculate snowline for CLAEF000+" ${cstep} ":00.grb"
-        ecflow_client --label=info "Calculate snowline for CLAEF000+${cstep}:00.grb"
+        echo "Calculate snowline for CLAEF${mem}+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate snowline for CLAEF${mem}+${cstep}:00.grb"
         ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}:00.log 2>&1
  
         if (( $? != 0 ))then
@@ -110,7 +110,7 @@ while (( $step <= ${leadtime} )) ; do
  
         SHOWGRIB=${ADDGRIBDIR}/show+${cstep}.grb
         ln -sf ${BINDIR}/alashowalter .
-        echo "Calculate showalter for CLAEF000+" ${cstep} ":00.grb"
+        echo "Calculate showalter for CLAEF${mem}+" ${cstep} ":00.grb"
         ./alashowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
  
         if (( $? != 0 ))then
@@ -130,8 +130,8 @@ while (( $step <= ${leadtime} )) ; do
 
           APCPGRIB=${ADDGRIBDIR}/apcp+${cstep}.grb
           ln -sf ${BINDIR}/arometotalprec .
-          echo "Calculate total prec for CLAEF000+" ${cstep} ":00.grb"
-          ecflow_client --label=info "Calculate total prec for CLAEF000+${cstep}:00.grb"
+          echo "Calculate total prec for CLAEF${mem}+" ${cstep} ":00.grb"
+          ecflow_client --label=info "Calculate total prec for CLAEF${mem}+${cstep}:00.grb"
           ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
   
           if (( $? != 0 ))then
@@ -150,8 +150,8 @@ while (( $step <= ${leadtime} )) ; do
  
         LCLTGRIB=${ADDGRIBDIR}/lclt+${cstep}.grb
         ln -sf  ${BINDIR}/aromettrigger .
-        echo "Calculate init T for CLAEF000+" ${cstep} ":00.grb"
-        ecflow_client --label=info "Calculate init T for CLAEF000+${cstep}.grb"
+        echo "Calculate init T for CLAEF${mem}+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate init T for CLAEF${mem}+${cstep}.grb"
         ./aromettrigger ${OUTFILE} ${LCLTGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
  
         if (( $? != 0 ))then
@@ -182,8 +182,8 @@ while (( $step <= ${leadtime} )) ; do
      
         APCPGRIB=${ADDGRIBDIR}/apcp+${cstep}.grb
         ln -sf ${BINDIR}/arometotalprec .
-        echo "Calculate total prec for CLAEF000+" ${cstep} ":00.grb"
-        ecflow_client --label=info "Calculate total prec for CLAEF000+${cstep}:00.grb"
+        echo "Calculate total prec for CLAEF${mem}+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate total prec for CLAEF${mem}+${cstep}:00.grb"
         ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
   
         if (( $? != 0 ))then

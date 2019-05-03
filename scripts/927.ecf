@@ -24,9 +24,9 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 
 if [[ ${mem} == "00" ]]
 then
-   leadtime=%LEAD%
-else
    leadtime=%LEADCTL%
+else
+   leadtime=%LEAD%
 fi
 
 NPROMA=-32

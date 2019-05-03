@@ -70,7 +70,7 @@ logport = 36652;
 
 # main runs time schedule
 timing = {
-  'comp' : '01:00',
+  'comp' : '23:00',
   '00' : '01:15',
   '06' : '07:15',
   '12' : '13:15',
@@ -121,23 +121,41 @@ def family_lbc():
        Edit(
           GL=gl),
 
+       # Task getlbc
+       [
+          Task("getlbc",
+             Event("a"),
+             Edit(
+                NP=1,
+                CLASS='ns',
+                KOPPLUNG=couplf,
+                NAME="getlbc",
+                WALLT="02",
+                USER=user
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Label("error", ""),
+          )
+       ],
+
        # Family MEMBER
        [
 
          Family("MEM_{:02d}".format(mem),
 
-          # Task getlbc
+          # Task divlbc
           [
-             Task("getlbc",
-                Trigger(":GL == 0"),
+             Task("divlbc",
+                Trigger(":GL == 0 and ../getlbc:a"),
                 Complete(":GL == 1 or :MEMBER == 00"),
+                Event("b"),
                 Edit(
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
-                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
-                   NAME="getlbc{:02d}".format(mem),
+                   NAME="divlbc{:02d}".format(mem),
                    WALLT="02",
                    USER=user
                 ),
@@ -150,7 +168,7 @@ def family_lbc():
           # Task 901
           [
              Task("901",
-                Trigger(":GL == 0 and getlbc == complete"),
+                Trigger(":GL == 0 and divlbc:b"),
                 Complete(":GL == 1 or :MEMBER == 00"),
                 Edit(
                    NP=1,
@@ -465,7 +483,7 @@ def family_main():
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=396,
+                     NP=360,
                      CLASS='np',
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
@@ -484,7 +502,7 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001  == complete"),
+                  Trigger("001 == complete"),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -503,7 +521,7 @@ def family_main():
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid  == complete"),
+                  Trigger("progrid == complete"),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -523,7 +541,7 @@ def family_main():
             # Task Transfer 
             [
                Task("transfer",
-                  Trigger("addgrib  == complete"),
+                  Trigger("addgrib == complete"),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -578,11 +596,11 @@ defs = Defs().add(
 
              # Task complete if something went wrong on the previous day
              Task("complete", Time(timing['comp']),
-                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01", USER=user ),
+                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01" ),
                 Label("run", ""),
                 Label("info", ""),
              ),
-          
+ 
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00", Time(timing['00']),
                 Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),

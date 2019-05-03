@@ -32,8 +32,8 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 suite_name = "claef_2"
 
 #ensemble members
-#members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [0]
+members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+#members = [0]
 
 # forecasting range
 fcst = 6
@@ -103,23 +103,41 @@ def family_lbc():
        Edit(
           GL=gl),
 
+       # Task getlbc
+       [
+          Task("getlbc",
+             Event("a"),
+             Edit(
+                NP=1,
+                CLASS='ns',
+                KOPPLUNG=couplf,
+                NAME="getlbc",
+                WALLT="02",
+                USER=user
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Label("error", ""),
+          )
+       ],
+
        # Family MEMBER
        [
 
          Family("MEM_{:02d}".format(mem),
 
-          # Task getlbc
+          # Task divlbc
           [
-             Task("getlbc",
-                Trigger(":GL == 0"),
+             Task("divlbc",
+                Trigger(":GL == 0 and ../getlbc:a"),
                 Complete(":GL == 1 or :MEMBER == 00"),
+                Event("b"),
                 Edit(
                    NP=1,
                    CLASS='ns',
                    KOPPLUNG=couplf,
-                   SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
-                   NAME="getlbc{:02d}".format(mem),
+                   NAME="divlbc{:02d}".format(mem),
                    WALLT="02",
                    USER=user
                 ),
@@ -132,7 +150,7 @@ def family_lbc():
           # Task 901
           [
              Task("901",
-                Trigger(":GL == 0 and getlbc == complete"),
+                Trigger(":GL == 0 and divlbc:b"),
                 Complete(":GL == 1 or :MEMBER == 00"),
                 Edit(
                    NP=1,
@@ -446,7 +464,7 @@ def family_main():
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=396,
+                     NP=360,
                      CLASS='np',
                      KOPPLUNG=couplf,
                      ASSIMC=assimc,
@@ -465,7 +483,7 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001  == complete"),
+                  Trigger("001 == complete"),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -484,7 +502,7 @@ def family_main():
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid  == complete"),
+                  Trigger("progrid == complete"),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -547,24 +565,24 @@ defs = Defs().add(
 #                family_obs(),
 #                family_main(),
 #             ),
-
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc),
-
-               # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-#             Family("RUN_12",
-#                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
 #
-#                # add suite Families and Tasks
+#             Family("RUN_06",
+#                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+#
+#               # add suite Families and Tasks
 #                family_lbc(),
 #                family_obs(),
 #                family_main(),
-#                ),
+#             ),
+
+             Family("RUN_12",
+                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+                ),
 
 #             Family("RUN_18",
 #                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),

@@ -30,6 +30,8 @@ cd ${RUNDIR}
 rm -rf $RUNDIR/*
 
 # Environmental settings
+prgenvswitchto intel
+
 NPROC=$EC_total_tasks
 export OMP_NUM_THREADS=1
 #export MALLOC_CHECK_=0

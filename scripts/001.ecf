@@ -25,9 +25,9 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 
 if [[ ${mem} == "00" ]]
 then
-   leadtime=%LEAD%
-else
    leadtime=%LEADCTL%
+else
+   leadtime=%LEAD%
 fi
 
 [[ ! -d ${C001DIR} ]] && mkdir -p ${C001DIR}
@@ -125,8 +125,13 @@ ln -sf ${NAMEL001SURFEX} EXSEG1.nam
 
 couplfr_s=`expr ${couplfr} \* 3600`
 date2=$( echo $date | cut -c7-8 )
-seedm=`expr ${mem} \* ${date2}`
 
+if [[ ${mem} == "00" ]]
+then
+   seedm=0
+else
+   seedm=`expr ${mem} \* ${date2}`
+fi
 
 if [[ ${step15} == 1 ]]
 then 

@@ -23,7 +23,7 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
    ecflow_client --label=info "Date/run exists"
    cd ${MY_DIR}/DATA/${p1date}/${p1run}
-   rm -rf BATOR BATOR3D OBSERVATIONS 
+   rm -rf BATOR BATOR3D OBSERVATIONS LBCGET 
 
    i=0
    while (( ${i} <= ${amem} - 1 )) ; do

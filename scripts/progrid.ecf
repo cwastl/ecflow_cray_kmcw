@@ -21,9 +21,9 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 
 if [[ ${mem} == "00" ]]
 then
-   leadtime=%LEAD%
-else
    leadtime=%LEADCTL%
+else
+   leadtime=%LEAD%
 fi
 
 [[ ! -d ${PROGRIDDIR} ]] && mkdir -p ${PROGRIDDIR}
@@ -77,13 +77,13 @@ while (( $step <= ${leadtime} )) ; do
   for min in ${my_min[*]}
   do
   
-    if [ ! -s ${PROGRIDDIR}/CLAEF000+${cstep}:${min}".grb" ] ; then
+    if [ ! -s ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" ] ; then
       ln -sf ${C001DIR}/PF${EXP}${EXP}+${cstep}:${min} fort.11
       status=0
-      ecflow_client --label=info "Prepare CLAEF000+${cstep}:${min}.grb"
+      ecflow_client --label=info "Prepare CLAEF${mem}+${cstep}:${min}.grb"
       /usr/bin/time aprun -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
       status=$?
-      rename GRIDBIZARRE ${PROGRIDDIR}/CLAEF000+${cstep}:${min}".grb" GRIDBIZARRE
+      rename GRIDBIZARRE ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" GRIDBIZARRE
       rm -f fort.11
     fi
 

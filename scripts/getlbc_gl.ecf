@@ -28,11 +28,6 @@ else
    leadtime=%LEADCTL%
 fi
 
-if [[ ${run} == "00" ]]                 #set complete task complete
-then
-   ecflow_client --force=complete recursive /${sname}/complete
-fi
-
 [[ ! -d ${LBCDIR} ]] && mkdir -p ${LBCDIR}
 
 cd ${LBCDIR}

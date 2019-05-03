@@ -12,7 +12,9 @@ mem=%MEMBER%
 step15=%STEPS15%
 user=%USER%
 
-############################Run setup script for environment#####
+set +e
+
+###############Run setup script for environment##################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 999 $user
 #################################################################
 
@@ -20,68 +22,70 @@ user=%USER%
 ecflow_client --label=run "The date is now ${date} ${run}"
 
 if [[ ${mem} == "00" ]]
-then 
-   leadtime=%LEAD%
-else
+then
    leadtime=%LEADCTL%
+else
+   leadtime=%LEAD%
 fi
 
-RUNDIR=${ADDGRIBDIR}/$PBS_JOBID
-[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
-cd ${RUNDIR}
+#RUNDIR=${ADDGRIBDIR}/$PBS_JOBID
+#[[ ! -d ${RUNDIR} ]] && mkdir ${RUNDIR}
+#cd ${RUNDIR}
 
-rm -fr ${RUNDIR}/*
+#rm -fr ${RUNDIR}/*
 
-step=0
-while (( $step <= $leadtime )) ; do
+#step=0
+#while (( $step <= $leadtime )) ; do
+#
+#   typeset -Z4 cstep
+#   cstep=$step
+#
+#   if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
+#   then
+#
+#     my_min="00 15 30 45"
+#
+#   else
+#
+#     my_min="00"
+#
+#   fi
+#
+#   for min in ${my_min[*]}
+#   do
+#
+#      if [ $min == "00" ] ; then
+#
+#         if [ -s ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" ] ; then
+#    
+#            ecflow_client --label=info "Thin CLAEF${mem}+${cstep}:${min}.grb" 
+#            cp ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" .
+#            grib_copy -w typeOfLevel!=isobaricInhPa ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" CLAEF${mem}+${cstep}:${min}"_surf.grb"
+#            grib_copy -w indicatorOfParameter=11/33/34/152 ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" CLAEF${mem}+${cstep}:${min}"_upper1.grb"
+#            grib_copy -w typeOfLevel=isobaricInhPa CLAEF${mem}+${cstep}:${min}"_upper1.grb" CLAEF${mem}+${cstep}:${min}"_upper2.grb"
+#            cat CLAEF${mem}+${cstep}:${min}"_surf.grb" CLAEF${mem}+${cstep}:${min}"_upper2.grb" > CLAEF${mem}+${cstep}:${min}".grb"
+#            rm -f CLAEF${mem}+${cstep}:${min}"_surf.grb" CLAEF${mem}+${cstep}:${min}"_upper1.grb" CLAEF${mem}+${cstep}:${min}"_upper2.grb"
+#         
+#         fi
+#      
+#      else
+#
+#         if [ -s ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" ] ; then
+#           
+#            cp ${ADDGRIBDIR}/CLAEF${mem}+${cstep}:${min}".grb" .
+#            ecflow_client --label=info "Thin CLAEF${mem}+${cstep}:${min}.grb" 
+#
+#         fi
+#
+#      fi
+#
+#   done
+#
+#   (( step=${step}+1 ))
+#
+#done
 
-   typeset -Z4 cstep
-   cstep=$step
-
-   if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
-   then
-
-     my_min="00 15 30 45"
-
-   else
-
-     my_min="00"
-
-   fi
-
-   for min in ${my_min[*]}
-   do
-
-      if [ $min == "00" ] ; then
-
-         if [ -s ${ADDGRIBDIR}/CLAEF000+${cstep}:${min}".grb" ] ; then
-    
-            ecflow_client --label=info "Thin CLAEF000+${cstep}:${min}.grb" 
-            grib_copy -w typeOfLevel!=isobaricInhPa ${ADDGRIBDIR}/CLAEF000+${cstep}:${min}".grb" CLAEF000+${cstep}:${min}"_surf.grb"
-            grib_copy -w indicatorOfParameter=6/11/33/34/152 ${ADDGRIBDIR}/CLAEF000+${cstep}:${min}".grb" CLAEF000+${cstep}:${min}"_upper1.grb"
-            grib_copy -w typeOfLevel=isobaricInhPa CLAEF000+${cstep}:${min}"_upper1.grb" CLAEF000+${cstep}:${min}"_upper2.grb"
-            cat CLAEF000+${cstep}:${min}"_surf.grb" CLAEF000+${cstep}:${min}"_upper2.grb" > CLAEF000+${cstep}:${min}".grb"
-            rm -f CLAEF000+${cstep}:${min}"_surf.grb" CLAEF000+${cstep}:${min}"_upper1.grb" CLAEF000+${cstep}:${min}"_upper2.grb"
-         
-         fi
-      
-      else
-
-         if [ -s ${ADDGRIBDIR}/CLAEF000+${cstep}:${min}".grb" ] ; then
-           
-            cp ${ADDGRIBDIR}/CLAEF000+${cstep}:${min}".grb" .
-            ecflow_client --label=info "Thin CLAEF000+${cstep}:${min}.grb" 
-
-         fi
-
-      fi
-
-   done
-
-   (( step=${step}+1 ))
-
-done
-
+cd ${ADDGRIBDIR}
 filen=CLAEF_${run}_${mem}.tar.gz
 tar -czvf ${filen} *.grb 
 
@@ -92,7 +96,8 @@ do
 
 
    ecflow_client --label=info "Copying ${filen}"
-   ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${RUNDIR}/${filen} -target /${run}/MEM_${mem}/${filen} -overwrite -verbose -mailto clemens.wastl@zamg.ac.at -onfailure
+#   ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${RUNDIR}/${filen} -target /${run}/MEM_${mem}/${filen} -overwrite -verbose -mailto clemens.wastl@zamg.ac.at -onfailure
+   ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${ADDGRIBDIR}/${filen} -target /../../CLAEF/PRODUCTION/GRIB/TMP/MEM_${mem}/${filen} -overwrite -verbose #-mailto clemens.wastl@zamg.ac.at -onfailure
 
    CODEREP=$?
    if (( ${CODEREP} !=0 ))
@@ -103,14 +108,15 @@ do
       sleep 300
 
    else
-
+   
+      echo ${date}${run} > ${OKFILE}
       (( CHECKTRANS = 10 ))
+      ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${ADDGRIBDIR}/${OKFILE} -target /../../CLAEF/PRODUCTION/GRIB/OKAY/${OKFILE} -overwrite -verbose #-mailto clemens.wastl@zamg.ac.at -onfailure
 
    fi
 
 done
 
-cd ${ADDGRIBDIR}
-rm -rf ${RUNDIR}
+rm -rf ${filen}
 
 %include <tail.h>
