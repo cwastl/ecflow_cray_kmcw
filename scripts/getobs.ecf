@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run getobs
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -89,6 +86,13 @@ fi
 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_temp_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_${date}_${run}0000.asc -overwrite -verbose 
+
+#Laketemps
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/LAKE_TEMPERATURE/laketemperatures_${date}.txt -overwrite -verbose
+
+#Snowgrid
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/SNOWGRID2/ELSCFARCWALBC000 -target ./ELSCFAR33ALBC000_snow_${date} -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/SNOWGRID/ELSCFARCWALBC000 -target ./ELSCFAROMALBC000_snow_${date} -overwrite -verbose
 
 if [[ ${TRANSOK} -ge 1 ]]
 then

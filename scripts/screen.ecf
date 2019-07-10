@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run assim/screening 3D
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -19,6 +16,9 @@ user=%USER%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+prgenvswitchto intel
 
 [[ ! -d ${SCREENDIR} ]] && mkdir -p ${SCREENDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}

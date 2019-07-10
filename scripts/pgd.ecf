@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run 927surf PGD part
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -119,8 +116,7 @@ ln -sf ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
 #     COUPLING FILES
 #
 
-typeset -Z4 cstep
-cstep=$lagg
+cstep=$(printf "%%04d" $lagg)
 
 cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
 ln -s ICMSHE927+0000 ${RUNDIR}/ICMSHE927INIT

@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run programs for addgrib
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -42,8 +39,7 @@ NPROC=$EC_total_tasks
 step=0
 while (( $step <= ${leadtime} )) ; do
 
-  typeset -Z4 cstep
-  cstep=$step
+  cstep=$(printf "%%04d" $step)
 
   if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
   then
@@ -162,6 +158,25 @@ while (( $step <= ${leadtime} )) ; do
 
         cat ${LCLTGRIB} >> ${OUTFILE}
         rm -f ${LCLTGRIB:="xxx"}
+
+        #################################
+        # Add scalar gusts to the grib: #
+        #################################
+ 
+        GUSTGRIB=${ADDGRIBDIR}/gust+${cstep}.grb
+        ln -sf  ${BINDIR}/gust_uv10m2ff10m .
+        echo "Calculate gusts for CLAEF${mem}+" ${cstep} ":00.grb"
+        ecflow_client --label=info "Calculate gusts for CLAEF${mem}+${cstep}.grb"
+        ./gust_uv10m2ff10m ${OUTFILE} ${GUSTGRIB} 130 131 133  >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+
+        if (( $? != 0 ))then
+          ecflow_client --label=error"Gusts not ok" 
+          echo "Gusts not ok"
+          exit 1
+        fi
+
+        cat ${GUSTGRIB} >> ${OUTFILE}
+        rm -f ${GUSTGRIB:="xxx"}
 
       else 
  

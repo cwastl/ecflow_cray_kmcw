@@ -1,8 +1,6 @@
-#!/bin/ksh
-#
 # Script to run GL tool to prepare ECMWF couplingfiles for 927
-%include <pbs.h>
 
+%include <pbs.h>
 %include <head.h>
 
 module load cray-snplauncher
@@ -58,8 +56,7 @@ while [ $i -le $anzahl ]
 do
 
     (( j = ${i}*${couplfr}+${lagg} ))
-    typeset -Z2 jj
-    jj=$j
+    jj=$(printf "%%02d" $j)
 
     if [ ! -s ${COUPLDIR}/ICMSHBC${mem}+00${jj} ]
     then

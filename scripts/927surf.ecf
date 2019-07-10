@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run 927surf
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -111,11 +108,8 @@ ln -s ${PGDFILE_FA} ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
 ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
 ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 
-typeset -Z4 cstep
-cstep=$lagg
-
-typeset -Z3 cstep2
-cstep2=$lagg
+cstep=$(printf "%%04d" $lagg)
+cstep2=$(printf "%%03d" $lagg)
 
 (( WAITCOUNT = 0 ))
 if [[ ${mem} == "00" ]]
@@ -134,8 +128,19 @@ then
       fi
    done
 else
-   ln -sf ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
-   (( WAITCOUNT = 300 ))
+   while [[ ${WAITCOUNT} -le 120 ]]
+   do
+      if [[ -f ${COUPLDIR}/ICMSHBC${mem}+${cstep} ]]
+      then
+         ln -s ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHE927INIT
+         (( WAITCOUNT = 300 ))
+      else
+         echo "ATTENTION: dissemination file does not yet exist!!!"
+         ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
+         (( WAITCOUNT = ${WAITCOUNT} + 1 ))
+         sleep 60
+      fi
+   done
 fi
 
 if [[ ${WAITCOUNT} -le 120 ]]

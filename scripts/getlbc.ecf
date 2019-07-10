@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 #Script to run getlbc to get couplingfiles from ECMWF
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -13,9 +10,9 @@ lagg=%VORHI%
 couplfr=%KOPPLUNG%
 user=%USER%
 
-##################Run setup script for environment#################
+#################Run setup script for environment#################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date 999 $lagg 999 $user
-###################################################################
+##################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -32,8 +29,7 @@ i=0
 (( leadtime=$leadtime+$lagg ))
 while (( $i <= $leadtime )) ; do
 
-   typeset -Z3 FT
-   FT=$i
+   FT=$(printf "%%03d" $i)
 
    actmm=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 5-6)
    actdd=$(/home/ms/at/${user}/bin/datecalc ${n1date}${n1run} -f -t +${i}:00 | cut -c 7-8)

@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run addsurf for assimilation
 
 %include <pbs.h>
-
 %include <head.h>
 
 module load cray-snplauncher

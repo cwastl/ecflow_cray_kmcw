@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run assim/canari
 
 %include <pbs.h>
-
 %include <head.h>
 
 module load cray-snplauncher
@@ -164,7 +161,8 @@ if [[ $LINISNOW == ".TRUE." ]] ; then
   echo "&NAMSCEN" >> fort.4
   echo "   /" >> fort.4
 
-  mpiexec -np $NSLOTS ${BINSNOWGRID3}
+#  mpiexec -np $NSLOTS ${BINSNOWGRID3} 
+  aprun -n $NSLOTS ${BINSNOWGRID3}
   status1=$?
   if (( $status1 != 0 )) && (( $status1 != 137 )) 
   then
@@ -192,7 +190,8 @@ if [[ ${LINISNOW2} == ".TRUE." ]] ; then
   echo "&NAMSCEN" >> fort.4
   echo "   /" >> fort.4
 
-  mpiexec -np 1 ${BINSNOWGRID4}
+#  mpiexec -np 1 ${BINSNOWGRID4}
+  aprun -n $NSLOTS ${BINSNOWGRID4}
   status11=$?                                                 
   if (( $status11 != 0 )) && (( $status11 != 137 ))
   then    

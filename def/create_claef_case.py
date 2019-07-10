@@ -32,8 +32,8 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 suite_name = "claef_2"
 
 #ensemble members
-members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-#members = [0]
+#members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+members = [0]
 
 # forecasting range
 fcst = 6
@@ -52,6 +52,7 @@ gl = False
 
 # assimilation switches
 assimi = False   #assimilation yes/no
+assimm = 3      #number of members without assimilation
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
@@ -60,11 +61,11 @@ seda = True     #surface eda
 enjk = True
 
 # use stochastic physics model error representation yes/no
-stophy = False
+stophy = True
 
 # SBU account, cluster and user name, logport
 account = "atlaef";
-host    = "cca";
+schost    = "cca";
 user    = "kmcw";
 logport = 36652;
 
@@ -110,10 +111,7 @@ def family_lbc():
              Edit(
                 NP=1,
                 CLASS='ns',
-                KOPPLUNG=couplf,
                 NAME="getlbc",
-                WALLT="02",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -135,11 +133,8 @@ def family_lbc():
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
                    NAME="divlbc{:02d}".format(mem),
-                   WALLT="02",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -152,14 +147,12 @@ def family_lbc():
              Task("901",
                 Trigger(":GL == 0 and divlbc:b"),
                 Complete(":GL == 1 or :MEMBER == 00"),
+                Event("c"),
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
                    NAME="901_{:02d}".format(mem),
-                   WALLT="03",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -175,12 +168,9 @@ def family_lbc():
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
-                   WALLT="01",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -196,10 +186,7 @@ def family_lbc():
                    MEMBER="{:02d}".format(mem),
                    NP=1,
                    CLASS='nf',
-                   KOPPLUNG=couplf,
                    NAME="gl{:02d}".format(mem),
-                   WALLT="03",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -228,8 +215,6 @@ def family_obs() :
                 NP=1,
                 CLASS='ns',
                 NAME="getobs",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -245,8 +230,6 @@ def family_obs() :
                 NP=1,
                 CLASS='ns',
                 NAME="bator",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -263,8 +246,6 @@ def family_obs() :
                 NP=1,
                 CLASS='ns',
                 NAME="bator3D",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -289,15 +270,13 @@ def family_main():
             # Task 927atm
             [
                Task("927",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+                  Event("d"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=16,
                      CLASS='np',
-                     KOPPLUNG=couplf,
                      NAME="927_{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -307,14 +286,12 @@ def family_main():
 #            # Task 927/PGD
 #            [
 #              Task("pgd",
-#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
 #                 Edit(
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
 #                    CLASS='np',
 #                    NAME="pgd{:02d}".format(mem),
-#                    WALLT="01",
-#                    USER=user
 #                 ),
 #                 Label("run", ""),
 #                 Label("info", ""),
@@ -324,34 +301,30 @@ def family_main():
             # Task 927/surf
             [
                Task("927surf",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
 #                  Trigger("pgd == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
                      NAME="927surf{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
+                  Label("error", ""),
                )
             ],
 
             # Task assim/sstex
             [
                Task("sstex",
-                  Trigger(":ASSIM == 1 and 927 == complete"),
+                  Trigger(":ASSIM == 1 and ../MEM_{:02d}/927:d".format(mem)),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
-                     ASSIMC=assimc,
                      NAME="sstex{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -367,10 +340,7 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
-                     ASSIMC=assimc,
                      NAME="addsurf{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -386,11 +356,8 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
-                     ASSIMC=assimc,
                      EDA=eda,
                      NAME="screen{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -407,10 +374,7 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
-                     ASSIMC=assimc,
                      NAME="screensurf{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -427,11 +391,8 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
-                     ASSIMC=assimc,
                      SEDA=seda,
                      NAME="canari{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -447,11 +408,9 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
-                     ASSIMC=assimc,
+                     ASSIMM=assimm,
                      ENSJK=enjk,
                      NAME="minim{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -466,13 +425,9 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=360,
                      CLASS='np',
-                     KOPPLUNG=couplf,
-                     ASSIMC=assimc,
                      STOCH=stophy,
                      STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
-                     WALLT="06",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -491,8 +446,6 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -510,8 +463,6 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -544,16 +495,22 @@ defs = Defs().add(
                 DATUM=date(),
 
                 # suite configuration variables
+                SCHOST=schost,
+                USER=user,
                 ACCOUNT=account,
                 CNF_DEBUG=debug,
 
+                # suite variables
+                KOPPLUNG=couplf,
+                ASSIMC=assimc,
+ 
                 # Running jobs remotely on HPCF
                 ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
-                ECF_LOGHOST=host,                     # remote log host
+                ECF_LOGHOST='%SCHOST%-log',                     # remote log host
                 ECF_LOGPORT=logport,                  # remote log port
 
                 # Submit job (remotely)
-                ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
+                ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
              ),
 
              # Main Runs per day (00, 06, 12, 18)
@@ -566,23 +523,23 @@ defs = Defs().add(
 #                family_main(),
 #             ),
 #
-#             Family("RUN_06",
-#                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-#
-#               # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+             Family("RUN_06",
+                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
-             Family("RUN_12",
-                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
-
-                # add suite Families and Tasks
+               # add suite Families and Tasks
                 family_lbc(),
                 family_obs(),
                 family_main(),
-                ),
+             ),
+
+#             Family("RUN_12",
+#                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
+
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#                ),
 
 #             Family("RUN_18",
 #                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),

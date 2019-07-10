@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script for transferring results to ZAMG
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -37,8 +34,7 @@ fi
 #step=0
 #while (( $step <= $leadtime )) ; do
 #
-#   typeset -Z4 cstep
-#   cstep=$step
+#   cstep=$(printf "%%04d" $step)
 #
 #   if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
 #   then
@@ -91,9 +87,8 @@ tar -czvf ${filen} *.grb
 
 (( CHECKTRANS = 1 ))
 
-while (( ${CHECKTRANS} <= 5 ))
+while (( ${CHECKTRANS} <= 20 ))
 do
-
 
    ecflow_client --label=info "Copying ${filen}"
 #   ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${RUNDIR}/${filen} -target /${run}/MEM_${mem}/${filen} -overwrite -verbose -mailto clemens.wastl@zamg.ac.at -onfailure
@@ -105,17 +100,46 @@ do
 
       ecflow_client --label=info "Copying ${filen} failed, ${CHECKTRANS}"
       (( CHECKTRANS = ${CHECKTRANS} + 1 ))
-      sleep 300
+      sleep 60
 
    else
    
+      (( CHECKTRANS = 30 ))
+      (( CHECKTRANSOK = 1 ))
       echo ${date}${run} > ${OKFILE}
-      (( CHECKTRANS = 10 ))
-      ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${ADDGRIBDIR}/${OKFILE} -target /../../CLAEF/PRODUCTION/GRIB/OKAY/${OKFILE} -overwrite -verbose #-mailto clemens.wastl@zamg.ac.at -onfailure
+
+      while (( ${CHECKTRANSOK} <= 20 ))
+      do
+   
+         ectrans -gateway zaaecm.zamg.ac.at -remote claef_zat -put -source ${ADDGRIBDIR}/${OKFILE} -target /../../CLAEF/PRODUCTION/GRIB/OKAY/${OKFILE} -overwrite -verbose #-mailto clemens.wastl@zamg.ac.at -onfailure
+
+         CODEREP2=$?
+         if (( ${CODEREP2} !=0 ))
+         then
+
+            ecflow_client --label=info "Copying ${OKFILE} failed, ${CHECKTRANSOK}"
+            (( CHECKTRANSOK = ${CHECKTRANSOK} + 1 ))
+            sleep 60
+ 
+         else
+
+            (( CHECKTRANSOK = 30 ))
+ 
+         fi
+
+      done
 
    fi
 
 done
+
+if (( ${CHECKTRANS} == 20 || ${CHECKTRANSOK} == 20 ))
+then
+
+   ecflow_client --label=error "Copying failed, exit"
+   exit 90
+
+fi
 
 rm -rf ${filen}
 

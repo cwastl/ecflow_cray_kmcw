@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 #Script to get couplingfiles from ECMWF for gl
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -11,7 +8,6 @@ run=%LAUF%
 lagg=%VORHI%
 couplfr=%KOPPLUNG%
 mem=%MEMBER%
-sname=%SUITENAME%
 user=%USER%
 
 ####################Run setup script for environment###############

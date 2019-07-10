@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run PROGRID
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -60,8 +57,7 @@ export TSTEP=60
 step=0
 while (( $step <= ${leadtime} )) ; do
   
-  typeset -Z4 cstep
-  cstep=$step
+  cstep=$(printf "%%04d" $step)
 
   if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
   then

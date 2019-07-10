@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run 001
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -70,6 +67,10 @@ elif [ -s ${SSTEXANAFILE} ] ; then     # use ECMWF/ARPEGE as init
    INITFILE_3D=${SSTEXANAFILE}
    INHYDRO=-1 
    ecflow_client --label=info "Use ECMWF file"
+elif [ -s ${FILE903} ] ; then     # use ECMWF/ARPEGE from 903 as init
+   INITFILE_3D=${FILE903}
+   INHYDRO=-1 
+   ecflow_client --label=info "Use ECMWF file from 903"
 else
    echo "No INITFILE_3D found"
    ecflow_client --label=error "No INITFILE_3D found"
@@ -146,9 +147,9 @@ then
   while (( ${act_step_hh2} <= ${leadtime} ))
   do
 
-    cact_step_hh=$(echo ${act_step_hh} | awk '{ printf "%%02d",$1*1}')
-    cact_step_min=$(echo ${act_step_min} | awk '{ printf "%%02d",$1*1}')
-    cact_step_dd=$(echo ${act_step_dd} | awk '{ printf "%%04d",$1*1}')
+    cact_step_hh=$(printf "%%04d" $cact_step_hh)
+    cact_step_min=$(printf "%%02d" $cact_step_min)
+    cact_step_dd=$(printf "%%04d" $cact_step_dd)
     cact_step="${cact_step_dd}${cact_step_hh}$cact_step_min"
 
     if [[ "$cact_step_min" == "00" ]]
@@ -263,18 +264,18 @@ ecflow_client --label=info "Run 001"
 
 rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
 
-#ii = 0                        #For B-Matrix calculation
-#while [ $ii -le 6 ]
-#do
-#   rename ICMSH${EXP}+000${ii}:00 ${C001DIR}/ICMSH${EXP}+000${ii} ICMSH${EXP}+000${ii}:00
-#   let "ii = $ii + 1"
-#done
+ii=0                        #For B-Matrix calculation
+mkdir -p /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
+while [ $ii -le 6 ]
+do
+   cp ICMSH${EXP}+000${ii}:00 /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
+   let "ii = $ii + 1"
+done
 
 ii=${assimc}                       #For assimilation cycle
 while [ $ii -le ${leadtime} ]
 do
-   typeset -Z2 jj
-   jj=$ii
+   jj=$(printf "%%02d" $ii)
    rename ICMSH${EXP}+00${jj}:00 ${C001DIR}/ICMSH${EXP}+00${jj} ICMSH${EXP}+00${jj}:00
    rename ICMSH${EXP}+00${jj}:00.sfx ${C001DIR}/ICMSH${EXP}+00${jj}.sfx ICMSH${EXP}+00${jj}:00.sfx
    let "ii = $ii + $assimc"

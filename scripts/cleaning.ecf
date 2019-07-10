@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script for cleaning
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
@@ -19,6 +16,7 @@ user=%USER%
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
+ecflow_client --label=info "Cleaning ${files}"
 if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
    ecflow_client --label=info "Date/run exists"
@@ -28,8 +26,7 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
    i=0
    while (( ${i} <= ${amem} - 1 )) ; do
 
-      typeset -Z2 ii
-      ii=$i
+      ii=$(printf "%%02d" $i)
 
       if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii} ] ; then
 

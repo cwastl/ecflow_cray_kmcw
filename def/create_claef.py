@@ -39,7 +39,7 @@ members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 fcst = 48
 
 # forecasting range control member
-fcstctl = 12
+fcstctl = 48
 
 # coupling frequency
 couplf = 3
@@ -52,6 +52,7 @@ gl = False
 
 # assimilation switches
 assimi = True   #assimilation yes/no
+assimm = 3      #number of members without assimilation
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
@@ -60,11 +61,11 @@ seda = True     #surface eda
 enjk = True
 
 # use stochastic physics model error representation yes/no
-stophy = False
+stophy = True
 
 # SBU account, cluster and user name, logport
 account = "atlaef";
-host    = "cca";
+schost  = "cca";
 user    = "kmcw";
 logport = 36652;
 
@@ -79,7 +80,6 @@ timing = {
   'o06' : '07:35',
   'o12' : '13:35',
   'o18' : '19:35',
-  
 }
 
 # debug mode (1 - yes, 0 - no)
@@ -103,10 +103,7 @@ def family_cleaning():
                 NP=1,
                 CLASS='ns',
                 NAME="cleaning",
-                WALLT="01",
-                ASSIMC=assimc,
                 ANZMEMB=anzmem,
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -128,10 +125,7 @@ def family_lbc():
              Edit(
                 NP=1,
                 CLASS='ns',
-                KOPPLUNG=couplf,
                 NAME="getlbc",
-                WALLT="02",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -153,11 +147,8 @@ def family_lbc():
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
                    NAME="divlbc{:02d}".format(mem),
-                   WALLT="02",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -170,14 +161,12 @@ def family_lbc():
              Task("901",
                 Trigger(":GL == 0 and divlbc:b"),
                 Complete(":GL == 1 or :MEMBER == 00"),
+                Event("c"),
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    MEMBER="{:02d}".format(mem),
                    NAME="901_{:02d}".format(mem),
-                   WALLT="03",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -193,12 +182,9 @@ def family_lbc():
                 Edit(
                    NP=1,
                    CLASS='ns',
-                   KOPPLUNG=couplf,
                    SUITENAME=suite_name,
                    MEMBER="{:02d}".format(mem),
                    NAME="getlbcgl{:02d}".format(mem),
-                   WALLT="01",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -214,10 +200,7 @@ def family_lbc():
                    MEMBER="{:02d}".format(mem),
                    NP=1,
                    CLASS='nf',
-                   KOPPLUNG=couplf,
                    NAME="gl{:02d}".format(mem),
-                   WALLT="03",
-                   USER=user
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -247,8 +230,6 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="getobs",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -264,8 +245,6 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="bator",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -282,8 +261,6 @@ def family_obs(startp) :
                 NP=1,
                 CLASS='ns',
                 NAME="bator3D",
-                WALLT="01",
-                USER=user
              ),
              Label("run", ""),
              Label("info", ""),
@@ -297,26 +274,24 @@ def family_main():
    return Family("main",
 
       Edit(
-         ASSIM=assimi,
          GL=gl,
+         ASSIM=assimi,
          LEADT=fcst),
 
       # Family MEMBER
       [
          Family("MEM_{:02d}".format(mem),
-           
+
             # Task 927atm
             [
                Task("927",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+                  Event("d"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=16,
                      CLASS='np',
-                     KOPPLUNG=couplf,
                      NAME="927_{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -326,14 +301,12 @@ def family_main():
 #            # Task 927/PGD
 #            [
 #              Task("pgd",
-#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
 #                 Edit(
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
 #                    CLASS='np',
 #                    NAME="pgd{:02d}".format(mem),
-#                    WALLT="01",
-#                    USER=user
 #                 ),
 #                 Label("run", ""),
 #                 Label("info", ""),
@@ -343,34 +316,30 @@ def family_main():
             # Task 927/surf
             [
                Task("927surf",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem,mem)),
+                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
 #                  Trigger("pgd == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
                      NAME="927surf{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
+                  Label("error", ""),
                )
             ],
 
             # Task assim/sstex
             [
                Task("sstex",
-                  Trigger(":ASSIM == 1 and 927 == complete"),
+                  Trigger(":ASSIM == 1 and ../MEM_{:02d}/927:d".format(mem)),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
-                     ASSIMC=assimc,
                      NAME="sstex{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -386,10 +355,7 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
-                     ASSIMC=assimc,
                      NAME="addsurf{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -405,11 +371,8 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
-                     ASSIMC=assimc,
                      EDA=eda,
                      NAME="screen{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -426,10 +389,7 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
-                     ASSIMC=assimc,
                      NAME="screensurf{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -446,11 +406,8 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='np',
-                     ASSIMC=assimc,
                      SEDA=seda,
                      NAME="canari{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -466,11 +423,9 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=12,
                      CLASS='np',
-                     ASSIMC=assimc,
+                     ASSIMM=assimm,
                      ENSJK=enjk,
                      NAME="minim{:02d}".format(mem),
-                     WALLT="03",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -485,13 +440,9 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=360,
                      CLASS='np',
-                     KOPPLUNG=couplf,
-                     ASSIMC=assimc,
                      STOCH=stophy,
                      STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
-                     WALLT="06",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -510,8 +461,6 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -529,8 +478,6 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -549,11 +496,10 @@ def family_main():
                      CLASS='ns',
                      STEPS15=step15,
                      NAME="transfer{:02d}".format(mem),
-                     WALLT="01",
-                     USER=user
                   ),
                   Label("run", ""),
                   Label("info", ""),
+                  Label("error", ""),
                )
             ],
 
@@ -582,25 +528,30 @@ defs = Defs().add(
                 ECF_TRIES=1,           # number of reruns if task aborts
 
                 # suite configuration variables
+                SCHOST=schost,
+                USER=user,
                 ACCOUNT=account,
                 CNF_DEBUG=debug,
 
+                # suite variables
+                KOPPLUNG=couplf,
+                ASSIMC=assimc,
+ 
                 # Running jobs remotely on HPCF
                 ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
-                ECF_LOGHOST=host,                     # remote log host
+                ECF_LOGHOST='%SCHOST%-log',                     # remote log host
                 ECF_LOGPORT=logport,                  # remote log port
 
                 # Submit job (remotely)
-                ECF_JOB_CMD="{} {} {} %ECF_JOB% %ECF_JOBOUT%".format(schedule, user, host),
+                ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
              ),
 
              # Task complete if something went wrong on the previous day
              Task("complete", Time(timing['comp']),
-                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name, WALLT="01" ),
+                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name ),
                 Label("run", ""),
                 Label("info", ""),
              ),
- 
              # Main Runs per day (00, 06, 12, 18)
              Family("RUN_00", Time(timing['00']),
                 Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
@@ -640,8 +591,7 @@ defs = Defs().add(
                 family_lbc(),
                 family_obs(timing['o18']),
                 family_main(),
-             ),
-             
+             ),     
           )
        )
 

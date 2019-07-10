@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run 901 for preparation of 927
 
 %include <pbs.h>
-
 %include <head.h>
 
 module load craype-hugepages2M
@@ -45,8 +42,7 @@ i=$lagg
 (( leadtime=$leadtime+$lagg ))
 while (( $i <= $leadtime )) ; do
 
-    typeset -Z3 ii
-    ii=$i
+    ii=$(printf "%%03d" $i)
 
     (( WAITCOUNT = 0 ))
 
@@ -61,7 +57,7 @@ while (( $i <= $leadtime )) ; do
     ln -sf ${NAMEL901} fort.4
 
     TFT=00
-    MM_FT=$(echo ${date} | cut -c 5-6)
+    MM_FT=$(echo ${n1date} | cut -c 5-6)
     ln -sf ${CLIMFILENAME_ECMWF_GLO}${MM_FT} Const.Clim
     
     while [[ ${WAITCOUNT} -le 120 ]]
@@ -110,7 +106,7 @@ while (( $i <= $leadtime )) ; do
              ecflow_client --label=error "ADDSURF for ${ii} failed"
              rename addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii} addArpClim.out
              rename addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii} addArpClim.err
-	     exit 1
+     	     exit 1
           fi
 
           (( WAITCOUNT = 300 ))
@@ -124,6 +120,8 @@ while (( $i <= $leadtime )) ; do
        fi
 
     done
+
+    ecflow_client --event=c
 
     (( i=$i+$couplfr ))
 

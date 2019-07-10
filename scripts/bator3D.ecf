@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to run bator
 
 %include <pbs.h>
-
 %include <head.h>
 
 module load cray-snplauncher
@@ -11,6 +8,8 @@ module load cray-snplauncher
 date=%DATUM%
 run=%LAUF%
 user=%USER%
+
+set +e
 
 ########################Run setup script for environment########
 . /home/ms/at/${user}/SCR/setup.ksh $run $date 999 999 999 $user
@@ -330,7 +329,7 @@ fi
 
 ecflow_client --label=info "Merging OBSFILES radiosoundings"
 $MERGEOBSBIN -obsoul $OBSDIR3D/OBSFILE_5_${date}${run} -files LISTFILE2
-rm -f  $OBSDIR3D/obsoul_5_xxxxxx_xx_*
+rm -f $OBSDIR3D/obsoul_5_xxxxxx_xx_*
 
 # amdar observations -> LISTFILE3 -> OBSFILE2 
 touch LISTFILE3

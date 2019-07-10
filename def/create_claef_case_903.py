@@ -32,27 +32,30 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 suite_name = "claef_2"
 
 #ensemble members
-members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-#members = [13]
+#members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+members = [1]
 
 # forecasting range
-fcst = 48
+fcst = 6
 
 # forecasting range control member
-fcstctl = 12
+fcstctl = 6
 
 # coupling frequency
-couplf = 6
+couplf = 3
 
 # use 15min output for precipitation
-step15 = False 
+step15 = False
 
 # use GL Tool yes/no, if no - 901 is used
-gl = True
+gl = False
+
+# use 903 Tool yes/no, if no - 901 is used
+l903 = True
 
 # assimilation switches
-assimi = True   #assimilation yes/no
-assimm = 0      #number of members without assimilation
+assimi = False   #assimilation yes/no
+assimm = 3      #number of members without assimilation
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
@@ -65,7 +68,7 @@ stophy = True
 
 # SBU account, cluster and user name, logport
 account = "atlaef";
-schost  = "cca";
+schost    = "cca";
 user    = "kmcw";
 logport = 36652;
 
@@ -75,12 +78,26 @@ debug = 0;
 anzmem = len(members)
 
 # user date (default is system date)
-start_date = 20160702
-end_date = 20160703
+user_date = {
+  'dd'  : '06',
+  'mm'  : '05',
+  'yyyy': '2019'
+}
 
 ###########################################
 #####define Families and Tasks#############
 ###########################################
+
+def date():
+
+    try: 
+       user_date
+       print("=> date defined by user\n")
+       return user_date['yyyy'] + user_date['mm'] + user_date['dd']
+
+    except NameError:
+       print("=> current date")
+       return now.strftime('%Y%m%d')
 
 def family_lbc():
 
@@ -88,11 +105,13 @@ def family_lbc():
     return Family("lbc",
 
        Edit(
-          GL=gl),
+          GL=gl,
+          L903=l903),
 
        # Task getlbc
        [
           Task("getlbc",
+             Complete(":L903 == 1"),
              Event("a"),
              Edit(
                 NP=1,
@@ -113,8 +132,8 @@ def family_lbc():
           # Task divlbc
           [
              Task("divlbc",
-                Trigger(":GL == 0 and ../getlbc:a"),
-                Complete(":GL == 1 or :MEMBER == 00"),
+                Trigger(":GL == 0 and :L903 == 0 and ../getlbc:a"),
+                Complete(":GL == 1 or :L903 == 1 or :MEMBER == 00"),
                 Event("b"),
                 Edit(
                    NP=1,
@@ -131,8 +150,8 @@ def family_lbc():
           # Task 901
           [
              Task("901",
-                Trigger(":GL == 0 and divlbc:b"),
-                Complete(":GL == 1 or :MEMBER == 00"),
+                Trigger(":GL == 0 and :L903 == 0 and divlbc:b"),
+                Complete(":GL == 1 or :L903 == 1 or :MEMBER == 00"),
                 Event("c"),
                 Edit(
                    NP=1,
@@ -176,6 +195,41 @@ def family_lbc():
                 ),
                 Label("run", ""),
                 Label("info", ""),
+             )
+          ],
+
+          # Task get_mars
+          [
+             Task("getmars",
+                Trigger(":L903 == 1"),
+                Complete(":L903 == 0"),
+                Edit(
+                   MEMBER="{:02d}".format(mem),
+                   NP=1,
+                   CLASS='ns',
+                   NAME="getmars{:02d}".format(mem),
+                ),
+                Label("run", ""),
+                Label("info", ""),
+             )
+          ],
+
+          # Task 903
+          [
+             Task("903",
+                Trigger(":L903 == 1 and getmars == complete"),
+                Complete(":L903 == 0"),
+                Edit(
+                   MEMBER="{:02d}".format(mem),
+                   NP=16,
+                   CLASS='np',
+                   KOPPLUNG=couplf,
+                   ANZMEMB=anzmem,
+                   NAME="903_{:02d}".format(mem),
+                ),
+                Label("run", ""),
+                Label("info", ""),
+                Label("error", ""),
              )
           ],
 
@@ -247,12 +301,13 @@ def family_main():
       Edit(
          GL=gl,
          ASSIM=assimi,
-         LEADT=fcst),
+         LEADT=fcst,
+         L903=l903),
 
       # Family MEMBER
       [
          Family("MEM_{:02d}".format(mem),
-
+     
             # Task 927atm
             [
                Task("927",
@@ -471,7 +526,6 @@ defs = Defs().add(
           # Suite C-LAEF
           Suite(suite_name).add(
 
-             RepeatDate("DATUM",start_date,end_date),
              Edit(
                 # ecflow configuration
                 ECF_MICRO='%',         # ecf micro-character
@@ -479,65 +533,59 @@ defs = Defs().add(
                 ECF_HOME=home,         # ecf root path
                 ECF_INCLUDE=incl,      # ecf include path
                 ECF_TRIES=1,           # number of reruns if task aborts
+                DATUM=date(),
 
-                # suite configuration variables
-                SCHOST=schost,
+				# suite configuration variables
+				SCHOST=schost,
                 USER=user,
                 ACCOUNT=account,
-                CNF_DEBUG=debug,
+				CNF_DEBUG=debug,
 
-                # suite variables
-                KOPPLUNG=couplf,
-                ASSIMC=assimc,
- 
-                # Running jobs remotely on HPCF
-                ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
-                ECF_LOGHOST='%SCHOST%-log',                     # remote log host
-                ECF_LOGPORT=logport,                  # remote log port
+				# Running jobs remotely on HPCF
+				ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
+				ECF_LOGHOST='%SCHOST%-log',                     # remote log host
+				ECF_LOGPORT=logport,                  # remote log port
 
-                # Submit job (remotely)
-                ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
-             ),
+				# Submit job (remotely)
+				ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
+				 ),
 
-             # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00",
-                Edit( LAUF='00', VORHI=0, LEAD=fcst, LEADCTL=fcstctl ),
+#             # Main Runs per day (00, 06, 12, 18)
+#             Family("RUN_00",
+#                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl),
+#
+#                # add suite Families and Task
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
 
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+				 Family("RUN_06",
+					Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-                Trigger("RUN_00 == complete"), 
+				   # add suite Families and Tasks
+					family_lbc(),
+					family_obs(),
+					family_main(),
+				 ),
 
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+#             Family("RUN_12",
+#                Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc),
+#                   
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#                ),
 
-             Family("RUN_12",
-                Edit( LAUF='12',VORHI=0, LEAD=fcst, LEADCTL=fcst ),
-                Trigger("RUN_06 == complete"), 
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-             Family("RUN_18",
-                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-                Trigger("RUN_12 == complete"), 
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+#             Family("RUN_18",
+#                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
              
           )
        )

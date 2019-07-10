@@ -1,9 +1,6 @@
-#!/bin/ksh
-#
 # Script to set suite to complete if date is old
 
 %include <pbs.h>
-
 %include <head.h>
 
 date=%DATUM%
