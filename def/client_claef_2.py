@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 # LOAD or RELOAD (if already exists) the C-LAEF suite
 #
@@ -15,4 +15,4 @@ try:
     ci.begin_suite("/claef")
 
 except RuntimeError as e:
-    print "(!) Failed:",   e
+    print ("(!) Failed:"),   e

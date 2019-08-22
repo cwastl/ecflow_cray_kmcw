@@ -108,7 +108,7 @@ libpath=$(dirname $(dirname ${libpath}))
 export ECCODES_SAMPLES_PATH="$libpath/share/eccodes/ifs_samples/grib1_mlgrib2"
 export ECCODES_DEFINITION_PATH="$libpath/share/eccodes/definitions"
 
-aprun -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 ${LOGDIR}/903_${mem}.log 2>&1
+aprun -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 > ${LOGDIR}/903_${mem}.log 2>&1
 
 if [[ $? -eq 0 ]]
 then
@@ -128,8 +128,10 @@ else
    ecflow_client --error=info "Something went wrong for File + " ${bcount}
 fi
 
+rename NODE.001_01 ${LOGDIR}/NODE_903_000_${EXP}_${mem} NODE.001_01
+
 cd ${C903DIR}
-rm -rf ${RUNDIR}
+#rm -rf ${RUNDIR}
 
 %include <tail.h>
 

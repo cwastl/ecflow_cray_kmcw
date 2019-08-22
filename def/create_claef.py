@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 #CREATE C-LAEF SUITE DEFINITION FILE
 #
@@ -72,14 +72,14 @@ logport = 36652;
 # main runs time schedule
 timing = {
   'comp' : '23:00',
-  '00' : '01:15',
-  '06' : '07:15',
-  '12' : '13:15',
-  '18' : '19:15',
-  'o00' : '01:35',
-  'o06' : '07:35',
-  'o12' : '13:35',
-  'o18' : '19:35',
+  'o00_1' : '0135',
+  'o00_2' : '0155',
+  'o06_1' : '0735',
+  'o06_2' : '0755',
+  'o12_1' : '1335',
+  'o12_2' : '1355',
+  'o18_1' : '1935',
+  'o18_2' : '1955',
 }
 
 # debug mode (1 - yes, 0 - no)
@@ -96,9 +96,30 @@ end_date = 20191231
 #####define Families and Tasks#############
 ###########################################
 
+def family_dummy():
+
+    # Family dummy
+    return Family("dummy",
+
+       # Task dummy1
+       [
+          Task("dummy1",
+             Edit(
+                NP=1,
+                CLASS='ts',
+                NAME="dummy1",
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Defstatus("suspended"),
+          )
+       ],
+   )
+
 def family_cleaning():
 
    return Task("cleaning",
+             Trigger("dummy/dummy1 == complete"),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -121,6 +142,7 @@ def family_lbc():
        # Task getlbc
        [
           Task("getlbc",
+             Trigger("../dummy/dummy1 == complete"),
              Event("a"),
              Edit(
                 NP=1,
@@ -142,7 +164,7 @@ def family_lbc():
           [
              Task("divlbc",
                 Trigger(":GL == 0 and ../getlbc:a"),
-                Complete(":GL == 1 or :MEMBER == 00"),
+                Complete(":GL == 1 or :MEMBER == 00 and ../../dummy/dummy1 == complete"),
                 Event("b"),
                 Edit(
                    NP=1,
@@ -160,7 +182,7 @@ def family_lbc():
           [
              Task("901",
                 Trigger(":GL == 0 and divlbc:b"),
-                Complete(":GL == 1 or :MEMBER == 00"),
+                Complete(":GL == 1 or :MEMBER == 00 and ../../dummy/dummy1 == complete"),
                 Event("c"),
                 Edit(
                    NP=1,
@@ -177,7 +199,7 @@ def family_lbc():
           # Task getlbc_gl
           [
              Task("getlbc_gl",
-                Trigger(":GL == 1"),
+                Trigger(":GL == 1 and ../../dummy/dummy1 == complete"),
                 Complete(":GL == 0"),
                 Edit(
                    NP=1,
@@ -212,7 +234,7 @@ def family_lbc():
       ]
     )
 
-def family_obs(startp) :
+def family_obs(startp1,startp2) :
 
     # Family OBS
     return Family("obs",
@@ -222,9 +244,8 @@ def family_obs(startp) :
        # Task assim/getobs
        [
           Task("getobs",
-             Trigger(":ASSIM == 1"),
+             Trigger(":ASSIM == 1 and /claef:TIME > {} and /claef:TIME < {}".format(startp1,startp2)),
              Complete(":ASSIM == 0"),
-             Time(startp), 
              Meter("obsprog", -1, 3, 3),
              Edit(
                 NP=1,
@@ -436,6 +457,7 @@ def family_main():
             [
                Task("001",
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
+                  Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=360,
@@ -453,8 +475,9 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001 == complete"),
+                  Trigger("../MEM_{:02d}/001:e".format(mem)),
                   Complete(":LEAD < :LEADT"),
+                  Event("f"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -470,7 +493,7 @@ def family_main():
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid == complete"),
+                  Trigger("../MEM_{:02d}/progrid:f".format(mem)),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -478,24 +501,6 @@ def family_main():
                      CLASS='np',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
-                  ),
-                  Label("run", ""),
-                  Label("info", ""),
-                  Label("error", ""),
-               )
-            ],
-
-            # Task Transfer 
-            [
-               Task("transfer",
-                  Trigger("addgrib == complete"),
-                  Complete(":LEAD < :LEADT"),
-                  Edit(
-                     MEMBER="{:02d}".format(mem),
-                     NP=1,
-                     CLASS='ns',
-                     STEPS15=step15,
-                     NAME="transfer{:02d}".format(mem),
                   ),
                   Label("run", ""),
                   Label("info", ""),
@@ -519,6 +524,7 @@ defs = Defs().add(
           Suite(suite_name).add(
 
              RepeatDate("DATUM",start_date,end_date),
+
              Edit(
                 # ecflow configuration
                 ECF_MICRO='%',         # ecf micro-character
@@ -553,43 +559,47 @@ defs = Defs().add(
                 Label("info", ""),
              ),
              # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00", Time(timing['00']),
+             Family("RUN_00",
                 Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 
                 # add suite Families and Tasks
+                family_dummy(),
                 family_cleaning(),
                 family_lbc(),
-                family_obs(timing['o00']),
+                family_obs(timing['o00_1'],timing['o00_2']),
                 family_main(),
              ),
 
-             Family("RUN_06", Time(timing['06']),
+             Family("RUN_06",
                 Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
                 # add suite Families and Tasks
+                family_dummy(),
                 family_cleaning(),
                 family_lbc(),
-                family_obs(timing['o06']),
+                family_obs(timing['o06_1'],timing['o06_2']),
                 family_main(),
              ),
 
-             Family("RUN_12", Time(timing['12']),
+             Family("RUN_12",
                 Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst ),
 
                 # add suite Families and Tasks
+                family_dummy(),
                 family_cleaning(),
                 family_lbc(),
-                family_obs(timing['o12']),
+                family_obs(timing['o12_1'],timing['o12_2']),
                 family_main(),
              ),
 
-             Family("RUN_18", Time(timing['18']),
+             Family("RUN_18",
                 Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
                 # add suite Families and Tasks
+                family_dummy(),
                 family_cleaning(),
                 family_lbc(),
-                family_obs(timing['o18']),
+                family_obs(timing['o18_1'],timing['o18_2']),
                 family_main(),
              ),     
           )

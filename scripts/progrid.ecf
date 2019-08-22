@@ -32,6 +32,8 @@ cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
+C001File=$(cat ${C001DIR}/jobinfo.txt)
+
 NSLOTS=$EC_total_tasks
 
 # MPI, openMP env, etc.
@@ -72,17 +74,35 @@ while (( $step <= ${leadtime} )) ; do
 
   for min in ${my_min[*]}
   do
-  
-    if [ ! -s ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" ] ; then
-      ln -sf ${C001DIR}/PF${EXP}${EXP}+${cstep}:${min} fort.11
-      status=0
-      ecflow_client --label=info "Prepare CLAEF${mem}+${cstep}:${min}.grb"
-      /usr/bin/time aprun -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
-      status=$?
-      rename GRIDBIZARRE ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" GRIDBIZARRE
-      rm -f fort.11
+    if [ ${min} == "00" ]; then
+      if [ ${mem} == "00" ]; then
+        FPOSOUTS=${FPOSOUTSIZECTL}
+      else
+        FPOSOUTS=${FPOSOUTSIZE}
+      fi
+    else
+      FPOSOUTS=${FPOSOUTSIZE15}
     fi
-
+    INFILE=${C001DIR}/${C001File}/PF${EXP}${EXP}+${cstep}:${min}
+    (( WAITCOUNT = 0 ))
+    while [[ ${WAITCOUNT} -le 60 ]]
+    do
+      if [ -s ${INFILE} ] && [ $(/usr/bin/stat --printf="%%s" ${INFILE}) == ${FPOSOUTS} ] ; then
+        ln -sf ${INFILE} fort.11
+        status=0
+        ecflow_client --label=info "Prepare CLAEF${mem}+${cstep}:${min}.grb"
+        /usr/bin/time aprun -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
+        status=$?
+        rename GRIDBIZARRE ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" GRIDBIZARRE
+        rm -f fort.11
+        (( WAITCOUNT = 100 ))
+        ecflow_client --event=f
+      else
+        (( WAITCOUNT = ${WAITCOUNT} + 1 ))
+        ecflow_client --label=info "PF${EXP}${EXP}+${cstep}:${min} does not yet exist, wait!"
+        sleep 60
+      fi
+    done  
   done
 
   (( step=${step}+1 ))

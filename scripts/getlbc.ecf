@@ -49,8 +49,8 @@ while (( $i <= $leadtime )) ; do
            cp 0-sol.pdg.grb_${n1date}${n1run}00+${i} landseamask.grb
            (( WAITCOUNT = 300 ))
         else
-           echo "ATTENTION: dissemination file does not yet exist!!!"
-           ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
+           echo "Dissemination file does not yet exist!!!"
+           ecflow_client --label=info "Dissemination file +${FT} does not yet exist!!!"
            (( WAITCOUNT = ${WAITCOUNT} + 1 ))
            sleep 60
         fi 
@@ -63,8 +63,8 @@ while (( $i <= $leadtime )) ; do
              grib_filter big.rule ${LBCIFS}/EAX${n1mm}${n1dd}${n1run}00${actmm}${actdd}${acthh}001
              (( WAITCOUNT = 300 ))
          else
-             echo "ATTENTION: dissemination file does not yet exist!!!"
-             ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
+             echo "Dissemination file does not yet exist!!!"
+             ecflow_client --label=info "Dissemination file +${FT} does not yet exist!!!"
              (( WAITCOUNT = ${WAITCOUNT} + 1 ))
              sleep 60
          fi                

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 #CREATE C-LAEF SUITE DEFINITION FILE
 #
@@ -79,8 +79,8 @@ anzmem = len(members)
 
 # user date (default is system date)
 user_date = {
-  'dd'  : '06',
-  'mm'  : '05',
+  'dd'  : '04',
+  'mm'  : '08',
   'yyyy': '2019'
 }
 
@@ -105,7 +105,6 @@ def family_lbc():
     return Family("lbc",
 
        Edit(
-          GL=gl,
           L903=l903),
 
        # Task getlbc
@@ -132,8 +131,8 @@ def family_lbc():
           # Task divlbc
           [
              Task("divlbc",
-                Trigger(":GL == 0 and :L903 == 0 and ../getlbc:a"),
-                Complete(":GL == 1 or :L903 == 1 or :MEMBER == 00"),
+                Trigger(":L903 == 0 and ../getlbc:a"),
+                Complete(":L903 == 1 or :MEMBER == 00"),
                 Event("b"),
                 Edit(
                    NP=1,
@@ -150,8 +149,8 @@ def family_lbc():
           # Task 901
           [
              Task("901",
-                Trigger(":GL == 0 and :L903 == 0 and divlbc:b"),
-                Complete(":GL == 1 or :L903 == 1 or :MEMBER == 00"),
+                Trigger(":L903 == 0 and divlbc:b"),
+                Complete(":L903 == 1 or :MEMBER == 00"),
                 Event("c"),
                 Edit(
                    NP=1,
@@ -162,39 +161,6 @@ def family_lbc():
                 Label("run", ""),
                 Label("info", ""),
                 Label("error", ""),
-             )
-          ],
-
-          # Task getlbc_gl
-          [
-             Task("getlbc_gl",
-                Trigger(":GL == 1"),
-                Complete(":GL == 0"),
-                Edit(
-                   NP=1,
-                   CLASS='ns',
-                   SUITENAME=suite_name,
-                   MEMBER="{:02d}".format(mem),
-                   NAME="getlbcgl{:02d}".format(mem),
-                ),
-                Label("run", ""),
-                Label("info", ""),
-             )
-          ],
-
-          # Task GL
-          [
-             Task("gl",
-                Trigger(":GL == 1 and getlbc_gl == complete"),
-                Complete(":GL == 0"),
-                Edit(
-                   MEMBER="{:02d}".format(mem),
-                   NP=1,
-                   CLASS='nf',
-                   NAME="gl{:02d}".format(mem),
-                ),
-                Label("run", ""),
-                Label("info", ""),
              )
           ],
 
@@ -226,6 +192,23 @@ def family_lbc():
                    KOPPLUNG=couplf,
                    ANZMEMB=anzmem,
                    NAME="903_{:02d}".format(mem),
+                ),
+                Label("run", ""),
+                Label("info", ""),
+                Label("error", ""),
+             )
+          ],
+
+          # Task 903surf
+          [
+             Task("903surf",
+                Trigger(":L903 == 1 and 903 == complete"),
+                Complete(":L903 == 0"),
+                Edit(
+                   MEMBER="{:02d}".format(mem),
+                   NP=16,
+                   CLASS='np',
+                   NAME="903surf_{:02d}".format(mem),
                 ),
                 Label("run", ""),
                 Label("info", ""),
@@ -311,7 +294,8 @@ def family_main():
             # Task 927atm
             [
                Task("927",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+                  Trigger("../../lbc/MEM_{:02d}/901 == complete or ../../lbc/MEM_{:02d}/901:c".format(mem,mem)),
+                  Complete(":L903 == 1"),
                   Event("d"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -327,7 +311,7 @@ def family_main():
 #            # Task 927/PGD
 #            [
 #              Task("pgd",
-#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+#                 Trigger("../../lbc/MEM_{:02d}/901 == complete or ../../lbc/MEM_{:02d}/901:c".format(mem,mem)),
 #                 Edit(
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
@@ -342,8 +326,9 @@ def family_main():
             # Task 927/surf
             [
                Task("927surf",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+                  Trigger("../../lbc/MEM_{:02d}/901 == complete or ../../lbc/MEM_{:02d}/901:c".format(mem,mem)),
 #                  Trigger("pgd == complete"),
+                  Complete(":L903 == 1"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -359,7 +344,7 @@ def family_main():
             # Task assim/sstex
             [
                Task("sstex",
-                  Trigger(":ASSIM == 1 and ../MEM_{:02d}/927:d".format(mem)),
+                  Trigger(":L903 == 0 and :ASSIM == 1 and ../MEM_{:02d}/927:d or :L903 == 1 and :ASSIM == 1 and ../../lbc/MEM_{:02d}/903 == complete".format(mem,mem)),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -461,7 +446,8 @@ def family_main():
             # Task 001
             [
                Task("001",
-                  Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
+                  Trigger(":L903 == 0 and 927 == complete and 927surf == complete and minim == complete and canari == complete or :L903 == 1 and ../../lbc/MEM_{:02d}/903 == complete and ../../lbc/MEM_{:02d}/903surf == complete and minim == complete and canari == complete".format(mem,mem)),
+                  Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=360,
@@ -479,8 +465,9 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001 == complete"),
+                  Trigger("../MEM_{:02d}/001:e".format(mem)),
                   Complete(":LEAD < :LEADT"),
+                  Event("f"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -496,7 +483,7 @@ def family_main():
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid == complete"),
+                  Trigger("../MEM_{:02d}/progrid:f".format(mem)),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -540,6 +527,10 @@ defs = Defs().add(
                 USER=user,
                 ACCOUNT=account,
 				CNF_DEBUG=debug,
+
+                # suite variables
+                KOPPLUNG=couplf,
+                ASSIMC=assimc,
 
 				# Running jobs remotely on HPCF
 				ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host

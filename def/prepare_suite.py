@@ -1,14 +1,15 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import os
 
-suite = "claef_2"
+suite = "claef"
 runs = ["00","06","12","18"]
 famil = ["lbc","obs","main"]
 members = ["00", "01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"]
 tasks_comp = ["complete"]
+tasks_dummy = ["dummy1"]
 tasks_clean = ["cleaning"]
-tasks_lbc = ["getlbc","divlbc","901","getlbc_gl","gl","getmars","903"]
+tasks_lbc = ["getlbc","divlbc","901","getlbc_gl","gl","getmars","903","903surf"]
 tasks_obs = ["getobs","bator","bator3D"]
 tasks_main = ["927","pgd","927surf","sstex","addsurf","screen", "screensurf","canari","minim","001","progrid","addgrib","transfer"]
 
@@ -28,6 +29,14 @@ for r in runs:
 
      if not os.path.exists("RUN_" + r):
          os.mkdir("RUN_" + r)  
+
+     if not os.path.exists("RUN_" + r + "/dummy"):
+         os.mkdir("RUN_" + r + "/dummy")  
+
+     for s in tasks_dummy:
+
+         if not os.path.lexists("RUN_" + r + "/dummy/" + s + ".ecf"):
+             os.symlink(hpath + "scripts/" + s + ".ecf", "RUN_" + r + "/dummy/" + s + ".ecf")
 
      for t in tasks_clean:
 

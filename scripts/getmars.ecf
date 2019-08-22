@@ -41,7 +41,7 @@ rm -f ${req_gg}
 
 cat <<EOF >> ${req_gg} 
 RET,
-    DATABASE   = fdb5 prod,
+#    DATABASE   = fdb5 prod,
     DATE       = ${n1date},
     TIME       = ${n1run},
     STEP       = $lagg/to/${leadtime}/by/${couplfr},
@@ -54,7 +54,7 @@ RET,
     EXPVER     = 0001,
     TARGET     = "ICMGGAROM+[STEP].[NUMBER]"
 RET,
-    DATABASE   = fdb5 prod,
+#    DATABASE   = fdb5 prod,
     DATE       = ${n1date},
     TIME       = ${n1run},
     STEP       = 00,
@@ -67,7 +67,7 @@ RET,
     EXPVER     = 0001,
     TARGET     = "ICMGGAROM.[NUMBER]"
 RET,
-    DATABASE   = marsod,
+#    DATABASE   = marsod,
     DATE       = ${n1date},
     TIME       = ${n1run},
     STEP       = 00,
@@ -87,7 +87,7 @@ req_ua=mars_ua.txt
 rm -f ${req_ua}
 cat <<EOF >> ${req_ua}
 RET,
-    DATABASE   = fdb5 prod,
+#    DATABASE   = fdb5 prod,
     DATE       = ${n1date},
     TIME       = ${n1run},
     STEP       = ${lagg}/to/${leadtime}/by/${couplfr},
@@ -108,7 +108,7 @@ req_sh=mars_sh.txt
 rm -f ${req_sh}
 cat <<EOF >> ${req_sh}
 RET,
-    DATABASE   = fdb5 prod,
+#    DATABASE   = fdb5 prod,
     DATE       = ${n1date},
     TIME       = ${n1run},
     STEP       = ${lagg}/to/${leadtime}/by/${couplfr}, 
@@ -122,7 +122,7 @@ RET,
     EXPVER     = 0001,
     TARGET     = "ICMSHAROM+[STEP].[NUMBER]"
 RET,
-    DATABASE   = fdb5 prod,
+#    DATABASE   = fdb5 prod,
     DATE       = ${n1date}, 
     TIME       = ${n1run}, 
     STEP       = 00,
@@ -143,9 +143,9 @@ while (( ${cstep} <= ${leadtime} ))
 do
    astep=$(printf "%%03d" $cstep)
    if [[ -s ICMGGAROM.${imem} ]] && [[ -s ICMGGAROM ]] && [[ -s ICMGGAROM+${cstep}.${imem} ]] && [[ ICMSHAROM.Z ]] && [[ ICMSHAROM+${cstep}.${imem} ]]; then
-   cat ICMGGAROM.${imem} ICMGGAROM ICMGGAROM+${cstep}.${imem}  >> ${MARSGET}/ICMGGE903+${astep}.${mem}
-   mv ICMUAAROM+${cstep}.${imem} ${MARSGET}/ICMUAE903+${astep}.${mem}
-   cat ICMSHAROM.Z ICMSHAROM+${cstep}.${imem} >> ${MARSGET}/ICMSHE903+${astep}.${mem} 
+      cat ICMGGAROM.${imem} ICMGGAROM ICMGGAROM+${cstep}.${imem}  >> ${MARSGET}/ICMGGE903+${astep}.${mem}
+      mv ICMUAAROM+${cstep}.${imem} ${MARSGET}/ICMUAE903+${astep}.${mem}
+      cat ICMSHAROM.Z ICMSHAROM+${cstep}.${imem} >> ${MARSGET}/ICMSHE903+${astep}.${mem} 
       ecflow_client --label=info "File +" ${astep} " copied"
    else
       ecflow_client --label=info "Something is missing for + " ${astep}

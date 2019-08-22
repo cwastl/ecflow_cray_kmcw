@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 #CREATE C-LAEF SUITE DEFINITION FILE
 #
@@ -33,13 +33,13 @@ suite_name = "claef_2"
 
 #ensemble members
 #members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [0]
+members = [1]
 
 # forecasting range
 fcst = 6
 
 # forecasting range control member
-fcstctl = 12
+fcstctl = 6
 
 # coupling frequency
 couplf = 3
@@ -421,6 +421,7 @@ def family_main():
             [
                Task("001",
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
+                  Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=360,
@@ -438,8 +439,9 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001 == complete"),
+                  Trigger("../MEM_{:02d}/001:e".format(mem)),
                   Complete(":LEAD < :LEADT"),
+                  Event("f"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -455,7 +457,7 @@ def family_main():
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid == complete"),
+                  Trigger("../MEM_{:02d}/progrid:f".format(mem)),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -523,23 +525,23 @@ defs = Defs().add(
 #                family_main(),
 #             ),
 #
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-
-               # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-#             Family("RUN_12",
-#                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
-
-#                # add suite Families and Tasks
+#             Family("RUN_06",
+#                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+#
+#               # add suite Families and Tasks
 #                family_lbc(),
 #                family_obs(),
 #                family_main(),
-#                ),
+#             ),
+
+             Family("RUN_12",
+                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
+
+                # add suite Families and Tasks
+                family_lbc(),
+                family_obs(),
+                family_main(),
+                ),
 
 #             Family("RUN_18",
 #                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),

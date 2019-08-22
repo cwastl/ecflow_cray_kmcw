@@ -5,12 +5,9 @@
 
 date=%DATUM%
 run=%LAUF%
-amem=%ANZMEMB%
 mem=%MEMBER%
 lagg=%VORHI%
-couplfr=%KOPPLUNG%
 user=%USER%
-leadtime=%LEAD%
 
 #################Run setup script for environment##################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
@@ -18,13 +15,6 @@ leadtime=%LEAD%
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
-
-if [[ ${mem} == "00" ]]
-then
-   leadtime=%LEADCTL%
-else
-   leadtime=%LEAD%
-fi
 
 [[ ! -d ${C903SURFDIR} ]] && mkdir -p ${C903SURFDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
@@ -35,8 +25,6 @@ cd $RUNDIR
 rm -rf $RUNDIR/*
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
-
-let "anzahl = (${leadtime})/${couplfr} + 1"
 
 NPROMA=-32
 NPROC=$EC_total_tasks
@@ -66,41 +54,49 @@ else
    export XLSMPOPTS="parthds=${OMP_NUM_THREADS}:stack=358400000";
 fi
 
+ln -sf ${NAMEL903SURFEX} ${RUNDIR}/PRE_REAL1.nam
+ln -sf ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.AROM
+
+#lfmwrit=.FALSE. # Default is write to LFI (= .TRUE.)
+#lfmread=.FALSE. # Default is read from LFI (= .TRUE.)
+#lhisfwr=.TRUE.  # Default is write historical data (= .TRUE.)
+#lpgdfwr=.FALSE. # Default is not write PGD (= .FALSE.)
+
+ln -s ${CLIMFILENAME_ECMWF_GLO}${month} ${RUNDIR}/Const.Clim
+
 sed -e "s/{NPROC}/${NPROC}/"\
     -e "s/{CNMEXP}/E903/"\
     -e "s/{NPROMA}/${NPROMA}/"\
     -e "s/{NSTROUT}/${NSTROUT}/"\
-    -e "s/{NFRPOS}/${anzahl}/"\
     -e "s/{DOMAIN}/AROM/"\
     -e "s/{CFPDIR}/ELSCF/"\
-    -e "s/{CFNCLIMOUT}/ELSCF/g" $NAMEL903 > $RUNDIR/fort.4  
+    -e "s/{CFNCLIMOUT}/ELSCF/g" ${NAMEL903SURF} > $RUNDIR/fort.4  
 
-(( leadtime=$leadtime+$lagg ))
-actstep=${lagg}
-icount=0
-while [[ ${actstep} -le ${leadtime} ]]
-do
-    astep=$(printf "%%03d" $actstep)
-    count=$(printf "%%06d" $icount)
+if [[ ! -s ${PGDFILE_FA903} ]]; then
+   ln -s ${CLIMDIR}/PGD_${EXP}.fa ${PGDFILE_FA903}
+fi
 
-    if [[ -s ${MARSGET}/ICMUAE903+${astep}.${mem} ]] && [[ -s ${MARSGET}/ICMSHE903+${astep}.${mem} ]] && [[ ${MARSGET}/ICMGGE903+${astep}.${mem} ]]; then    
-       ln -sf ${MARSGET}/ICMUAE903+${astep}.${mem} ICMUAE903+${count}
-       ln -sf ${MARSGET}/ICMSHE903+${astep}.${mem} ICMSHE903+${count}
-       ln -sf ${MARSGET}/ICMGGE903+${astep}.${mem} ICMGGE903+${count}
-       ecflow_client --label=info "Everything available for + " ${astep}
-    else
-       ecflow_client --label=info "Something missing for + " ${astep}
-    fi
-    (( icount = ${icount} + 1 ))
-    (( actstep = ${actstep} + ${couplfr} ))
-done
+ln -s ${PGDFILE_FA903} ${RUNDIR}/const.clim.sfx.AROM # sts cy40t1 FA
+ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
+ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 
 astep=$(printf "%%03d" $lagg)
 
-ln -sf ${MARSGET}/ICMUAE903+${astep}.${mem} ICMUAE903INIT
-ln -sf ${MARSGET}/ICMSHE903+${astep}.${mem} ICMSHE903INIT
-ln -sf ${MARSGET}/ICMGGE903+${astep}.${mem} ICMGGE903INIT
-ln -sf ${CLIMFILENAME_AROME}${month} const.clim.AROM
+if [[ -s ${MARSGET}/ICMUAE903+${astep}.${mem} ]] && [[ -s ${MARSGET}/ICMSHE903+${astep}.${mem} ]] && [[ ${MARSGET}/ICMGGE903+${astep}.${mem} ]]; then
+
+  ln -sf ${MARSGET}/ICMUAE903+${astep}.${mem} ICMUAE903INIT
+  ln -sf ${MARSGET}/ICMSHE903+${astep}.${mem} ICMSHE903INIT
+  ln -sf ${MARSGET}/ICMGGE903+${astep}.${mem} ICMGGE903INIT
+  cp ICMUAE903INIT ICMUAE903+000000
+  cp ICMSHE903INIT ICMSHE903+000000
+  cp ICMGGE903INIT ICMGGE903+000000
+  ecflow_client --label=info "Everything available for + " ${astep}
+
+else
+
+  ecflow_client --label=info "Something missing for + " ${astep}
+
+fi
 
 # grib_api environment variables determined by executable
 libpath=$(ldd $BIN903 | grep libeccodes_f90 | cut -d " " -f3)
@@ -108,28 +104,20 @@ libpath=$(dirname $(dirname ${libpath}))
 export ECCODES_SAMPLES_PATH="$libpath/share/eccodes/ifs_samples/grib1_mlgrib2"
 export ECCODES_DEFINITION_PATH="$libpath/share/eccodes/definitions"
 
-aprun -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 ${LOGDIR}/903_${mem}.log 2>&1
+aprun -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 > ${LOGDIR}/903_${mem}.log 2>&1
 
 if [[ $? -eq 0 ]]
 then
-   actstep=${lagg}
-   icount=0
-   while [[ ${actstep} -le ${leadtime} ]]
-   do
-      count=$(printf "%%04d" $icount)
-      bcount=$(printf "%%03d" $icount)
-      rename ELSCFE903AROM+${count} ${C903DIR}/ELSCFAROMALBC${bcount} ELSCFE903AROM+${count}
-      ecflow_client --label=info "Copy File + " ${bcount}
-    
-      (( icount = ${icount} + 1 ))
-      (( actstep = ${actstep} + ${couplfr} ))
-   done
+  rename ELSCFE903AROM+0000 ${C903SURFDIR}/PFE927AROM+0000.sfx ELSCFE903AROM+0000
+  ecflow_client --label=info "Copy Sfx File"
 else
-   ecflow_client --error=info "Something went wrong for File + " ${bcount}
+  ecflow_client --error=info "Something went wrong for Sfx File"
 fi
 
-cd ${C903DIR}
-rm -rf ${RUNDIR}
+rename NODE.001_01 ${LOGDIR}/NODE_903surf_000_${EXP}_${mem} NODE.001_01
+
+cd ${C903SURFDIR}
+#rm -rf ${RUNDIR}
 
 %include <tail.h>
 

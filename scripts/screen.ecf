@@ -174,10 +174,10 @@ sed -e "s/{NBPROC}/${NPROC}/" \
 
 # Humidity -> spectral (because of LSPRT)
 ecflow_client --label=info "Change humidity to spectral"
-module load python/2.7.12-01
-fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
-fa_gp2sp.py medusa_worm
-fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHSCREINIT
+module load python3
+${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
+${BINDIR}/fa_gp2sp.py medusa_worm
+${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHSCREINIT
 rm -rf medusa_worm.allsp
 
 # Run screening config 002

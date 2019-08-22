@@ -19,7 +19,7 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 ecflow_client --label=info "Cleaning ${files}"
 if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
-   ecflow_client --label=info "Date/run exists"
+   ecflow_client --label=info "${p1date}/${p1run} exists"
    cd ${MY_DIR}/DATA/${p1date}/${p1run}
    rm -rf BATOR BATOR3D OBSERVATIONS LBCGET 
 
@@ -48,7 +48,7 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
 else
 
-   ecflow_client --label=info "Date/run does not exist"
+   ecflow_client --label=info "${p1date}/${p1run} does not exist"
 
 fi
 

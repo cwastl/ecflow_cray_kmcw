@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 #
 #CREATE C-LAEF SUITE DEFINITION FILE
 #
@@ -407,6 +407,7 @@ def family_main():
             [
                Task("001",
                   Trigger("927 == complete and 927surf == complete and minim == complete and canari == complete"),
+                  Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=360,
@@ -424,8 +425,9 @@ def family_main():
             # Task PROGRID
             [
                Task("progrid",
-                  Trigger("001 == complete"),
+                  Trigger("../MEM_{:02d}/001:e".format(mem)),
                   Complete(":LEAD < :LEADT"),
+                  Event("f"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,

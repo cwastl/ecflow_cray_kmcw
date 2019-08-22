@@ -161,7 +161,7 @@ if [[ $LINISNOW == ".TRUE." ]] ; then
   echo "&NAMSCEN" >> fort.4
   echo "   /" >> fort.4
 
-#  mpiexec -np $NSLOTS ${BINSNOWGRID3} 
+#  mpiexec -np $NSLOTS ${BINSNOWGRID3}
   aprun -n $NSLOTS ${BINSNOWGRID3}
   status1=$?
   if (( $status1 != 0 )) && (( $status1 != 137 )) 

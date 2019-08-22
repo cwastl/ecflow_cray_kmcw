@@ -10,7 +10,7 @@ suite claef_2
   edit ACCOUNT 'atlaef'
   edit KOPPLUNG '3'
   edit ECF_HOME '/home/ms/at/kmcw/ecf'
-  edit DATUM '20190710'
+  edit DATUM '20190804'
   edit USER 'kmcw'
   edit ECF_LOGPORT '36652'
   edit ECF_OUT '/scratch/ms/at/kmcw/ECF'
@@ -22,62 +22,70 @@ suite claef_2
     edit LAUF '06'
     edit LEAD '6'
     family lbc
-      edit GL '0'
+      edit L903 '1'
       task getlbc
+        complete :L903 == 1
         edit NP '1'
-        edit CLASS 'ns'
-        edit WALLT '02'
         edit NAME 'getlbc'
+        edit CLASS 'ns'
         label run ""
         label info ""
         label error ""
         event a
-      family MEM_00
+      family MEM_01
         task divlbc
-          complete :GL == 1 or :MEMBER == 00
-          trigger :GL == 0 and ../getlbc:a
-          edit MEMBER '00'
-          edit CLASS 'ns'
+          complete :L903 == 1 or :MEMBER == 00
+          trigger :L903 == 0 and ../getlbc:a
+          edit MEMBER '01'
           edit NP '1'
-          edit WALLT '02'
-          edit NAME 'divlbc00'
+          edit NAME 'divlbc01'
+          edit CLASS 'ns'
           label run ""
           label info ""
           label error ""
           event b
         task 901
-          complete :GL == 1 or :MEMBER == 00
-          trigger :GL == 0 and divlbc:b
-          edit MEMBER '00'
-          edit CLASS 'ns'
+          complete :L903 == 1 or :MEMBER == 00
+          trigger :L903 == 0 and divlbc:b
+          edit MEMBER '01'
           edit NP '1'
-          edit WALLT '03'
-          edit NAME '901_00'
+          edit NAME '901_01'
+          edit CLASS 'ns'
           label run ""
           label info ""
           label error ""
           event c
-        task getlbc_gl
-          complete :GL == 0
-          trigger :GL == 1
-          edit NAME 'getlbcgl00'
-          edit SUITENAME 'claef_2'
-          edit MEMBER '00'
-          edit WALLT '01'
+        task getmars
+          complete :L903 == 0
+          trigger :L903 == 1
           edit NP '1'
+          edit MEMBER '01'
+          edit NAME 'getmars01'
           edit CLASS 'ns'
           label run ""
           label info ""
-        task gl
-          complete :GL == 0
-          trigger :GL == 1 and getlbc_gl == complete
-          edit NP '1'
-          edit CLASS 'nf'
-          edit MEMBER '00'
-          edit WALLT '03'
-          edit NAME 'gl00'
+        task 903
+          complete :L903 == 0
+          trigger :L903 == 1 and getmars == complete
+          edit ANZMEMB '1'
+          edit NAME '903_01'
+          edit KOPPLUNG '3'
+          edit MEMBER '01'
+          edit NP '16'
+          edit CLASS 'np'
           label run ""
           label info ""
+          label error ""
+        task 903surf
+          complete :L903 == 0
+          trigger :L903 == 1 and 903 == complete
+          edit NP '16'
+          edit MEMBER '01'
+          edit NAME '903surf_01'
+          edit CLASS 'np'
+          label run ""
+          label info ""
+          label error ""
       endfamily
     endfamily
     family obs
@@ -86,9 +94,8 @@ suite claef_2
         complete :ASSIM == 0
         trigger :ASSIM == 1
         edit NP '1'
-        edit CLASS 'ns'
-        edit WALLT '01'
         edit NAME 'getobs'
+        edit CLASS 'ns'
         label run ""
         label info ""
         meter obsprog -1 3 3
@@ -96,9 +103,8 @@ suite claef_2
         complete :ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0
         trigger :ASSIM == 1 and getobs == complete
         edit NP '1'
-        edit CLASS 'ns'
-        edit WALLT '01'
         edit NAME 'bator'
+        edit CLASS 'ns'
         label run ""
         label info ""
         label error ""
@@ -106,65 +112,62 @@ suite claef_2
         complete :ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0
         trigger :ASSIM == 1 and getobs == complete
         edit NP '1'
-        edit CLASS 'ns'
-        edit WALLT '01'
         edit NAME 'bator3D'
+        edit CLASS 'ns'
         label run ""
         label info ""
     endfamily
     family main
       edit ASSIM '0'
+      edit L903 '1'
       edit GL '0'
       edit LEADT '6'
-      family MEM_00
+      family MEM_01
         task 927
-          trigger :GL == 1 and ../../lbc/MEM_00/gl == complete or :GL == 0 and ../../lbc/MEM_00/901 == complete or :GL == 0 and ../../lbc/MEM_00/901:c
+          complete :L903 == 1
+          trigger ../../lbc/MEM_01/901 == complete or ../../lbc/MEM_01/901:c
           edit NP '16'
+          edit MEMBER '01'
+          edit NAME '927_01'
           edit CLASS 'np'
-          edit MEMBER '00'
-          edit WALLT '03'
-          edit NAME '927_00'
           label run ""
           label info ""
           event d
         task 927surf
-          trigger :GL == 1 and ../../lbc/MEM_00/gl == complete or :GL == 0 and ../../lbc/MEM_00/901 == complete or :GL == 0 and ../../lbc/MEM_00/901:c
+          complete :L903 == 1
+          trigger ../../lbc/MEM_01/901 == complete or ../../lbc/MEM_01/901:c
           edit NP '1'
+          edit MEMBER '01'
+          edit NAME '927surf01'
           edit CLASS 'np'
-          edit MEMBER '00'
-          edit WALLT '01'
-          edit NAME '927surf00'
           label run ""
           label info ""
           label error ""
         task sstex
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
-          trigger :ASSIM == 1 and ../MEM_00/927:d
+          trigger :L903 == 0 and :ASSIM == 1 and ../MEM_01/927:d or :L903 == 1 and :ASSIM == 1 and ../../lbc/MEM_01/903 == complete
           edit NP '1'
+          edit MEMBER '01'
+          edit NAME 'sstex01'
           edit CLASS 'ns'
-          edit MEMBER '00'
-          edit WALLT '01'
-          edit NAME 'sstex00'
           label run ""
           label info ""
         task addsurf
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
           trigger :ASSIM == 1 and sstex == complete
           edit NP '1'
+          edit MEMBER '01'
+          edit NAME 'addsurf01'
           edit CLASS 'ns'
-          edit MEMBER '00'
-          edit WALLT '01'
-          edit NAME 'addsurf00'
           label run ""
           label info ""
         task screen
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
           trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete
-          edit EDA '1'
-          edit NAME 'screen00'
-          edit MEMBER '00'
-          edit WALLT '03'
           edit NP '12'
+          edit MEMBER '01'
+          edit EDA '1'
+          edit NAME 'screen01'
           edit CLASS 'np'
           label run ""
           label info ""
@@ -173,67 +176,63 @@ suite claef_2
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
           trigger :ASSIM == 1 and addsurf == complete and ../../obs/bator == complete
           edit NP '1'
+          edit MEMBER '01'
+          edit NAME 'screensurf01'
           edit CLASS 'np'
-          edit MEMBER '00'
-          edit WALLT '03'
-          edit NAME 'screensurf00'
           label run ""
           label info ""
           label error ""
         task canari
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
           trigger :ASSIM == 1 and screensurf == complete
-          edit NAME 'canari00'
-          edit MEMBER '00'
-          edit SEDA '1'
           edit NP '1'
           edit CLASS 'np'
-          edit WALLT '03'
+          edit MEMBER '01'
+          edit NAME 'canari01'
+          edit SEDA '1'
           label run ""
           label info ""
         task minim
           complete :ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0
           trigger :ASSIM == 1 and screen == complete
           edit ENSJK '1'
-          edit NAME 'minim00'
+          edit NAME 'minim01'
           edit ASSIMM '3'
-          edit MEMBER '00'
-          edit WALLT '03'
+          edit MEMBER '01'
           edit NP '12'
           edit CLASS 'np'
           label run ""
           label info ""
         task 001
-          trigger 927 == complete and 927surf == complete and minim == complete and canari == complete
-          edit NAME '001_00'
-          edit MEMBER '00'
+          trigger :L903 == 0 and 927 == complete and 927surf == complete and minim == complete and canari == complete or :L903 == 1 and ../../lbc/MEM_01/903 == complete and ../../lbc/MEM_01/903surf == complete and minim == complete and canari == complete
+          edit NAME '001_01'
+          edit MEMBER '01'
           edit STEPS15 '0'
-          edit WALLT '06'
           edit NP '360'
           edit STOCH '1'
           edit CLASS 'np'
           label run ""
           label info ""
           label error ""
+          event e
         task progrid
           complete :LEAD < :LEADT
-          trigger 001 == complete
-          edit NAME 'progrid00'
-          edit MEMBER '00'
-          edit STEPS15 '0'
-          edit WALLT '01'
+          trigger ../MEM_01/001:e
           edit NP '1'
+          edit MEMBER '01'
+          edit STEPS15 '0'
+          edit NAME 'progrid01'
           edit CLASS 'np'
           label run ""
           label info ""
+          event f
         task addgrib
           complete :LEAD < :LEADT
-          trigger progrid == complete
-          edit NAME 'addgrib00'
-          edit MEMBER '00'
-          edit STEPS15 '0'
-          edit WALLT '01'
+          trigger ../MEM_01/progrid:f
           edit NP '1'
+          edit MEMBER '01'
+          edit STEPS15 '0'
+          edit NAME 'addgrib01'
           edit CLASS 'np'
           label run ""
           label info ""

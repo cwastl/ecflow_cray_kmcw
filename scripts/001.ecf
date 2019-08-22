@@ -31,6 +31,7 @@ fi
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 RUNDIR=${C001DIR}/$PBS_JOBID
+echo $PBS_JOBID > ${C001DIR}/jobinfo.txt
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
 cd ${RUNDIR}
 
@@ -130,147 +131,117 @@ date2=$( echo $date | cut -c7-8 )
 if [[ ${mem} == "00" ]]
 then
    seedm=0
+   NAMELS1=${NAMELSELECTCTL}
 else
    seedm=`expr ${mem} \* ${date2}`
+   NAMELS1=${NAMELSELECT}
 fi
+
+# create links and inline fpos xtt
+typeset -i act_step_dd act_step_hh act_step_min
+act_step_hh=0
+act_step_hh2=0
+act_step_min=0
+act_step_dd=0
 
 if [[ ${step15} == 1 ]]
 then 
+  steps=15
+else
+  steps=60
+fi
 
-  # create links and inline fpos xtt
-  typeset -i act_step_dd act_step_hh act_step_min
-  act_step_hh=0
-  act_step_hh2=0
-  act_step_min=0
-  act_step_dd=0
+while (( ${act_step_hh2} <= ${leadtime} ))
+do
 
-  while (( ${act_step_hh2} <= ${leadtime} ))
-  do
+  cact_step_hh=$(printf "%%02d" $act_step_hh)
+  cact_step_min=$(printf "%%02d" $act_step_min)
+  cact_step_dd=$(printf "%%04d" $act_step_dd)
+  cact_step="${cact_step_dd}${cact_step_hh}$cact_step_min"
 
-    cact_step_hh=$(printf "%%04d" $cact_step_hh)
-    cact_step_min=$(printf "%%02d" $cact_step_min)
-    cact_step_dd=$(printf "%%04d" $cact_step_dd)
-    cact_step="${cact_step_dd}${cact_step_hh}$cact_step_min"
+  if [[ "$cact_step_min" == "00" ]]
+  then
 
-    if [[ "$cact_step_min" == "00" ]]
+    ln -sf ${NAMELS1} ${RUNDIR}/xxt$cact_step
+
+    if [[ "$cact_step_hh" == "00" ]]
     then
 
-      ln -sf ${NAMELSELECT} ${RUNDIR}/xxt$cact_step
-
-      if [[ "$cact_step_hh" == "00" ]]
-      then
-
-        grep -v $RUNDIR/CLCFU xxt00000000  >  $RUNDIR/xxt00000000_
-        grep -v $RUNDIR/CLDCFU xxt00000000_ > $RUNDIR/xxt00000000__
-        rename  $RUNDIR/xxt00000000__  $RUNDIR/xxt00000000 $RUNDIR/xxt00000000__
-
-      fi
-
-    else
-
-      ln -sf ${NAMELSELECT15} $RUNDIR/xxt$cact_step
+      grep -v $RUNDIR/CLCFU xxt00000000  >  $RUNDIR/xxt00000000_
+      grep -v $RUNDIR/CLDCFU xxt00000000_ > $RUNDIR/xxt00000000__
+      rename  $RUNDIR/xxt00000000__  $RUNDIR/xxt00000000 $RUNDIR/xxt00000000__
 
     fi
 
-    act_step_min=$act_step_min+15
-    (( $act_step_min == 60 )) && { act_step_hh=$act_step_hh+1; act_step_min=0; act_step_hh2=$act_step_hh2+1; }
-    (( $act_step_hh == 24 )) && { act_step_dd=$act_step_dd+1; act_step_hh=0; }
-    (( $act_step_hh2 == ${leadtime} && $act_step_min > 0 )) && break
-
-  done
-
-  if [[ $mem == "00" || $stophy == 0 ]]
-  then 
-   
-    sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{experiment}/${EXP}/"\
-        -e   "s/{nproc}/$NPROC/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
-        -e   "s/{nprtrw}/$NPRTRW/"\
-        -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
-        -e   "s/{couplfreq}/${couplfr_s}/"\
-        -e   "s/{inhydro}/${INHYDRO}/"\
-        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-        -e   "s/NFRPOS=60,/NFRPOS=15,/"\
-        -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
-        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
-
   else
 
-    sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{experiment}/${EXP}/"\
-        -e   "s/{nproc}/$NPROC/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
-        -e   "s/{nprtrw}/$NPRTRW/"\
-        -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{couplfreq}/${couplfr_s}/"\
-        -e   "s/{inhydro}/${INHYDRO}/"\
-        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-        -e   "s/NFRPOS=60,/NFRPOS=15,/"\
-        -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
-        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+    ln -sf ${NAMELSELECT15} $RUNDIR/xxt$cact_step
 
   fi
+ 
+  act_step_min=$act_step_min+$steps
+
+  (( $act_step_min == 60 )) && { act_step_hh=$act_step_hh+1; act_step_min=0; act_step_hh2=$act_step_hh2+1; }
+  (( $act_step_hh == 24 )) && { act_step_dd=$act_step_dd+1; act_step_hh=0; }
+  (( $act_step_hh2 == ${leadtime} && $act_step_min > 0 )) && break
+
+done
+
+if [[ $mem == "00" || $stophy == 0 ]]
+then 
+   
+  sed -e   "s/{nproma}/$NPROMA/"\
+      -e   "s/{experiment}/${EXP}/"\
+      -e   "s/{nproc}/$NPROC/"\
+      -e   "s/{nprgpns}/$NPRGPNS/"\
+      -e   "s/{nprgpew}/$NPRGPEW/"\
+      -e   "s/{nprtrv}/$NPRTRV/"\
+      -e   "s/{nprtrw}/$NPRTRW/"\
+      -e   "s/{nstrin}/$NSTRIN/"\
+      -e   "s/{nstrout}/$NSTROUT/"\
+      -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
+      -e   "s/{couplfreq}/${couplfr_s}/"\
+      -e   "s/{inhydro}/${INHYDRO}/"\
+      -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+      -e   "s/NFRPOS=60,/NFRPOS=${steps},/"\
+      -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
+      -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
 else
 
-  if [[ $mem == "00" || $stophy == 0 ]]
-  then 
-   
-    sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{experiment}/${EXP}/"\
-        -e   "s/{nproc}/$NPROC/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
-        -e   "s/{nprtrw}/$NPRTRW/"\
-        -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/LSPSDT=.TRUE./LSPSDT=.FALSE./"\
-        -e   "s/{couplfreq}/${couplfr_s}/"\
-        -e   "s/{inhydro}/${INHYDRO}/"\
-        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+  sed -e   "s/{nproma}/$NPROMA/"\
+      -e   "s/{experiment}/${EXP}/"\
+      -e   "s/{nproc}/$NPROC/"\
+      -e   "s/{nprgpns}/$NPRGPNS/"\
+      -e   "s/{nprgpew}/$NPRGPEW/"\
+      -e   "s/{nprtrv}/$NPRTRV/"\
+      -e   "s/{nprtrw}/$NPRTRW/"\
+      -e   "s/{nstrin}/$NSTRIN/"\
+      -e   "s/{nstrout}/$NSTROUT/"\
+      -e   "s/{couplfreq}/${couplfr_s}/"\
+      -e   "s/{inhydro}/${INHYDRO}/"\
+      -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
+      -e   "s/NFRPOS=60,/NFRPOS=${steps},/"\
+      -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
+      -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
-  else
-
-    sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{experiment}/${EXP}/"\
-        -e   "s/{nproc}/$NPROC/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
-        -e   "s/{nprtrw}/$NPRTRW/"\
-        -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{couplfreq}/${couplfr_s}/"\
-        -e   "s/{inhydro}/${INHYDRO}/"\
-        -e   "s/NSEED_SDT=60/NSEED_SDT=${seedm}/"\
-        -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
- 
-  fi
-
-fi
+fi  
 
 ecflow_client --label=info "Run 001"
+ecflow_client --event=e
+
 /usr/bin/time aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_${mem}.log 2>&1
 
 rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
 
-ii=0                        #For B-Matrix calculation
-mkdir -p /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
-while [ $ii -le 6 ]
-do
-   cp ICMSH${EXP}+000${ii}:00 /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
-   let "ii = $ii + 1"
-done
+#ii=0                        #For B-Matrix calculation
+#mkdir -p /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
+#while [ $ii -le 6 ]
+#do
+#   cp ICMSH${EXP}+000${ii}:00 /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
+#   cp ICMSH${EXP}+000${ii}:00.sfx /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
+#   let "ii = $ii + 3"
+#done
 
 ii=${assimc}                       #For assimilation cycle
 while [ $ii -le ${leadtime} ]
@@ -281,7 +252,8 @@ do
    let "ii = $ii + $assimc"
 done
 
-rename PF ${C001DIR}/PF PF${EXP}${EXP}+*
+#rename PF ${C001DIR}/PF PF${EXP}${EXP}+*
+cp PF${EXP}${EXP}+* ${C001DIR}
 
 cd ${C001DIR}
 
