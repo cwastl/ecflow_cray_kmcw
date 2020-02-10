@@ -91,15 +91,9 @@ if [[ $gl == 1 ]];then
    NAM=${NAMEL927}
    NAMADDS=${NAMEL927ADDS}
 else
-   if [[ ${mem} == "00" ]];then
-      ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
-      NAM=${NAMEL927}
-      NAMADDS=${NAMEL927ADDS}
-   else
-      ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
-      NAM=${NAMEL927_GLO}
-      NAMADDS=${NAMEL927ADDS_GLO}
-   fi
+   ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
+   NAM=${NAMEL927}
+   NAMADDS=${NAMEL927ADDS}
 fi
 
 ln -s ${ECOCLIMAPI} .
@@ -153,36 +147,19 @@ while (( $i <= $leadtime )) ; do
   rm -f ICMSHE927INIT
 
   (( WAITCOUNT = 0 ))
-  if [[ ${mem} == "00" ]]
-  then
-     while [[ ${WAITCOUNT} -le 120 ]]
-     do
-        if [[ -f ${LBCIFS}/ffei${n1date}_${n1run}00+${jj} ]]
-        then
-           ln -s ${LBCIFS}/ffei${n1date}_${n1run}00+${jj} ICMSHE927INIT
-           (( WAITCOUNT = 300 ))
-        else 
-           echo "ATTENTION: dissemination file does not yet exist!!!"
-           ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
-           (( WAITCOUNT = ${WAITCOUNT} + 1 ))
-           sleep 60
-        fi
-     done      
-  else
-     while [[ ${WAITCOUNT} -le 120 ]]
-     do
-        if [[ -f ${COUPLDIR}/ICMSHBC${mem}+${j} ]]
-        then
-           ln -s ${COUPLDIR}/ICMSHBC${mem}+${j} ICMSHE927INIT
-           (( WAITCOUNT = 300 ))
-        else
-           echo "ATTENTION: dissemination file does not yet exist!!!"
-           ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
-           (( WAITCOUNT = ${WAITCOUNT} + 1 ))
-           sleep 60
-        fi
-     done
-  fi
+  while [[ ${WAITCOUNT} -le 120 ]]
+  do
+     if [[ -f ${LBCGET}/ffei${n1date}_${n1run}00+${jj} ]]
+     then
+        ln -s ${LBCGET}/ffei${n1date}_${n1run}00+${jj} ICMSHE927INIT
+        (( WAITCOUNT = 300 ))
+     else 
+        echo "ATTENTION: dissemination file does not yet exist!!!"
+        ecflow_client --label=info "ATTENTION: dissemination file does not yet exist!!!"
+        (( WAITCOUNT = ${WAITCOUNT} + 1 ))
+        sleep 60
+     fi
+  done      
 
   if [[ ${WAITCOUNT} -le 120 ]]
   then

@@ -96,7 +96,11 @@ else
    exit 91
 fi
 
-INITFILE_SURFACE=${PGDFILE_FA}
+if [[ -s ${PGDFILE_FA} ]]; then
+   INITFILE_SURFACE=${PGDFILE_FA}
+else
+   INITFILE_SURFACE=${CLIMDIR}/PGD_${EXP}.fa
+fi
 
 ln -sf ${C927DIR}/ELSC*${EXP}* .
 ln -sf ${INITFILE_3D} ICMSH${EXP}INIT
@@ -118,8 +122,9 @@ ln -sf ${CLIMDIR}/C12CLIM . #cy40
 ln -sf ${CLIMDIR}/GOZOCLIM . #cy40 
 ln -sf ${CLIMDIR}/C22CLIM . #cy40 
 ln -sf ${CLIMDIR}/CCL4CLIM . #cy40 
-
 ln -sf ${CLIMDIR}/RADSRTM . #cy40 
+ln -sf ${CLIMDIR}/ECOZC . #cy40 
+
 ln -sf ${NAMEL001SURFEX} EXSEG1.nam
 
 # run 001

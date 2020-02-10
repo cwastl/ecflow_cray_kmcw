@@ -3,6 +3,8 @@
 %include <pbs.h>
 %include <head.h>
 
+module load cray-snplauncher
+
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
@@ -54,13 +56,9 @@ else
    export XLSMPOPTS="parthds=${OMP_NUM_THREADS}:stack=358400000";
 fi
 
+
 ln -sf ${NAMEL903SURFEX} ${RUNDIR}/PRE_REAL1.nam
 ln -sf ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.AROM
-
-#lfmwrit=.FALSE. # Default is write to LFI (= .TRUE.)
-#lfmread=.FALSE. # Default is read from LFI (= .TRUE.)
-#lhisfwr=.TRUE.  # Default is write historical data (= .TRUE.)
-#lpgdfwr=.FALSE. # Default is not write PGD (= .FALSE.)
 
 ln -s ${CLIMFILENAME_ECMWF_GLO}${month} ${RUNDIR}/Const.Clim
 
@@ -68,9 +66,7 @@ sed -e "s/{NPROC}/${NPROC}/"\
     -e "s/{CNMEXP}/E903/"\
     -e "s/{NPROMA}/${NPROMA}/"\
     -e "s/{NSTROUT}/${NSTROUT}/"\
-    -e "s/{DOMAIN}/AROM/"\
-    -e "s/{CFPDIR}/ELSCF/"\
-    -e "s/{CFNCLIMOUT}/ELSCF/g" ${NAMEL903SURF} > $RUNDIR/fort.4  
+    -e "s/{DOMAIN}/AROM/g" ${NAMEL903SURF} > ${RUNDIR}/fort.4
 
 if [[ ! -s ${PGDFILE_FA903} ]]; then
    ln -s ${CLIMDIR}/PGD_${EXP}.fa ${PGDFILE_FA903}
@@ -104,7 +100,7 @@ libpath=$(dirname $(dirname ${libpath}))
 export ECCODES_SAMPLES_PATH="$libpath/share/eccodes/ifs_samples/grib1_mlgrib2"
 export ECCODES_DEFINITION_PATH="$libpath/share/eccodes/definitions"
 
-aprun -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 > ${LOGDIR}/903_${mem}.log 2>&1
+mpiexec -cc numa_node -ss -n ${EC_total_tasks} -N ${EC_tasks_per_node} -j ${EC_hyperthreads} -d $OMP_NUM_THREADS $BIN903 > ${LOGDIR}/903surf_${mem}.log 2>&1
 
 if [[ $? -eq 0 ]]
 then

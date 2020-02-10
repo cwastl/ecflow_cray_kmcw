@@ -11,9 +11,9 @@ enjk=%ENSJK%
 user=%USER%
 assimm=%ASSIMM%
 
-#################Run setup script for environment####################
+############################Run setup script for environment#########################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################        
+#####################################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -70,12 +70,9 @@ then
    #export CNF_DEBUG=1
    #export TO_ODB_DEBUG=1
    #export F_RECLUNIT=BYTE  #cini se da ne utjece na rezultat
-   LSPRT=.FALSE.            #treba biti FALSE za minim.
-   QLGP=.FALSE.             #humidity GP in input
-   QLSP=.TRUE.              #humidity SP in input
-   REDNMC=1.35
-   NITER=120 
-   NSIMU=130
+   REDNMC=1.2
+   NITER=66 
+   NSIMU=69
 
    # Some environment variables (ODB, DR. HOOK, GRIBTABLES)
    export ECMWF_LOCAL_TABLE_PATH=$GRIBTABLES
@@ -140,6 +137,7 @@ then
    if [[ $mem -eq "00" ]]; then
       LEJK=.FALSE.
    fi
+
    NSMAXJK=215          # integer truncation of the low res. LAM geometry
    ALPHAKT=$AT          # amplification factor for Jk temperture term
    ALPHAKVOR=$AV        # amplification factor for Jk vorticity term
@@ -163,7 +161,6 @@ then
    #cp $SCREENINGDIR/VARBC.cycle ./VARBC.cycle
    cp ${ADDSURFRESULTFILE} ./ICMSHMINIIMIN
    cp ${ADDSURFRESULTFILE} .
-   cp ${SSTEXANAFILE} ./ICMJKMINIINIT 
    cp ${SCREENDIR}/CCMA.tar CCMA.tar
 
    tar -xvf CCMA.tar
@@ -176,7 +173,56 @@ then
    cp $BMATRIXFILE1 ./stabal96.bal
    cp $BMATRIXFILE2 ./stabal96.cv
    cp $BMATRIXFILE3 ./stabal96.cvt
-   cp $VMATRIXFILE  ./nonsep93_jk.cvt
+
+   if [[ $LEJK == ".TRUE." ]]; then
+
+     LSPRT=.FALSE.
+     QLGP=.FALSE. 
+     QLSP=.TRUE.
+
+     cp $VMATRIXFILE  ./nonsep93_jk.cvt
+     cp ${SSTEXANAFILE} ./ICMJKMINIINIT 
+
+     # Humidity -> spectral (because of Jk)
+     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMSHMINIIMIN medusa_worm
+     ${BINDIR}/fa_gp2sp.py medusa_worm
+     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f medusa_worm.allsp ICMSHMINIIMIN
+     rm -rf medusa_worm.allsp 
+     cp ICMSHMINIIMIN ICMSHMINIINIT
+     cp ICMSHMINIIMIN ICMRFMINI0000
+
+     # ECMWF perturbations inflation
+     if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
+       ecflow_client --label=info "Perturbation inflation"
+       cp ${C927DIR}/ELSCFAROMALBC000 00-ICMJKMINIINIT 
+       export DR_HOOK_NOT_MPI="yes"
+       cp ${BINDIR}/inflating_new.py .
+       python3 inflating_new.py
+       ${BINDIR}/fa_copy -w prefix=S,suffix=TEMPERATURE -f fossil_dyna ICMJKMINIINIT
+       ${BINDIR}/fa_copy -w prefix=S,suffix=WIND.U.PHYS -f fossil_dyna ICMJKMINIINIT
+       ${BINDIR}/fa_copy -w prefix=S,suffix=WIND.V.PHYS -f fossil_dyna ICMJKMINIINIT
+       ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna ICMJKMINIINIT
+       rm -rf fossil_dyna
+     fi
+
+     if [[ $INFLATION == ".FALSE." && $LEJK == ".TRUE." ]]; then
+       ecflow_client --label=info "Change humidity to spectral"
+       ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMJKMINIINIT fossil_dyna
+       ${BINDIR}/fa_gp2sp.py fossil_dyna
+       ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna.allsp ICMJKMINIINIT
+       rm -rf fossil_dyna.allsp
+     fi
+  
+   else
+ 
+     LSPRT=.TRUE.
+     QLGP=.TRUE. 
+     QLSP=.FALSE.
+
+     cp ICMSHMINIIMIN ICMSHMINIINIT
+     cp ICMSHMINIIMIN ICMRFMINI0000
+
+   fi
 
    rm -rf fort.4
 
@@ -206,55 +252,26 @@ then
        -e "s/{PRESUPJK}/${PRESUPJK}/" \
        -e "s/{NTRUNCJK}/${NTRUNCJK}/" ${NAMELMINIM} > fort.4
 
-   # Humidity -> spectral (because of Jk)
-   ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMSHMINIIMIN medusa_worm
-   ${BINDIR}/fa_gp2sp.py medusa_worm
-   ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f medusa_worm.allsp ICMSHMINIIMIN
-   rm -rf medusa_worm.allsp 
-   cp ICMSHMINIIMIN ICMSHMINIINIT
-   cp ICMSHMINIIMIN ICMRFMINI0000
-
-   # ECMWF perturbations inflation
-   if [[ $INFLATION == ".TRUE." && $LEJK == ".TRUE." ]]; then
-     ecflow_client --label=info "Perturbation inflation"
-     cp ${C927DIR}/ELSCFAROMALBC000 00-ICMJKMINIINIT 
-     export DR_HOOK_NOT_MPI="yes"
-     cp ${BINDIR}/inflating_new.py .
-     python3 inflating_new.py
-     ${BINDIR}/fa_copy -w prefix=S,suffix=TEMPERATURE -f fossil_dyna ICMJKMINIINIT
-     ${BINDIR}/fa_copy -w prefix=S,suffix=WIND.U.PHYS -f fossil_dyna ICMJKMINIINIT
-     ${BINDIR}/fa_copy -w prefix=S,suffix=WIND.V.PHYS -f fossil_dyna ICMJKMINIINIT
-     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna ICMJKMINIINIT
-     rm -rf fossil_dyna
-   fi
-
-   if [[ $INFLATION == ".FALSE." && $LEJK == ".TRUE." ]]; then
-     ecflow_client --label=info "Change humidity to spectral"
-     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f ICMJKMINIINIT fossil_dyna
-     ${BINDIR}/fa_gp2sp.py fossil_dyna
-     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f fossil_dyna.allsp ICMJKMINIINIT
-     rm -rf fossil_dyna.allsp
-   fi
 
    # Run minimization config 131
-   #aprun -n $NPROC $MASTERBIN 
    ecflow_client --label=info "Run Minimization"
    aprun -n $NPROC ${BINMASTER}
-   #aprun -n $NPROC ${BINDIR}/MASTERODB_endy
 
-   ecflow_client --label=info "Change humidity to gridpoint"
-   ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
-   ${BINDIR}/fa_sp2gp.py golem_sentry
-   ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f golem_sentry.allgp MXMINI999+0000
-   rm -rf golem_sentry.allgp
 
-   # Correction of humidity errors due to SP<->GP conversions
-   ecflow_client --label=info "Correction of humidity errors"
-   export DR_HOOK_NOT_MPI="yes"
-   cp $BINDIR/corrections_ecf.py .
-   python3 corrections_ecf.py ${assimc1}
-   ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f block_dragon MXMINI999+0000
-   rm -rf block_dragon
+   if [[ $LEJK == ".TRUE." ]]; then
+     ecflow_client --label=info "Change humidity to gridpoint"
+     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
+     ${BINDIR}/fa_sp2gp.py golem_sentry
+     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f golem_sentry.allgp MXMINI999+0000
+     rm -rf golem_sentry.allgp
+
+     # Correction of humidity errors due to SP<->GP conversions
+     ecflow_client --label=info "Correction of humidity errors"
+     cp $BINDIR/corrections_ecf.py .
+     python3 corrections_ecf.py ${assimc1}
+     ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f block_dragon MXMINI999+0000
+     rm -rf block_dragon
+   fi
 
    # Distribute output (logfiles,nodefiles, ODB output FA output, VARBC output)
    #cp VARBC.cycle $VARBCFILE
@@ -265,6 +282,7 @@ then
    cp MXMINI999+0000 ${MINIMDIR}/MXMINI999+0000
 
    # BLEND hydrometeors with first guess file
+   export DR_HOOK_NOT_MPI="yes"
    if [[ $LHYDRO3D == ".TRUE." ]]
    then
      ecflow_client --label=info "Blend hydrometeors"

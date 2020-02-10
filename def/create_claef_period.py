@@ -36,13 +36,13 @@ members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 #members = [13]
 
 # forecasting range
-fcst = 48
+fcst = 21
 
 # forecasting range control member
-fcstctl = 12
+fcstctl = 21
 
 # coupling frequency
-couplf = 6
+couplf = 3
 
 # use 15min output for precipitation
 step15 = False 
@@ -51,11 +51,11 @@ step15 = False
 gl = True
 
 # assimilation switches
-assimi = True   #assimilation yes/no
-assimm = 0      #number of members without assimilation
+assimi = False   #assimilation yes/no
+assimm = 0      #number of members without 3DVar
 assimc = 6      #assimilation cycle in hours
-eda = True      #ensemble data assimilation
-seda = True     #surface eda
+eda = False      #ensemble data assimilation
+seda = False     #surface eda
 
 # use EnJK method of Endy yes/no
 enjk = True
@@ -75,8 +75,8 @@ debug = 0;
 anzmem = len(members)
 
 # user date (default is system date)
-start_date = 20160702
-end_date = 20160703
+start_date = 20160701
+end_date = 20160731
 
 ###########################################
 #####define Families and Tasks#############
@@ -93,6 +93,8 @@ def family_lbc():
        # Task getlbc
        [
           Task("getlbc",
+             Trigger(":GL == 0"),
+             Complete(":GL == 1"),
              Event("a"),
              Edit(
                 NP=1,
@@ -261,7 +263,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=16,
-                     CLASS='np',
+                     CLASS='nf',
                      NAME="927_{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -276,7 +278,7 @@ def family_main():
 #                 Edit(
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
-#                    CLASS='np',
+#                    CLASS='nf',
 #                    NAME="pgd{:02d}".format(mem),
 #                 ),
 #                 Label("run", ""),
@@ -292,7 +294,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      NAME="927surf{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -340,7 +342,7 @@ def family_main():
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=12,
+                     NP=36,
                      CLASS='np',
                      EDA=eda,
                      NAME="screen{:02d}".format(mem),
@@ -376,7 +378,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='ns',
                      SEDA=seda,
                      NAME="canari{:02d}".format(mem),
                   ),
@@ -392,7 +394,7 @@ def family_main():
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=12,
+                     NP=36,
                      CLASS='np',
                      ASSIMM=assimm,
                      ENSJK=enjk,
@@ -431,24 +433,25 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
                   ),
                   Label("run", ""),
                   Label("info", ""),
+                  Label("error", "")
                )
             ],
 
             # Task ADDGRIB
             [
                Task("addgrib",
-                  Trigger("progrid == complete"),
+                  Trigger("../MEM_{:02d}/progrid:f".format(mem)),
                   Complete(":LEAD < :LEADT"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
                   ),
@@ -511,35 +514,35 @@ defs = Defs().add(
                 family_main(),
              ),
 
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-                Trigger("RUN_00 == complete"), 
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-             Family("RUN_12",
-                Edit( LAUF='12',VORHI=0, LEAD=fcst, LEADCTL=fcst ),
-                Trigger("RUN_06 == complete"), 
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
-
-             Family("RUN_18",
-                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-                Trigger("RUN_12 == complete"), 
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+#             Family("RUN_06",
+#                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+#                Trigger("RUN_00 == complete"), 
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
+#
+#             Family("RUN_12",
+#                Edit( LAUF='12',VORHI=0, LEAD=fcst, LEADCTL=fcst ),
+#                Trigger("RUN_06 == complete"), 
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
+#
+#             Family("RUN_18",
+#                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+#                Trigger("RUN_12 == complete"), 
+#
+#                # add suite Families and Tasks
+#                family_lbc(),
+#                family_obs(),
+#                family_main(),
+#             ),
              
           )
        )

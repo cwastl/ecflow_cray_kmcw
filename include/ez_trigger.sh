@@ -23,8 +23,8 @@ HRJ=$(printf "%02d" $HRUN)
 
 # Set task complete for ecFlow
 module load ecflow
-export ECF_NODE=ecgate
+export ECF_HOST=ecgate
 export ECF_PORT=3152
 suiteName='claef'
-ecflow_client --resume /${suiteName}/RUN_${HRJ}/dummy/dummy1 
+ecflow_client --resume /${suiteName}/RUN_${HRJ}/dummy/ez_trigger/dummy1 
 exit

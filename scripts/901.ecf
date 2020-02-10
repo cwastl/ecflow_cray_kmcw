@@ -39,6 +39,7 @@ ln -sf ${BIN901} MASTER
 export OMP_NUM_THREADS=$EC_threads_per_task
 
 i=$lagg
+(( triggert=${leadtime} - ${lagg} ))
 (( leadtime=$leadtime+$lagg ))
 while (( $i <= $leadtime )) ; do
 
@@ -121,7 +122,12 @@ while (( $i <= $leadtime )) ; do
 
     done
 
-    ecflow_client --event=c
+    if (( ${i} > ${triggert} ))
+    then
+
+      ecflow_client --event=c
+
+    fi
 
     (( i=$i+$couplfr ))
 

@@ -16,6 +16,9 @@ user=%USER%
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
 ###################################################################
 
+# Include auxlibs in LD_LIBRARY_PATH because we use dynamic libs
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ms/fr/rme/opt/INTEL/auxlibs/lib/
+
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
@@ -44,7 +47,7 @@ LQGP=FALSE    #if true, humidity is gridpoint in output
 NHYD=TRUE    #if true, nonhydrostatic fields will be produced in output
 
 # ECMWF files and AROME climate file
-cp ${LBCDIR}/ECMWF_$mem.grb .
+cp ${LBCDIR_GL}/ECMWF_$mem.grb .
 ln -sf ${CLIMFILENAME_ECMWF_LAE}${month} ./climate_aladin
 # Extract z, ci and sst
 grib_copy -w shortName=z/ci/sst ECMWF_$mem.grb CONST.grb

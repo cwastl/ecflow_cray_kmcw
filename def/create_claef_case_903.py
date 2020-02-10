@@ -79,8 +79,8 @@ anzmem = len(members)
 
 # user date (default is system date)
 user_date = {
-  'dd'  : '04',
-  'mm'  : '08',
+  'dd'  : '13',
+  'mm'  : '01',
   'yyyy': '2019'
 }
 
@@ -188,9 +188,8 @@ def family_lbc():
                 Edit(
                    MEMBER="{:02d}".format(mem),
                    NP=16,
-                   CLASS='np',
+                   CLASS='nf',
                    KOPPLUNG=couplf,
-                   ANZMEMB=anzmem,
                    NAME="903_{:02d}".format(mem),
                 ),
                 Label("run", ""),
@@ -207,7 +206,8 @@ def family_lbc():
                 Edit(
                    MEMBER="{:02d}".format(mem),
                    NP=16,
-                   CLASS='np',
+                   CLASS='nf',
+                   KOPPLUNG=couplf,
                    NAME="903surf_{:02d}".format(mem),
                 ),
                 Label("run", ""),
@@ -300,7 +300,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=16,
-                     CLASS='np',
+                     CLASS='nf',
                      NAME="927_{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -315,7 +315,7 @@ def family_main():
 #                 Edit(
 #                    MEMBER="{:02d}".format(mem),
 #                    NP=1,
-#                    CLASS='np',
+#                    CLASS='nf',
 #                    NAME="pgd{:02d}".format(mem),
 #                 ),
 #                 Label("run", ""),
@@ -332,7 +332,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      NAME="927surf{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -380,7 +380,7 @@ def family_main():
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=12,
+                     NP=36,
                      CLASS='np',
                      EDA=eda,
                      NAME="screen{:02d}".format(mem),
@@ -416,7 +416,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='ns',
                      SEDA=seda,
                      NAME="canari{:02d}".format(mem),
                   ),
@@ -432,7 +432,7 @@ def family_main():
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
-                     NP=12,
+                     NP=36,
                      CLASS='np',
                      ASSIMM=assimm,
                      ENSJK=enjk,
@@ -471,12 +471,13 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      STEPS15=step15,
                      NAME="progrid{:02d}".format(mem),
                   ),
                   Label("run", ""),
                   Label("info", ""),
+                  Label("error", "")
                )
             ],
 
@@ -488,7 +489,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='np',
+                     CLASS='nf',
                      STEPS15=step15,
                      NAME="addgrib{:02d}".format(mem),
                   ),

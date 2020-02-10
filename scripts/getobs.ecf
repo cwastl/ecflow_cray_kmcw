@@ -61,7 +61,7 @@ ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../mo
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date1}/obsoul_amdar_${date1}_${hh1}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date2}/obsoul_amdar_${date2}_${hh2}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date3}/obsoul_amdar_${date3}_${hh3}0000.asc -overwrite -verbose 
-#ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_pilot_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_schiwm_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_ship_${date}_${run}0000.asc -overwrite -verbose 
@@ -93,6 +93,9 @@ ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../mo
 #Snowgrid
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/SNOWGRID2/ELSCFARCWALBC000 -target ./ELSCFAR33ALBC000_snow_${date} -overwrite -verbose
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/SNOWGRID/ELSCFARCWALBC000 -target ./ELSCFAROMALBC000_snow_${date} -overwrite -verbose
+
+#Satellite/ASCAT
+#ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/ASSIM/OPLACE_archive/${date}/ascat_${date}_${run}????_metopa_?????_ear_o_250_ovw.l2_bufr.gz -overwrite -verbose
 
 if [[ ${TRANSOK} -ge 1 ]]
 then

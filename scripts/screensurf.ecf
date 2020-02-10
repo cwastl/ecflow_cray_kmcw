@@ -174,11 +174,11 @@ ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHS
 rm -rf medusa_worm.allsp
 
 # Run screening config 002
-#aprun -n $NPROC $MASTERBIN
 ecflow_client --label=info "Screensurf"
-aprun -n $NPROC ${BINMASTER} #tu je onaj blacklist geowinda popravljen
+aprun -n $NPROC ${BINMASTER} 
 
-if (($? != 0 ))then
+if (( $? != 0 ))
+then
   ecflow_client --label=error "Error screening"
   exit 1
 fi

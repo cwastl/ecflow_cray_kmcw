@@ -21,14 +21,15 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 RADARSTATIONS="11038 11052 11164 11126 07291" # 11124
 RADARPARAMETER="DBZ VEL"
 RADARTIME="0000 0200"
+LRADAR=.FALSE.
 LDOPPLER=.FALSE.
 LREFL=.FALSE.
-LNATIONAL=.TRUE.
+LNATIONAL=.FALSE.
 LMODES=.FALSE.
 L15MIN_FPOS=.FALSE.
-LMETAROBS=.FALSE.
+LMETAROBS=.TRUE.
 LHYDRO3D=.TRUE.
-LHYDROOBS=.FALSE.
+LHYDROOBS=.TRUE.
 LSCHIWMOBS=.TRUE.
 LGPS=.FALSE.        # using GPS observations if available
 LPSEUDO=.FALSE.     # using pseudosoundings from surface observations in the alps
@@ -37,6 +38,7 @@ export MALLOC_CHECK_=0
 #export MALLOC_CHECK_=3
 
 [[ ! -d ${BATOR3DIR} ]] && mkdir -p ${BATOR3DIR}
+[[ ! -d ${LOGDIRBATOR} ]] && mkdir -p ${LOGDIRBATOR}
 [[ ! -d ${OBSDIR3D} ]] && mkdir -p ${OBSDIR3D}
 rm -f $OBSDIR3D/*
 cd $OBSDIR3D
@@ -73,8 +75,8 @@ fi
  
 if (( $flag>0 )) ; then
 # create bufr_7 files
-  export satellite="noaa16 noaa18 noaa19 metop metopb"
-  export instrument="hirs amsua amsub mhs iasi"
+  export satellite="noaa16 noaa18 noaa19 metop metopb snpp"
+  export instrument="hirs amsua amsub mhs iasi atms"
   ecflow_client --label=info "Get satellite data"
 #rm -rf *metop_*
 
@@ -107,7 +109,6 @@ if (( $flag>0 )) ; then
   cat bufr_6_wp_xxxx_?????????? >>bufr_6_europro
   rm -f bufr_6_wp_xxxx_??????????
 
-  rm -f bufr_3_geowind
   touch bufr_3_geowind
 
   gunzip -f bufr_3_geowind_xx_*gz
@@ -131,7 +132,7 @@ if (( $flag>0 )) ; then
   gunzip -f  obsoul_5_xxxxxx_xx_*gz
 
 else
-  echo "no OPLACE OBS file at all - try only ZAMG OBS" #>> $LOGFILEBATOR 2>&1 
+  echo "no OPLACE OBS file at all - try only ZAMG OBS"
   ecflow_client --label=info "No OPLACE OBS file - try only ZAMG"
 fi
 
@@ -210,47 +211,50 @@ fi
 [ ! -s $OBSDIR3D/bufr.ssmis ] && rm -f $OBSDIR3D/bufr.ssmis
 
 # RADAR
-for num in $RADARSTATIONS; do
-  ecflow_client --label=info "Radar data"
-  (( num2=$num+1 ))
-  touch ${OBSDIR3D:='xxx'}/bufr.$num
-  touch ${OBSDIR3D:='xxx'}/bufr.$num2
-  for radartype in $RADARPARAMETER; do
-    for minute in $RADARTIME; do
-      echo "$minute $RADARTIME"
-      if [ -s ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz ]; then
-        gunzip -f ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz
-        if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
-        elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+if [[ $LRADAR = ".TRUE." ]] 
+then
+  for num in $RADARSTATIONS; do
+    ecflow_client --label=info "Radar data"
+    (( num2=$num+1 ))
+    touch ${OBSDIR3D:='xxx'}/bufr.$num
+    touch ${OBSDIR3D:='xxx'}/bufr.$num2
+    for radartype in $RADARPARAMETER; do
+      for minute in $RADARTIME; do
+        echo "$minute $RADARTIME"
+        if [ -s ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz ]; then
+          gunzip -f ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz
+          if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
+          elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+          fi
+          gzip -f ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz
         fi
-        gzip -f ${OBSDIR3D}/${date}${run}${minute}_${num}_${radartype}.bfr.gz
-      fi
 
-      if [ -s ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr.gz ]; then
-        gunzip -f ${OBSDIR3D}/${date1}${run1}${minute}_${num}_${radartype}.bfr.gz
-        if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
-        elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+        if [ -s ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr.gz ]; then
+          gunzip -f ${OBSDIR3D}/${date1}${run1}${minute}_${num}_${radartype}.bfr.gz
+          if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
+          elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date1}${hh1}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+          fi
+          gzip -f ${OBSDIR3D}/${date1}${run1}${minute}_${num}_${radartype}.bfr.gz
         fi
-        gzip -f ${OBSDIR3D}/${date1}${run1}${minute}_${num}_${radartype}.bfr.gz
-      fi
 
-      if [ -s ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr.gz ]; then
-        gunzip -f ${OBSDIR3D}/${date2}${run2}${minute}_${num}_${radartype}.bfr.gz
-        if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
-        elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
-          cat ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+        if [ -s ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr.gz ]; then
+          gunzip -f ${OBSDIR3D}/${date2}${run2}${minute}_${num}_${radartype}.bfr.gz
+          if [ $radartype = "DBZ" ] && [[ $LREFL = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num
+          elif [ $radartype = "VEL" ] && [[ $LDOPPLER = ".TRUE." ]]; then
+            cat ${OBSDIR3D}/${date2}${hh2}${minute}_${num}_${radartype}.bfr >>${OBSDIR3D}/bufr.$num2
+          fi
         fi
-      fi
+      done
     done
+    [ ! -s ${OBSDIR3D:='xxx'}/bufr.$num ] && rm -f ${OBSDIR3D:='xxx'}/bufr.$num
+    [ ! -s ${OBSDIR3D:='xxx'}/bufr.$num2 ] && rm -f ${OBSDIR3D:='xxx'}/bufr.$num2
   done
-  [ ! -s ${OBSDIR3D:='xxx'}/bufr.$num ] && rm -f ${OBSDIR3D:='xxx'}/bufr.$num
-  [ ! -s ${OBSDIR3D:='xxx'}/bufr.$num2 ] && rm -f ${OBSDIR3D:='xxx'}/bufr.$num2
-done
+fi
 
 # surface observations -> LISTFILE1 -> OBSFILE1
 touch LISTFILE1
@@ -262,9 +266,9 @@ elif [ -s $OBSDIR3D/obsoul_1_xxxxxx_xx_${date1}${hh1} ]; then
   ls $OBSDIR3D/obsoul_1_xxxxxx_xx_${date1}${hh1}  >> LISTFILE1
 fi
 
-if [ -s $OBSFILEZAMG ]; then
-  ls $OBSFILEZAMG >> LISTFILE1
-fi
+#if [ -s $OBSFILEZAMG ]; then
+#  ls $OBSFILEZAMG >> LISTFILE1
+#fi
 
 if [ -s $OBSFILE6 ]; then
   ls $OBSFILE6 >> LISTFILE1
@@ -438,15 +442,15 @@ echo "${ficright}00" >> ${BATOR3DIR}/ficdate
 
 #types_BASE='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
 #types_BASE='conv ascat geow iasi amsua amsub hirs sevb'
-types_BASE='conv ascat geow' 
-#types_BASE='conv' 
+#types_BASE='conv ascat geow' 
+types_BASE='conv geow' 
 #base2merge='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
 #base2merge='conv ascat geow iasi amsua amsub hirs sevb'
-base2merge='conv ascat geow'
-#base2merge='conv'
+#base2merge='conv ascat geow'
+base2merge='conv geow'
 
 export EC_PROFILE_HEAP=0
-export BATOR_NBPOOL=12
+export BATOR_NBPOOL=36
 export BATOR_NBSLOT=1
 export ODB_IO_METHOD=1
 export ODB_CMA=ECMA
@@ -513,7 +517,7 @@ do
    ecflow_client --label=info "Create IOASSIGN"
    chmod 777 ./create_ioassign
    cp -f $LIST_GPS list_gpssol
-   ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} 
+   ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} >> ${LOGDIRBATOR}/CREATEIOASSIGN_3D_${base}.log 2>&1 
 
    case ${base} in 
         "conv")
@@ -651,7 +655,7 @@ do
    cp $BLACKLIST3 LISTE_LOC
    cp $BLACKLIST2 LISTE_NOIRE_DIAP
 
-   mpiexec -n $NPROC $BATORBIN     
+   mpiexec -n $NPROC $BATORBIN >> ${LOGDIRBATOR}/BATOR_3D_$base.log 2>&1    
    echo $?
 
    cp IOASSIGN ECMA.${base}/IOASSIGN 
@@ -677,7 +681,7 @@ done
 cp $MERGEBIN ./merge_ioassign
 
 ecflow_client --label=info "Merge IOASSIGN"
-./merge_ioassign -d $RUNDIR ${liste} 
+./merge_ioassign -d $RUNDIR ${liste} > ${LOGDIRBATOR}/IOASSIGN_3D.log 2>&1 
 
 unset liste
 
@@ -694,7 +698,7 @@ nb=1
 ln -s $SHUFFLEBIN shuffle
 
 ecflow_client --label=info "Shuffle"
-mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na
+mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na > ${LOGDIRBATOR}/SHUFFLE_3D.log 2>&1
 
 # save merged bases (including sub bases)
 tar cvf ECMA_merged.tar $out_BASE ECMA.*

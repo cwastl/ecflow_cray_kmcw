@@ -3,6 +3,8 @@
 %include <pbs.h>
 %include <head.h>
 
+module load cray-snplauncher
+
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
@@ -27,11 +29,11 @@ cd ${RUNDIR}
 rm -fr ${RUNDIR}/*
 
 NPROMA=-32
-NPROC=$EC_total_tasks
-NPRGPNS=$NPROC
+NPROC=${EC_total_tasks}
+NPRGPNS=${NPROC}
 NPRGPEW=1
-NPRTRV=$NPRGPEW
-NPRTRW=$NPRGPNS
+NPRTRV=${NPRGPEW}
+NPRTRW=${NPRGPNS}
 NSTRIN=1
 NSTROUT=1
 NEINI=0
@@ -118,13 +120,19 @@ ln -sf ${PGDFILE_LFI} ${RUNDIR}/PGDFILE.lfi
 
 cstep=$(printf "%%04d" $lagg)
 
-cp ${COUPLDIR}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
+if [[ ${mem} == "00" ]]
+then
+  ln -s ${LBCIFS}/ffei${n1date}_${n1run}00 ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000   
+else
+  ln -s ${COUPLDIR}/ICMSHBC${mem}+${cstep} ${RUNDIR}/ICMSHE927+0000 # Couplingdatei, Stunde 0000
+fi
+
 ln -s ICMSHE927+0000 ${RUNDIR}/ICMSHE927INIT
 
 ecflow_client --label=info "Create PGD-File"
 # --- submit the job ---------------
 status=0
-time  aprun -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
+time aprun -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
 status=${?}
 # ----------------------------------
 
