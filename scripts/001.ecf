@@ -87,6 +87,12 @@ elif [ -s ${SOILGUESSFILE1} ] ; then
 elif [ -s ${SOILGUESSFILE2} ] ; then
    INITFILE_SFX=${SOILGUESSFILE2}
    ecflow_client --label=info "Use old soil file 2"
+elif [ -s ${SOILGUESSFILE3} ] ; then
+   INITFILE_SFX=${SOILGUESSFILE3}
+   ecflow_client --label=info "Use old soil file 3"
+elif [ -s ${SOILGUESSFILE4} ] ; then
+   INITFILE_SFX=${SOILGUESSFILE4}
+   ecflow_client --label=info "Use old soil file 4"
 elif [ -s ${C927SURFDIR}/PFE927${EXP}+0000.sfx ] ; then
    INITFILE_SFX=${C927SURFDIR}/PFE927${EXP}+0000.sfx
    ecflow_client --label=info "Use ECMWF soil"

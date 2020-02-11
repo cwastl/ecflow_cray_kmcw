@@ -16,7 +16,7 @@ user=%USER%
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
-ecflow_client --label=info "Cleaning ${files}"
+ecflow_client --label=info "Cleaning files"
 if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
    ecflow_client --label=info "${p1date}/${p1run} exists"
