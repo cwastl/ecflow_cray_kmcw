@@ -391,7 +391,6 @@ defs = Defs().add(
           # Suite C-LAEF
           Suite(suite_name).add(
 
-             RepeatDate("DATUM",start_date,end_date),
              Edit(
                 # ecflow configuration
                 ECF_MICRO='%',         # ecf micro-character
@@ -419,46 +418,49 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
              ),
 
-#             # Main Runs per day (00, 06, 12, 18)
-#             Family("RUN_00",
-#                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
-#
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+             Family("runs",
+                RepeatDate("DATUM",start_date,end_date),
 
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=0, LEAD=fcst, LEADCTL=fcstctl ),
-#                Trigger("RUN_00 == complete"), 
+#                # Main Runs per day (00, 06, 12, 18)
+#                Family("RUN_00",
+#                   Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 #
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
-             ),
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
+
+                Family("RUN_06",
+                   Edit( LAUF='06',VORHI=0, LEAD=fcst, LEADCTL=fcstctl ),
+#                   Trigger("RUN_00 == complete"), 
 #
-#             Family("RUN_12",
-#                Edit( LAUF='12',VORHI=0, LEAD=fcst, LEADCTL=fcst ),
-#                Trigger("RUN_06 == complete"), 
+                   # add suite Families and Tasks
+                   family_lbc(),
+                   family_obs(),
+                   family_main(),
+                ),
 #
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+#                Family("RUN_12",
+#                   Edit( LAUF='12',VORHI=0, LEAD=fcst, LEADCTL=fcst ),
+#                   Trigger("RUN_06 == complete"), 
+# 
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
 #
-#             Family("RUN_18",
-#                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-#                Trigger("RUN_12 == complete"), 
-#
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
-             
+#                Family("RUN_18",
+#                   Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+#                   Trigger("RUN_12 == complete"), 
+#   
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
+             )             
           )
        )
 

@@ -225,7 +225,7 @@ def family_obs() :
        [
           Task("bator",
              Trigger(":ASSIM == 1 and getobs == complete"),
-             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
+             Complete(":ASSIM == 1 and getobs:obsprog < 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -241,7 +241,7 @@ def family_obs() :
        [
           Task("bator3D",
              Trigger(":ASSIM == 1 and getobs == complete"),
-             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
+             Complete(":ASSIM == 1 and getobs:obsprog < 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
                 CLASS='ns',
@@ -319,7 +319,7 @@ def family_main():
             [
                Task("sstex",
                   Trigger(":ASSIM == 1 and ../MEM_{:02d}/927:d".format(mem)),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -335,7 +335,7 @@ def family_main():
             [
                Task("addsurf",
                   Trigger(":ASSIM == 1 and sstex == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -351,7 +351,7 @@ def family_main():
             [
                Task("screen",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=36,
@@ -369,7 +369,7 @@ def family_main():
             [
                Task("screensurf",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -386,7 +386,7 @@ def family_main():
             [
                Task("canari",
                   Trigger(":ASSIM == 1 and screensurf == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -403,7 +403,7 @@ def family_main():
             [
                Task("minim",
                   Trigger(":ASSIM == 1 and screen == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog < 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=36,
@@ -516,43 +516,45 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
              ),
 
+             Family("runs",
+
              # Main Runs per day (00, 06, 12, 18)
-#             Family("RUN_00",
-#                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl),
+#                Family("RUN_00",
+#                   Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl),
+#   
+#                   # add suite Families and Task
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
 #
-#                # add suite Families and Task
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+#                Family("RUN_06",
+#                   Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 #
-#             Family("RUN_06",
-#                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-#
-#               # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+#                  # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
 
-             Family("RUN_12",
-                Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
-
-                # add suite Families and Tasks
-                family_lbc(),
-                family_obs(),
-                family_main(),
+                Family("RUN_12",
+                   Edit( LAUF='12',VORHI=6, LEAD=fcst, LEADCTL=fcst),
+   
+                   # add suite Families and Tasks
+                   family_lbc(),
+                   family_obs(),
+                   family_main(),
                 ),
 
-#             Family("RUN_18",
-#                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),
+#                Family("RUN_18",
+#                   Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),
 #
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
-             
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
+             )            
           )
        )
 

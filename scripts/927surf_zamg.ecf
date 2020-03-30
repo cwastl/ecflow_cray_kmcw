@@ -1,6 +1,6 @@
 # Script to run 927surf
 
-%include <pbs_mem.h>
+%include <pbs_mem2.h>
 %include <head.h>
 
 module load cray-snplauncher
@@ -133,7 +133,7 @@ fi
 ecflow_client --label=info "creating PFE927${EXP}+0000.sfx"
 # --- submit the job ---------------
 status=0
-time mpiexec -n ${NPROC} ${BINMASTER} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
+/usr/bin/time -v mpiexec -n ${NPROC} ${BINMASTER} > ${LOGDIR}/927_Master_surf_${mem}.log 2>&1
 status=${?}
 # ----------------------------------
 

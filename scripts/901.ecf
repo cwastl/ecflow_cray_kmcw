@@ -78,7 +78,7 @@ while (( $i <= $leadtime )) ; do
           ln -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
 
           ecflow_client --label=info "901 for +${ii}"
-          mpiexec -n $EC_total_tasks MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
+          /usr/bin/time -v mpiexec MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
           CODEREP=$?
 
           if (( ${CODEREP} !=0 ))
@@ -97,7 +97,7 @@ while (( $i <= $leadtime )) ; do
 
           ln -sf ${BINADDSURF} ADDSURF
           ecflow_client --label=info "ADDSURF for +${ii}"
-          mpiexec -n $EC_total_tasks ADDSURF fort.11 fort.12
+          /usr/bin/time -v mpiexec ADDSURF fort.11 fort.12
           CODEREP=$?
           rename fort.11 ${COUPLDIR}/ICMSHBC${mem}+0${ii} fort.11
 

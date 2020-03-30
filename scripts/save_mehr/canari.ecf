@@ -12,8 +12,6 @@ assimc=%ASSIMC%
 seda=%SEDA%
 user=%USER%
 
-set +e
-
 #####################Run setup script for environment################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
 #####################################################################
@@ -45,8 +43,13 @@ fi
 
 [ ${M2} -lt 10 ] && M2=0${M2}
 
-CLIMFILE1=${CLIMFILENAME_AROME}${MM}
-CLIMFILE2=${CLIMFILENAME_AROME}${M2}
+if [[ ${mem} == "00" ]];then
+   CLIMFILE1=${CLIMFILENAME_AROME}${MM}
+   CLIMFILE2=${CLIMFILENAME_AROME}${M2}
+else
+   CLIMFILE1=${CLIMDIR}/clim_claef_gtopof_m${MM}
+   CLIMFILE2=${CLIMDIR}/clim_claef_gtopof_m${M2}
+fi
 
 [[ -s ${OBSDIR}/laketemperatures_${date}.txt ]] && cp ${OBSDIR}/laketemperatures_${date}.txt ./laketemperatures.txt
 [[ -s ${OBSDIR}/ELSCFAROMALBC000_snow_$date ]] && cp ${OBSDIR}/ELSCFAROMALBC000_snow_$date ./snow_sat
@@ -230,10 +233,16 @@ ln -s guess ICMSHANALINIT
 cp ${CLIMFILE1} ICMSHCYCLCLIM
 cp ${CLIMFILE2} ICMSHCYCLCLI2
 
-if [[ -s ${PGDFILE_FA} ]]; then
+#if [[ -s ${PGDFILE_FA} ]]; then
+#   cp ${PGDFILE_FA} Const.Clim.sfx
+#else
+#   cp ${CLIMDIR}/PGD_${EXP}.fa Const.Clim.sfx
+#fi
+
+if [[ ${mem} == "00" ]];then
    cp ${PGDFILE_FA} Const.Clim.sfx
 else
-   cp ${CLIMDIR}/PGD_${EXP}.fa Const.Clim.sfx
+   cp ${CLIMDIR}/PGD_AROM_gtopof.fa Const.Clim.sfx
 fi
 
 try_guess=1

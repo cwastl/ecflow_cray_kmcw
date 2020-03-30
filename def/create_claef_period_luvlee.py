@@ -165,7 +165,6 @@ defs = Defs().add(
           # Suite C-LAEF
           Suite(suite_name).add(
 
-             RepeatDate("DATUM",start_date,end_date),
              Edit(
                 # ecflow configuration
                 ECF_MICRO='%',         # ecf micro-character
@@ -191,16 +190,19 @@ defs = Defs().add(
 
                 # Submit job (remotely)
                 ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
-             ),
+                ),
 
-             # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00",
-                Edit( LAUF='00', VORHI=0, LEAD=fcst, LEADCTL=fcstctl ),
+             Family("runs",
+                RepeatDate("DATUM",start_date,end_date),
 
-                # add suite Families and Tasks
-                family_main(),
-             ),
+                # Main Runs per day (00, 06, 12, 18)
+                Family("RUN_00",
+                   Edit( LAUF='00', VORHI=0, LEAD=fcst, LEADCTL=fcstctl ),
 
+                   # add suite Families and Tasks
+                   family_main(),
+                ),
+             )
           )
        )
 

@@ -3,7 +3,7 @@
 %include <pbs.h>
 %include <head.h>
 
-date=%DATUM%
+date=%ECF_DATE%
 sname=%SUITENAME%
 
 # report to ecflow
@@ -11,9 +11,6 @@ ecflow_client --label=run "The date is ${date}"
 
 echo "Set suite "  ${sname} " complete"
 ecflow_client --label=info "Set suite " $sname " complete"
-ecflow_client --force=complete recursive /${sname}/RUN_00
-ecflow_client --force=complete recursive /${sname}/RUN_06
-ecflow_client --force=complete recursive /${sname}/RUN_12
-ecflow_client --force=complete recursive /${sname}/RUN_18
+ecflow_client --force=complete recursive /${sname}/runs
 
 %include <tail.h>

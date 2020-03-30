@@ -132,7 +132,7 @@ ln -s ICMSHE927+0000 ${RUNDIR}/ICMSHE927INIT
 ecflow_client --label=info "Create PGD-File"
 # --- submit the job ---------------
 status=0
-time aprun -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
+/usr/bin/time -v mpiexec -n ${EC_total_tasks} ${BINMASTER} > ${RUNDIR}/PGD_Master.log 2>&1
 status=${?}
 # ----------------------------------
 

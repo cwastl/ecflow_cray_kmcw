@@ -26,5 +26,5 @@ module load ecflow
 export ECF_HOST=ecgate
 export ECF_PORT=3152
 suiteName='claef'
-ecflow_client --resume /${suiteName}/RUN_${HRJ}/dummy/ez_trigger/dummy1 
+ecflow_client --resume /${suiteName}/runs/RUN_${HRJ}/dummy/ez_trigger/dummy1 
 exit

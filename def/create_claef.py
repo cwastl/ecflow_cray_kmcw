@@ -72,6 +72,7 @@ logport = 36652;
 # main runs time schedule
 timing = {
   'comp' : '23:30',
+  'clean' : '05:00',
   'o00_1' : '0135',
   'o00_2' : '0155',
   'o06_1' : '0735',
@@ -587,6 +588,22 @@ def family_main():
                )
             ],
 
+            # Task verif
+            [
+               Task("verif",
+                  Trigger("../MEM_{:02d}/addgrib == complete".format(mem)),
+                  Complete(":LEAD < :LEADT"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='ns',
+                     NAME="verif{:02d}".format(mem),
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+               )
+            ],
+
            ) for mem in members
          ]
        )
@@ -601,8 +618,6 @@ defs = Defs().add(
 
           # Suite C-LAEF
           Suite(suite_name).add(
-
-             RepeatDate("DATUM",start_date,end_date),
 
              Edit(
                 # ecflow configuration
@@ -631,56 +646,86 @@ defs = Defs().add(
                 ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
              ),
 
-             # Task complete if something went wrong on the previous day
-             Task("complete", Time(timing['comp']),
-                Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name ),
-                Label("run", ""),
-                Label("info", ""),
-             ),
-             # Main Runs per day (00, 06, 12, 18)
-             Family("RUN_00",
-                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
+             Family("admin",
+            
+                # Task clean logfile
+                Task("cleanlog",Date("28.*.*"),Time(timing['clean']),
+                   Edit(
+                      ECF_JOBOUT="%ECF_HOME%/ecf_out/ecf.out",
+                      ECF_JOB_CMD="{} {} ecgb %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
+                      NAME="cleanlog"),
+                   Label("info", ""),
+                ),
 
-                # add suite Families and Tasks
-                family_dummy(timing['c00_1'],timing['c00_2']),
-                family_cleaning(),
-                family_lbc(),
-                family_obs(timing['o00_1'],timing['o00_2']),
-                family_main(),
-             ),
-
-             Family("RUN_06",
-                Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-
-                # add suite Families and Tasks
-                family_dummy(timing['c06_1'],timing['c06_2']),
-                family_cleaning(),
-                family_lbc(),
-                family_obs(timing['o06_1'],timing['o06_2']),
-                family_main(),
+                # Task complete if something went wrong on the previous day
+                Task("complete", Cron(timing['comp']),
+                   Edit( NAME="complete", CLASS="ns", NP=1, SUITENAME=suite_name ),
+                   Label("run", ""),
+                   Label("info", ""),
+                ),
              ),
 
-             Family("RUN_12",
-                Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+             Family("runs",
 
-                # add suite Families and Tasks
-                family_dummy(timing['c12_1'],timing['c12_2']),
-                family_cleaning(),
-                family_lbc(),
-                family_obs(timing['o12_1'],timing['o12_2']),
-                family_main(),
-             ),
+                RepeatDate("DATUM",start_date,end_date),
+    
+                # Task dummy
+                Task("dummy",
+                  Edit(
+                     NP=1,
+                     CLASS='ns',
+                     NAME="dummy",
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+                  Defstatus("suspended"),
+                ),
 
-             Family("RUN_18",
-                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+                # Main Runs per day (00, 06, 12, 18)
+                Family("RUN_00",
+                   Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 
-                # add suite Families and Tasks
-                family_dummy(timing['c18_1'],timing['c18_2']),
-                family_cleaning(),
-                family_lbc(),
-                family_obs(timing['o18_1'],timing['o18_2']),
-                family_main(),
-             ),     
+                   # add suite Families and Tasks
+                   family_dummy(timing['c00_1'],timing['c00_2']),
+                   family_cleaning(),
+                   family_lbc(),
+                   family_obs(timing['o00_1'],timing['o00_2']),
+                   family_main(),
+                ),
+
+                Family("RUN_06",
+                   Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c06_1'],timing['c06_2']),
+                   family_cleaning(),
+                   family_lbc(),
+                   family_obs(timing['o06_1'],timing['o06_2']),
+                   family_main(),
+                ),
+
+                Family("RUN_12",
+                   Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c12_1'],timing['c12_2']),
+                   family_cleaning(),
+                   family_lbc(),
+                   family_obs(timing['o12_1'],timing['o12_2']),
+                   family_main(),
+                ),
+
+                Family("RUN_18",
+                   Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c18_1'],timing['c18_2']),
+                   family_cleaning(),
+                   family_lbc(),
+                   family_obs(timing['o18_1'],timing['o18_2']),
+                   family_main(),
+                ),
+             )     
           )
        )
 

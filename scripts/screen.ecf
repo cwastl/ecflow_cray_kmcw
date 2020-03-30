@@ -182,7 +182,7 @@ rm -rf medusa_worm.allsp
 
 # Run screening config 002
 ecflow_client --label=info "Screening"
-aprun -n $NPROC ${BINMASTER} #tu je onaj blacklist geowinda popravljen
+/usr/bin/time -v aprun -n $NPROC ${BINMASTER} #tu je onaj blacklist geowinda popravljen
 
 if (($? != 0 ))
 then

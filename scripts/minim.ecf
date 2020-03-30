@@ -255,7 +255,7 @@ then
 
    # Run minimization config 131
    ecflow_client --label=info "Run Minimization"
-   aprun -n $NPROC ${BINMASTER}
+   /usr/bin/time -v aprun -n $NPROC ${BINMASTER}
 
 
    if [[ $LEJK == ".TRUE." ]]; then
@@ -292,7 +292,7 @@ then
      cp AldsurfA AldsurfC
      cp $NAMELBLEND fort.4
 
-     aprun -n 1 $BLENDBIN
+     /usr/bin/time -v aprun -n 1 $BLENDBIN
 
      mv AldsurfC ${MINIMRESULTFILE}
    fi

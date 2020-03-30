@@ -102,10 +102,16 @@ else
    exit 91
 fi
 
-if [[ -s ${PGDFILE_FA} ]]; then
+#if [[ -s ${PGDFILE_FA} ]]; then
+#   INITFILE_SURFACE=${PGDFILE_FA}
+#else
+#   INITFILE_SURFACE=${CLIMDIR}/PGD_${EXP}.fa
+#fi
+
+if [[ ${mem} == "00" ]];then
    INITFILE_SURFACE=${PGDFILE_FA}
 else
-   INITFILE_SURFACE=${CLIMDIR}/PGD_${EXP}.fa
+   INITFILE_SURFACE=${CLIMDIR}/PGD_AROM_gtopof.fa
 fi
 
 ln -sf ${C927DIR}/ELSC*${EXP}* .
@@ -114,7 +120,12 @@ ln -sf ${INITFILE_3D} ICMSH${EXP}INIT
 ln -sf ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
 ln -sf ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
 ln -sf ${INITFILE_SURFACE} Const.Clim.sfx    #nka
-ln -sf ${CLIMFILENAME_AROME}${month} Const.Clim
+
+if [[ ${mem} == "00" ]];then
+   ln -sf ${CLIMFILENAME_AROME}${month} Const.Clim
+else
+   ln -sf ${CLIMDIR}/clim_claef_gtopof_m${month} Const.Clim
+fi
 
 ln -sf ${ECOCLIMAPI} . #cy40
 ln -sf ${ECOCLIMAPII} . #cy40
@@ -245,16 +256,16 @@ ecflow_client --event=e
 
 rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
 
-ii=0                        #For B-Matrix calculation
-mkdir -p /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
-while [ $ii -le 6 ]
-do
-   cp ICMSH${EXP}+000${ii}:00 /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
-   cp ICMSH${EXP}+000${ii}:00.sfx /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
-   let "ii = $ii + 3"
-done
+#ii=0                        #For B-Matrix calculation
+#mkdir -p /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
+#while [ $ii -le 6 ]
+#do
+#   cp ICMSH${EXP}+000${ii}:00 /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
+#   cp ICMSH${EXP}+000${ii}:00.sfx /sc1/tcwork/zat2/lb/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
+#   let "ii = $ii + 3"
+#done
 
-ii=0                       #For assimilation cycle
+ii=${assimc}                       #For assimilation cycle
 while [ $ii -le ${leadtime} ]
 do
    jj=$(printf "%%02d" $ii)

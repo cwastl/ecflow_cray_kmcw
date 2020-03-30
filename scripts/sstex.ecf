@@ -29,7 +29,6 @@ rm -rf $RUNDIR/*
 # Environmental settings
 prgenvswitchto intel
 
-NPROC=$EC_total_tasks
 export OMP_NUM_THREADS=1
 #export MALLOC_CHECK_=0
 export MALLOC_CHECK_=3
@@ -69,14 +68,14 @@ cp AROME_GUESS Blend_sea0
 cp ${NAMELSSTEX1} fort.4
 
 ecflow_client --label=info "Blendsur1"
-mpiexec -n $NPROC ${BLENDSURBIN}
+/usr/bin/time -v ${BLENDSURBIN}
 
 rm -f fort.4
 cp AROME_GUESS AROME_SSTOK
 cp ${NAMELSSTEX2} fort.4
 
 ecflow_client --label=info "Blendsur2"
-mpiexec -n $NPROC ${BLENDSURBIN}
+/usr/bin/time -v ${BLENDSURBIN}
 
 chmod 666 AROME_SSTOK
 mv AROME_SSTOK ${SSTEXDIR}/AROME_SSTOK

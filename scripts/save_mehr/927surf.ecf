@@ -71,12 +71,16 @@ lfmread=.FALSE. # Default is read from LFI (= .TRUE.)
 lhisfwr=.TRUE.  # Default is write historical data (= .TRUE.)
 lpgdfwr=.FALSE. # Default is not write PGD (= .FALSE.)
 
-ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
+if [[ ${mem} == "00" ]];then
+   ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
+else
+   ln -s ${CLIMDIR}/clim_claef_gtopof_m${month} const.clim.AROM
+fi
 if [[ $gl == 1 ]];then
    ln -s ${CLIMFILENAME_ECMWF_LAE}${month} ${RUNDIR}/Const.Clim
    NAMELSURF=${NAMEL927SURF}
 else
-   if [[ ${mem} == "00" ]];then
+   if [[ ${mem} == "00"  || ${mem} == "01" ]];then
       ln -s ${CLIMFILENAME_ECMWF_DET}${month} ${RUNDIR}/Const.Clim
       NAMELSURF=${NAMEL927SURF}
    else
@@ -106,7 +110,13 @@ if [[ ! -s ${PGDFILE_FA} ]]; then
    ln -s ${CLIMDIR}/PGD_${EXP}.fa ${PGDFILE_FA}
 fi
 
-ln -s ${PGDFILE_FA} ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
+if [[ ${mem} == "00" ]];then
+   ln -s ${PGDFILE_FA} ${RUNDIR}/Const.Clim.sfx # sts cy40t1 FA
+else
+   ln -s ${CLIMDIR}/PGD_AROM_gtopof.fa ${RUNDIR}/Const.Clim.sfx
+fi
+
+
 ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin #cy40
 ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin #cy40
 
@@ -114,7 +124,7 @@ cstep=$(printf "%%04d" $lagg)
 cstep2=$(printf "%%03d" $lagg)
 
 (( WAITCOUNT = 0 ))
-if [[ ${mem} == "00" ]]
+if [[ ${mem} == "00"  || ${mem} == "01" ]]
 then
    while [[ ${WAITCOUNT} -le 120 ]]
    do

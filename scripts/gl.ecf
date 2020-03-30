@@ -82,7 +82,7 @@ do
            -e "s/{skip_surf}/$SKIP_SURF/" ${NAMELGL} > ./gl_namel
 
        # Running the GL
-       mpiexec -n 1 ${BINGL} -lbc ifs ECMWF_${mem}_small.grb -o ELSCFAROMALBC0${jj} -d -s -n gl_namel
+       /usr/bin/time -v mpiexec -n 1 ${BINGL} -lbc ifs ECMWF_${mem}_small.grb -o ELSCFAROMALBC0${jj} -d -s -n gl_namel
 
        rename ELSCFAROMALBC0${jj} ${COUPLDIR}/ICMSHBC${mem}+00${jj} ELSCFAROMALBC0${jj}
 

@@ -27,8 +27,6 @@ cd ${RUNDIR}
 
 rm -fr ${RUNDIR}/*
 
-NPROC=$EC_total_tasks
-
 # MPI, openMP env, etc.
 export OMP_NUM_THREADS=1
 export MALLOC_CHECK_=0
@@ -46,7 +44,7 @@ cp ${C927DIR}/ADDSURFAROMALBC000 ./fort.12
 cp ${NAMELADDSURF} fort.4
 
 ecflow_client --label=info "Addsurf"
-mpiexec -n $NPROC ${BINADDSURF} 
+/usr/bin/time -v mpiexec ${BINADDSURF} 
 
 mv fort.11 ${ADDSURFRESULTFILE}
 

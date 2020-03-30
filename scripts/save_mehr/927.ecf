@@ -84,14 +84,18 @@ export TSTEP=60
 ln -sf ${BINMASTER} MASTER
 
 # --- get necessary files
+if [[ ${mem} == "00" ]];then
+   ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
+else
+   ln -s ${CLIMDIR}/clim_claef_gtopof_m${month} const.clim.AROM
+fi
 
-ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
 if [[ $gl == 1 ]];then
    ln -s ${CLIMFILENAME_ECMWF_LAE}${month} Const.Clim
    NAM=${NAMEL927}
    NAMADDS=${NAMEL927ADDS}
 else
-   if [[ ${mem} == "00" ]];then
+   if [[ ${mem} == "00" || ${mem} == "01" ]];then
       ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
       NAM=${NAMEL927}
       NAMADDS=${NAMEL927ADDS}
@@ -153,7 +157,7 @@ while (( $i <= $leadtime )) ; do
   rm -f ICMSHE927INIT
 
   (( WAITCOUNT = 0 ))
-  if [[ ${mem} == "00" ]]
+  if [[ ${mem} == "00"  || ${mem} == "01" ]]
   then
      while [[ ${WAITCOUNT} -le 120 ]]
      do

@@ -175,7 +175,7 @@ rm -rf medusa_worm.allsp
 
 # Run screening config 002
 ecflow_client --label=info "Screensurf"
-aprun -n $NPROC ${BINMASTER} 
+/usr/bin/time -v aprun -n $NPROC ${BINMASTER} 
 
 if (( $? != 0 ))
 then

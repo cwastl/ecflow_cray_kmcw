@@ -542,15 +542,17 @@ defs = Defs().add(
 				ECF_JOB_CMD="{} {} %SCHOST% %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
 				 ),
 
-#             # Main Runs per day (00, 06, 12, 18)
-#             Family("RUN_00",
-#                Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl),
+             Family("runs",
+
+#                # Main Runs per day (00, 06, 12, 18)
+#                Family("RUN_00",
+#                   Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl),
 #
-#                # add suite Families and Task
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
+#                   # add suite Families and Task
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
 
 				 Family("RUN_06",
 					Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
@@ -559,26 +561,26 @@ defs = Defs().add(
 					family_lbc(),
 					family_obs(),
 					family_main(),
-				 ),
+		     	 ),
 
-#             Family("RUN_12",
-#                Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc),
+#                Family("RUN_12",
+#                   Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc),
 #                   
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#                ),
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                   ),
 
-#             Family("RUN_18",
-#                Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),
+#                Family("RUN_18",
+#                   Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc),
 #
-#                # add suite Families and Tasks
-#                family_lbc(),
-#                family_obs(),
-#                family_main(),
-#             ),
-             
+#                   # add suite Families and Tasks
+#                   family_lbc(),
+#                   family_obs(),
+#                   family_main(),
+#                ),
+             )              
           )
        )
 

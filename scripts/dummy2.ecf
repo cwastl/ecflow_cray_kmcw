@@ -13,6 +13,4 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 echo "Something went wrong with C-LAEF ${run}"
 ecflow_client --label=error "Something went wrong with C-LAEF ${run}"
 
-exit 1
-
 %include <tail.h>

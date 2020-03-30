@@ -9,5 +9,5 @@
 #PBS -l EC_threads_per_task=1
 #PBS -o %ECF_JOBOUT%
 #PBS -j oe
-#PBS -l EC_memory_per_task=16144mb
+#PBS -l EC_memory_per_task=16GB
 #-----------------------------------------

@@ -169,7 +169,7 @@ while (( $i <= $leadtime )) ; do
   fi
 
   status=0
-  mpiexec -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_${mem}.log 2>&1 
+  /usr/bin/time -v mpiexec -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_${mem}.log 2>&1 
   status=$?
 
   if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]]; then
