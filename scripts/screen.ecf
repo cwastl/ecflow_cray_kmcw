@@ -130,14 +130,12 @@ cp ioassign $ODB_DATAPATH_CCMA/IOASSIGN
 
 cp ${CLIMDIR}/const.tar.gz .
 tar -xzvf const.tar.gz
-mv const_tar/* .
 
 cp rtcoef_noaa_17_hirs.bin rtcoef_noaa_18_hirs.bin
 ln -s scat.cmod5.table fort.36
 cp errgrib_scr errgrib
 
-#cp $CLIMDIR/table? .
-cp ${VARBCFILE}${run} ./VARBC.cycle
+cp ${VARBCFILE}${run}_${mem} ./VARBC.cycle
 cp ${ADDSURFRESULTFILE} ICMSHSCREINIT
 cp ${BATOR3DODBFILE} ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar

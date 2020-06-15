@@ -153,12 +153,11 @@ then
 
    cp ${CLIMDIR}/const.tar.gz .
    tar -xzvf const.tar.gz
-   mv const_tar/* .
 
    ln -s scat.cmod5.table fort.36
 
    # Get VARBC file from SCREENING, ODB file from CCMA and first guess
-   #cp $SCREENINGDIR/VARBC.cycle ./VARBC.cycle
+   cp ${SCREENDIR}/VARBC.cycle ./VARBC.cycle
    cp ${ADDSURFRESULTFILE} ./ICMSHMINIIMIN
    cp ${ADDSURFRESULTFILE} .
    cp ${SCREENDIR}/CCMA.tar CCMA.tar
@@ -274,8 +273,8 @@ then
    fi
 
    # Distribute output (logfiles,nodefiles, ODB output FA output, VARBC output)
-   #cp VARBC.cycle $VARBCFILE
-   #mv VARBC.cycle $MINIMIZATIONDIR
+   cp VARBC.cycle ${VARBCFILE}${run}_${mem}
+   mv VARBC.cycle ${MINIMDIR}
 
    tar cvf CCMA_minim.tar CCMA*
    mv CCMA_minim.tar ${MINIMDIR}/CCMA_minim.tar

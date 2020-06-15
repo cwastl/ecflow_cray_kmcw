@@ -25,13 +25,14 @@ LRADAR=.FALSE.
 LDOPPLER=.FALSE.
 LREFL=.FALSE.
 LNATIONAL=.FALSE.
-LMODES=.FALSE.
+LMODES=.TRUE.
+LMODESNATIONAL=.TRUE.
 L15MIN_FPOS=.FALSE.
-LMETAROBS=.TRUE.
+LMETAROBS=.FALSE.
 LHYDRO3D=.TRUE.
 LHYDROOBS=.TRUE.
-LSCHIWMOBS=.TRUE.
-LGPS=.FALSE.        # using GPS observations if available
+LSCHIWMOBS=.FALSE.
+LGPS=.TRUE.        # using GPS observations if available
 LPSEUDO=.FALSE.     # using pseudosoundings from surface observations in the alps
 
 export MALLOC_CHECK_=0
@@ -169,14 +170,36 @@ fi
 rm -f $OBSDIR3D/bufr.ascat
 touch $OBSDIR3D/bufr.ascat
 
-if [ -s $OBSDIR3D/ascat*gz ]; then
-  ecflow_client --label=info "ASCAT"
-  gunzip -f  ascat*gz
-  for ascat in $(ls $OBSDIR3D/ascat*)
-  do
-     cat $ascat >> $OBSDIR3D/bufr.ascat
-  done
-fi
+#if [ -s $OBSDIR3D/ascat*gz ]; then
+#  ecflow_client --label=info "ASCAT"
+#  gunzip -f  ascat*gz
+#  for ascat in $(ls $OBSDIR3D/ascat*)
+#  do
+#     cat $ascat >> $OBSDIR3D/bufr.ascat
+#  done
+#fi
+
+METOP="metop metopb"
+for sat in $METOP ; do
+  if [ -s ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date}${run}.gz ] ; then
+    ecflow_client --label=info "ASCAT"
+    gunzip -f ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date}${run}.gz
+  fi
+  if [ -s ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date1}${hh1}.gz ] ; then
+    gunzip -f ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date1}${hh1}.gz
+  fi
+  if [ -s ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date2}${hh2}.gz ] ; then
+    gunzip -f ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date2}${hh2}.gz
+  fi
+  if [ -s ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date3}${hh3}.gz ] ; then
+    gunzip -f ${OBSDIR3D}/bufr_9_ascatC_${sat}_${date3}${hh3}.gz
+  fi
+done
+
+for ascat in $(ls ${OBSDIR3D}/bufr_9_ascatC_*) ; do
+  cat ${ascat} >> ${OBSDIR3D}/bufr.ascat
+  cp ${OBSDIR3D}/bufr.ascat .
+done
 
 [ ! -s $OBSDIR3D/bufr.ascat ] && rm -f $OBSDIR3D/bufr.ascat
 
@@ -305,9 +328,14 @@ if [[ $LSCHIWMOBS = ".TRUE." ]] && [ -s $OBSFILE14a ]; then
 fi
 
 # wait for ZAMG observation file
-if [[ $LGPS = ".TRUE." ]]; then
-  if [[ -s $OKFILEPREGPSSOL ]]; then
-    ls $PREGPSSOLRESULTFILE >> LISTFILE1
+if [[ $LGPS = ".TRUE." ]] ; then
+  if [ -s ${PREGPSSOLRESULTFILE} ] ; then
+    ecflow_client --label=info "PREGPS"
+    ls ${PREGPSSOLRESULTFILE} >> LISTFILE1
+  fi
+  if [ -s ${PREGPSSOLRESULTFILE2} ] ; then
+    ecflow_client --label=info "PREGPS2"
+    ls ${PREGPSSOLRESULTFILE2} >> LISTFILE1
   fi
 fi
 
@@ -353,18 +381,60 @@ do
   fi
 
   if [[ $LMODES = ".TRUE." ]]; then
-    if [ -s $OBSDIR/obsoul_MODES_${assdate}_${asstime}00_RUC ]; then
-      ls $OBSDIR/obsoul_MODES_${assdate}_${asstime}00_RUC >> LISTFILE3
+
+    if [[ -s ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin}.gz ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin}.gz
+      gunzip -f ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin}.gz
+      ls ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin} >> LISTFILE3
+    elif [[ -s ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin} ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin}
+      ls ${OBSDIR3D}/obsoul_2_ehs_eu_${asswin} >> LISTFILE3
     fi
-    if [ -s ${OBSDIR3D}/obsoul_2_mrar_si_${asswin}.gz ] ; then
+
+#    if [[ -s ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin}.gz ]] ; then
+#      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin}.gz
+#      gunzip -f ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin}.gz
+#      ls ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin} >> LISTFILE3
+#    elif [[ -s ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin} ]] ; then
+#      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin}
+#      ls ${OBSDIR3D}/obsoul_2_ehs_nl_${asswin} >> LISTFILE3
+#    elif [ -s $OBSDIR/obsoul_MODES_${assdate}_${asstime}00_RUC ] ; then
+#      ls $OBSDIR/obsoul_MODES_${assdate}_${asstime}00_RUC >> LISTFILE3
+#    fi
+
+    if [[ -s ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin}.gz ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin}.gz
+      gunzip -f ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin}.gz
+      ls ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin} >> LISTFILE3
+    elif [[ -s ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin} ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin}
+      ls ${OBSDIR3D}/obsoul_2_ehs_dk_${asswin} >> LISTFILE3
+    fi
+
+    if [[ -s ${OBSDIR3D}/obsoul_2_mrar_si_${asswin}.gz ]] ; then
       chmod 777 ${OBSDIR3D}/obsoul_2_mrar_si_${asswin}.gz
       gunzip -f ${OBSDIR3D}/obsoul_2_mrar_si_${asswin}.gz
       ls ${OBSDIR3D}/obsoul_2_mrar_si_${asswin} >> LISTFILE3
-    elif [ -s ${OBSDIR3D}/obsoul_2_mrar_si_${asswin} ] ; then
+    elif [[ -s ${OBSDIR3D}/obsoul_2_mrar_si_${asswin} ]] ; then
       chmod 777 ${OBSDIR3D}/obsoul_2_mrar_si_${asswin}
       ls ${OBSDIR3D}/obsoul_2_mrar_si_${asswin} >> LISTFILE3
     fi
+    if [[ -s ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin}.gz ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin}.gz
+      gunzip -f ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin}.gz
+      ls ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin} >> LISTFILE3
+    elif [[ -s ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin} ]] ; then
+      chmod 777 ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin}
+      ls ${OBSDIR3D}/obsoul_2_mrar_cz_${asswin} >> LISTFILE3
+    fi
   fi
+
+  if [[ $LMODESNATIONAL = ".TRUE." ]] ; then
+  if [ -s $OBSDIR/obsoul_MODES_aut_${assdate}_${asstime}00.asc ]; then
+    ls $OBSDIR/obsoul_MODES_aut_${assdate}_${asstime}00.asc >> LISTFILE3
+  fi
+fi
+
 done
 
 ecflow_client --label=info "Merging OBSFILES assimilation window"
@@ -439,15 +509,15 @@ fi
 rm -f ${BATOR3DIR}/ficdate
 echo "${ficleft}00" > ${BATOR3DIR}/ficdate
 echo "${ficright}00" >> ${BATOR3DIR}/ficdate
-
 #types_BASE='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
-#types_BASE='conv ascat geow iasi amsua amsub hirs sevb'
+types_BASE='conv ascat geow iasi amsua amsub hirs sevb'
 #types_BASE='conv ascat geow' 
-types_BASE='conv geow' 
+#types_BASE='conv geow'
+
 #base2merge='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
-#base2merge='conv ascat geow iasi amsua amsub hirs sevb'
+base2merge='conv ascat geow iasi amsua amsub hirs sevb'
 #base2merge='conv ascat geow'
-base2merge='conv geow'
+#base2merge='conv geow'
 
 export EC_PROFILE_HEAP=0
 export BATOR_NBPOOL=36
@@ -497,6 +567,7 @@ export ODB_ECMA_CREATE_POOLMASK=1
 export ODB_ECMA_POOLMASK_FILE=$RUNDIR/$out_BASE/ECMA.poolmask
 
 ecflow_client --label=info "Run Bator"
+cp -f $LIST_GPS ./list_gpssol
 for base in $types_BASE
 do
    # ODB environment settings for BATOR
@@ -516,7 +587,6 @@ do
    cp -f ${CIOASSIGNBIN} ./create_ioassign
    ecflow_client --label=info "Create IOASSIGN"
    chmod 777 ./create_ioassign
-   cp -f $LIST_GPS list_gpssol
    ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} >> ${LOGDIRBATOR}/CREATEIOASSIGN_3D_${base}.log 2>&1 
 
    case ${base} in 

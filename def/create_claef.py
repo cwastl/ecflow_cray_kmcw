@@ -36,10 +36,10 @@ suite_name = "claef"
 members = [0]
 
 # forecasting range
-fcst = 30
+fcst = 48
 
 # forecasting range control member
-fcstctl = 30
+fcstctl = 48
 
 # coupling frequency
 couplf = 3
@@ -73,14 +73,14 @@ logport = 36652;
 timing = {
   'comp' : '23:30',
   'clean' : '05:00',
-  'o00_1' : '0135',
-  'o00_2' : '0155',
-  'o06_1' : '0735',
-  'o06_2' : '0755',
-  'o12_1' : '1335',
-  'o12_2' : '1355',
-  'o18_1' : '1935',
-  'o18_2' : '1955',
+  'o00_1' : '0155',
+  'o00_2' : '0205',
+  'o06_1' : '0755',
+  'o06_2' : '0805',
+  'o12_1' : '1355',
+  'o12_2' : '1405',
+  'o18_1' : '1955',
+  'o18_2' : '2005',
   'c00_1' : '02:30',
   'c00_2' : '05:15',
   'c06_1' : '08:30',
@@ -335,6 +335,22 @@ def family_obs(starto1,starto2) :
           )
        ],
 
+       # Task assim/pregps
+       [
+          Task("pregps",
+             Trigger(":ASSIM == 1 and getobs == complete"),
+             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
+             Edit(
+                NP=1,
+                CLASS='ns',
+                NAME="pregps",
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Label("error", "")
+          )
+       ],
+
        # Task assim/bator
        [
           Task("bator",
@@ -354,7 +370,7 @@ def family_obs(starto1,starto2) :
        # Task assim/bator3D
        [
           Task("bator3D",
-             Trigger(":ASSIM == 1 and getobs == complete"),
+             Trigger(":ASSIM == 1 and pregps == complete"),
              Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
@@ -588,21 +604,21 @@ def family_main():
                )
             ],
 
-            # Task verif
-            [
-               Task("verif",
-                  Trigger("../MEM_{:02d}/addgrib == complete".format(mem)),
-                  Complete(":LEAD < :LEADT"),
-                  Edit(
-                     MEMBER="{:02d}".format(mem),
-                     NP=1,
-                     CLASS='ns',
-                     NAME="verif{:02d}".format(mem),
-                  ),
-                  Label("run", ""),
-                  Label("info", ""),
-               )
-            ],
+#            # Task verif
+#            [
+#               Task("verif",
+#                  Trigger("../MEM_{:02d}/addgrib == complete".format(mem)),
+#                  Complete(":LEAD < :LEADT"),
+#                  Edit(
+#                     MEMBER="{:02d}".format(mem),
+#                     NP=1,
+#                     CLASS='ns',
+#                     NAME="verif{:02d}".format(mem),
+#                  ),
+#                  Label("run", ""),
+#                  Label("info", ""),
+#               )
+#            ],
 
            ) for mem in members
          ]

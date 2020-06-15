@@ -245,14 +245,14 @@ ecflow_client --event=e
 
 rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
 
-ii=0                        #For B-Matrix calculation
-mkdir -p /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
-while [ $ii -le 6 ]
-do
-   cp ICMSH${EXP}+000${ii}:00 /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
-   cp ICMSH${EXP}+000${ii}:00.sfx /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
-   let "ii = $ii + 3"
-done
+#ii=0                        #For B-Matrix calculation
+#mkdir -p /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
+#while [ $ii -le 6 ]
+#do
+#   cp ICMSH${EXP}+000${ii}:00 /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
+#   cp ICMSH${EXP}+000${ii}:00.sfx /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
+#   let "ii = $ii + 3"
+#done
 
 ii=0                       #For assimilation cycle
 while [ $ii -le ${leadtime} ]

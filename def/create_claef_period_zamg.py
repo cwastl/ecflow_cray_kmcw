@@ -125,6 +125,22 @@ def family_obs() :
           )
        ],
 
+       # Task assim/pregps
+       [
+          Task("pregps",
+             Trigger(":ASSIM == 1 and getobs == complete"),
+             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
+             Edit(
+                NP=1,
+                CLASS='ns',
+                NAME="pregps",
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Label("error", "")
+          )
+       ],
+
        # Task assim/bator
        [
           Task("bator",
@@ -144,7 +160,7 @@ def family_obs() :
        # Task assim/bator3D
        [
           Task("bator3D",
-             Trigger(":ASSIM == 1 and getobs == complete"),
+             Trigger(":ASSIM == 1 and pregps == complete"),
              Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
              Edit(
                 NP=1,

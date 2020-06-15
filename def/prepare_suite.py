@@ -14,8 +14,8 @@ tasks_check_obs = ["dummy2"]
 tasks_check_main = ["dummy2"]
 tasks_clean = ["cleaning"]
 tasks_lbc = ["getlbc","divlbc","901","getlbc_gl","gl"]
-tasks_obs = ["getobs","bator","bator3D"]
-tasks_main = ["927","pgd","927surf","sstex","addsurf","screen", "screensurf","canari","minim","001","progrid","addgrib","verif","transfer","archmars"]
+tasks_obs = ["getobs","bator","bator3D","pregps"]
+tasks_main = ["927","pgd","927surf","sstex","addsurf","screen","screensurf","canari","minim","001","progrid","addgrib","verif","transfer","archmars"]
 
 hpath="/home/ms/at/kmcw/ecf/"
 

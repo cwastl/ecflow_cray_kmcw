@@ -217,7 +217,6 @@ cp ${CLIMDIR}/rszcoef_fmt .
 
 cp ${CLIMDIR}/const.tar.gz .
 tar -xzvf const.tar.gz
-mv const_tar/* .
 
 cp ${ECOCLIMAPI} .
 cp ${ECOCLIMAPII} .

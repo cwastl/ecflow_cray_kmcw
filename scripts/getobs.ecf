@@ -53,7 +53,12 @@ else
 fi
 gunzip -f obs_foreign_${date}${run}.tar.gz
 
-#  ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../MODE-S/DATA_IN/${date}/obsoul_MODES_${date}_${run}00_RUC -overwrite -verbose
+#ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S/DATA_IN/${date}/obsoul_MODES_${date}_${run}00_RUC -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date}/obsoul_MODES_aut_${date}_${run}00.asc -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date1}/obsoul_MODES_aut_${date1}_${hh1}00.asc -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date2}/obsoul_MODES_aut_${date2}_${hh2}00.asc -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date3}/obsoul_MODES_aut_${date3}_${hh3}00.asc -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date4}/obsoul_MODES_aut_${date4}_${hh4}00.asc -overwrite -verbose
 
 # Now get ZAMG observations - /modelle/prod/mgruppe
 ecflow_client --label=info "Copy ZAMG data"
@@ -63,7 +68,6 @@ ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../mo
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date3}/obsoul_amdar_${date3}_${hh3}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date4}/obsoul_amdar_${date4}_${hh4}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_pilot_${date}_${run}0000.asc -overwrite -verbose 
-ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_schiwm_${date}_${run}0000.asc -overwrite -verbose 
 ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../modelle/prod/mgruppe/OBS/ODB/${date}/obsoul_ship_${date}_${run}0000.asc -overwrite -verbose 
 
 if [[ -s ${OBSDIRLAEF}/obsoul_taw_${date}_${run}0000.asc ]]
@@ -96,6 +100,12 @@ ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../me
 
 #Satellite/ASCAT
 #ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/ASSIM/OPLACE_archive/${date}/ascat_${date}_${run}????_metopa_?????_ear_o_250_ovw.l2_bufr.gz -overwrite -verbose
+
+#GPS data
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/TU_GNSS/ARCHIVE/${date}/OBSOUL.TU.${date}${run}00.plusproch -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/TU_GNSS/ARCHIVE/${date}/OBSOUL_TUAT_${date}${run}00.plusproch -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/TU_GNSS/ARCHIVE/${date1}/OBSOUL_TUAT_${date1}${hh1}00.plusproch -overwrite -verbose
+ectrans -gateway zaaecm.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/EGVAP/OBSOUL/OBSOUL_EGVAP_${date1}${hh1}00.plusproch -overwrite -verbose
 
 if [[ ${TRANSOK} -ge 1 ]]
 then

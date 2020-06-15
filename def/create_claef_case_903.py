@@ -244,6 +244,22 @@ def family_obs() :
           )
        ],
 
+       # Task assim/pregps
+       [
+          Task("pregps",
+             Trigger(":ASSIM == 1 and getobs == complete"),
+             Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
+             Edit(
+                NP=1,
+                CLASS='ns',
+                NAME="pregps",
+             ),
+             Label("run", ""),
+             Label("info", ""),
+             Label("error", "")
+          )
+       ],
+
        # Task assim/bator
        [
           Task("bator",
@@ -263,7 +279,7 @@ def family_obs() :
        # Task assim/bator3D
        [
           Task("bator3D",
-             Trigger(":ASSIM == 1 and getobs == complete"),
+             Trigger(":ASSIM == 1 and pregps == complete"),
              Complete(":ASSIM == 1 and getobs:obsprog == 0 or :ASSIM == 0"),
              Edit(
                 NP=1,
@@ -446,7 +462,7 @@ def family_main():
             # Task 001
             [
                Task("001",
-                  Trigger(":L903 == 0 and 927 == complete and 927surf == complete and minim == complete and canari == complete or :L903 == 1 and ../../lbc/MEM_{:02d}/903 == complete and ../../lbc/MEM_{:02d}/903surf == complete and minim == complete and canari == complete".format(mem,mem)),
+                  Trigger(":L903 == 0 and 927 == complete and minim == complete and canari == complete or :L903 == 1 and ../../lbc/MEM_{:02d}/903 == complete and ../../lbc/MEM_{:02d}/903surf == complete and minim == complete and canari == complete".format(mem,mem)),
                   Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),

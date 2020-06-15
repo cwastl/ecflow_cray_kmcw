@@ -108,7 +108,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf ${BINDIR}/aromesnowline .
               echo "Calculate snowline for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate snowline for CLAEF${mem}+${cstep}:00.grb"
-              ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}:00.log 2>&1
+              ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
  
               if (( $? != 0 )); then
                 ecflow_client --label=error"Snowline not ok" 

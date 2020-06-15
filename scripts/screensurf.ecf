@@ -123,14 +123,12 @@ cp ioassign $ODB_DATAPATH_CCMA/IOASSIGN
 
 cp ${CLIMDIR}/const.tar.gz .
 tar -xzvf const.tar.gz
-mv const_tar/* .
 
 cp rtcoef_noaa_17_hirs.bin rtcoef_noaa_18_hirs.bin
 ln -s scat.cmod5.table fort.36
 cp errgrib_scr errgrib
 
 #cp $CLIMDIR/table? .
-cp ${VARBCFILE}${run} ./VARBC.cycle
 cp ${ADDSURFRESULTFILE} ICMSHSCREINIT
 cp ${BATORDIR}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
@@ -183,7 +181,7 @@ then
   exit 1
 fi
 
-# Distribute output (log files, NODE file, ODB file, VARBC file)
+# Distribute output (log files, NODE file, ODB file)
 tar cvf ECMA_surf.tar ECMA*
 mv ECMA_surf.tar ${SCREENSURFRESULTFILE}
 mv NODE.001_01 ${LOGDIR}/NODE_SCREEN_SURF_${date}${run}_${mem}
