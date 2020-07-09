@@ -3,20 +3,23 @@
 %include <pbs.h>
 %include <head.h>
 
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 user=%USER%
 
 set +e
 
-########################Run setup script for environment########
-. /home/ms/at/${user}/SCR/setup.ksh $run $date 999 999 999 $user
-################################################################
+########################Run setup script for environment#############
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date 999 999 999 $user
+#####################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+module load cray-snplauncher
+prgenvswitchto intel
+module swap intel/18.0.0.033
 
 RADARSTATIONS="11038 11052 11164 11126 07291" # 11124
 RADARPARAMETER="DBZ VEL"
@@ -31,7 +34,6 @@ L15MIN_FPOS=.FALSE.
 LMETAROBS=.FALSE.
 LHYDRO3D=.TRUE.
 LHYDROOBS=.TRUE.
-LSCHIWMOBS=.FALSE.
 LGPS=.TRUE.        # using GPS observations if available
 LPSEUDO=.FALSE.     # using pseudosoundings from surface observations in the alps
 
@@ -321,12 +323,6 @@ if [[ $LNATIONAL = ".TRUE." ]]; then
   done
 fi
 
-# SCHI-WM stations
-if [[ $LSCHIWMOBS = ".TRUE." ]] && [ -s $OBSFILE14a ]; then
-  ecflow_client --label=info "Ski WM"
-  ls $OBSFILE14a >> LISTFILE1
-fi
-
 # wait for ZAMG observation file
 if [[ $LGPS = ".TRUE." ]] ; then
   if [ -s ${PREGPSSOLRESULTFILE} ] ; then
@@ -525,7 +521,13 @@ export BATOR_NBSLOT=1
 export ODB_IO_METHOD=1
 export ODB_CMA=ECMA
 export ODB_STATIC_LINKING=1
-export PRINT_TABLE_NAMES=FALSE
+export PRINT_TABLE_NAMES=${BUFRTABLES}
+
+#cy43
+export BATOR_WINDOW_LEN=180   # width of the temporal assimilation window (in minutes)
+export BATOR_WINDOW_SHIFT=-90 # shift of the temporal assimilation window relat
+export BATOR_SLOT_LEN=0       # width of a standard timeslot (in minutes)
+export BATOR_CENTER_LEN=0     # width of the centred timeslot ( in minutes)
 
 # create working directory
 
@@ -582,7 +584,6 @@ do
    cp -f $NAMELRGB namelist_rgb
    cp -f $NAMELLAMFLAG3D NAM_lamflag
    cp -f $NAMELIASICHAN iasichannels
-   cp -f $NAMELCRISCHAN crischannels
    cp -f ${CLIMFILENAME_BATOR} param.cfg
    cp -f ${CIOASSIGNBIN} ./create_ioassign
    ecflow_client --label=info "Create IOASSIGN"
@@ -593,19 +594,16 @@ do
         "conv")
            if [[ -s $OBSDIR3D/OBSFILEMERGED_${date}${run} ]]; then
              cp $OBSDIR3D/OBSFILEMERGED_${date}${run} OBSOUL.conv
-             echo "$base     OBSOUL   $base             ${date} ${run}" > refdata.conv 
            fi
            ;;
         "europro")
            if [[ -s $OBSDIR3D/bufr_6_${base} ]]; then
              cp $OBSDIR3D/bufr_6_${base} BUFR.${base}
-             echo "$base  BUFR     $base          ${date} ${run}" > refdata.${base}
            fi
            ;;
 		"temp")
            if [[ -s $OBSDIR3D/bufr.${base} ]] ; then
              cp $OBSDIR3D/bufr.temp BUFR.${base}
-             echo "$base     BUFR     $base             ${date} ${run}" > refdata.${base}
            fi
            ;;
         "sevb")
@@ -619,7 +617,6 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi 
-           echo "$base     GRIB     $base             ${date} ${run}" > refdata.${base}
            ;;
         "geow")
            if [[ -s $OBSDIR3D/bufr_3_geowind ]] 
@@ -632,12 +629,10 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi 
-           echo "geowind  BUFR     geowind          ${date} ${run}" > refdata.geow
            ;;
 		"geow2")
            if [[ -s $OBSDIR3D/bufr_3_geowind2 ]] ; then
              cp $OBSDIR3D/bufr_3_geowind2 BUFR.geowind2
-             echo "geowind2 BUFR     geowind2         ${date} ${run}" > refdata.geow2
            fi
            ;;
         "amsua"|"amsub")
@@ -651,7 +646,6 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi 
-           echo "tov$base BUFR     $base            ${date} ${run}" > refdata.${base}
            ;;     
         "hirs")
            if [[ -s $OBSDIR3D/bufr_7_hirs ]] 
@@ -664,7 +658,6 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi
-           echo "tov$base  BUFR     $base             ${date} ${run}" > refdata.hirs
            ;;
         "iasi2")
            if [[ -s $OBSDIR3D/bufr_7_iasi ]]
@@ -677,7 +670,6 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi
-           echo "$base    BUFR     $base            ${date} ${run}" > refdata.${base}
            ;;
         "iasi")
            if [[ -s $OBSDIR3D/bufr_7_${base} ]]
@@ -690,7 +682,6 @@ do
               base2merge=$( echo $base2merge | sed -e "s/ *$base */ /" )
               continue
            fi
-           echo "$base     BUFR     $base             ${date} ${run}" > refdata.${base}
            ;;
         "ascat"|"ssmis"|"ersuwi")
            if [[ -s $OBSDIR3D/bufr.${base} ]]
@@ -701,26 +692,21 @@ do
               echo $base2merge
               continue
            fi
-           echo "$base    BUFR     $base            ${date} ${run}" > refdata.${base}
            ;;
 		"radarv")
-           rm -f refdata.radarv
-           touch refdata.radarv
            for num in $RADARSTATIONS; do
              (( num2=$num+1 ))
              if [[ -s $OBSDIR3D/bufr.$num ]]; then
                cp $OBSDIR3D/bufr.$num BUFR.$num
-               echo "$num    BUFR     $base           ${date} ${run}" >>refdata.radarv
              fi
              if [[ -s $OBSDIR3D/bufr.$num2 ]]; then
                cp $OBSDIR3D/bufr.$num2 BUFR.$num2
-               echo "$num2    BUFR     $base           ${date} ${run}" >> refdata.radarv
              fi
            done
            ;;   
    esac
 
-   cp refdata.${base} refdata
+   cp ${BATORMAP3D}_${base} batormap
 
    cp $BLACKLIST3 LISTE_LOC
    cp $BLACKLIST2 LISTE_NOIRE_DIAP
@@ -731,7 +717,7 @@ do
    cp IOASSIGN ECMA.${base}/IOASSIGN 
    [ ! -f ECMA.${base}/ECMA.dd ] && rm -rf ECMA.${base}
 
-   rm -f refdata
+   rm -f batormap
 done
 
 tar cvf ecma_raw.tar ECMA.*

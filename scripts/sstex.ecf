@@ -9,12 +9,16 @@ mem=%MEMBER%
 assimc=%ASSIMC%
 user=%USER%
 
-############################Run setup script for environment#########
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################
+#################################Run setup script for environment#########
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+prgenvswitchto intel
+module swap intel/18.0.0.033
 
 [[ ! -d ${SSTEXDIR} ]] && mkdir -p ${SSTEXDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
@@ -26,11 +30,7 @@ cd ${RUNDIR}
 
 rm -rf $RUNDIR/*
 
-# Environmental settings
-prgenvswitchto intel
-
 export OMP_NUM_THREADS=1
-#export MALLOC_CHECK_=0
 export MALLOC_CHECK_=3
 export DR_HOOK=0                  # Dr. Hook is for the traceback errors, but it's now disabled
 export DR_HOOK_NOT_MPI="yes"      # had to be added - crashing otherwise (calling to MPI). Maybe because sst_exc. is single task (non-MPI) job?
@@ -68,14 +68,14 @@ cp AROME_GUESS Blend_sea0
 cp ${NAMELSSTEX1} fort.4
 
 ecflow_client --label=info "Blendsur1"
-/usr/bin/time -v ${BLENDSURBIN}
+/usr/bin/time -v ${BLENDSURBIN} > ${LOGDIR}/BLENDSUR1_${mem}.log 2>&1
 
 rm -f fort.4
 cp AROME_GUESS AROME_SSTOK
 cp ${NAMELSSTEX2} fort.4
 
 ecflow_client --label=info "Blendsur2"
-/usr/bin/time -v ${BLENDSURBIN}
+/usr/bin/time -v ${BLENDSURBIN} > ${LOGDIR}/BLENDSUR2_${mem}.log 2>&1
 
 chmod 666 AROME_SSTOK
 mv AROME_SSTOK ${SSTEXDIR}/AROME_SSTOK

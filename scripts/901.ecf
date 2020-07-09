@@ -3,9 +3,6 @@
 %include <pbs.h>
 %include <head.h>
 
-module load craype-hugepages2M
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
@@ -13,12 +10,16 @@ lagg=%VORHI%
 couplfr=%KOPPLUNG%
 user=%USER%
 
-##################Run setup script for environment#################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
-###################################################################
+#######################Run setup script for environment#################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem $lagg 999 $user
+########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+module load craype-hugepages2M
+module load cray-snplauncher
 
 if [[ ${mem} == "00" ]]
 then
@@ -81,6 +82,7 @@ while (( $i <= $leadtime )) ; do
 
           ecflow_client --label=info "901 for +${ii}"
           /usr/bin/time -v mpiexec MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
+#          /usr/bin/time -v mpiexec MASTER 
           CODEREP=$?
 
           if (( ${CODEREP} !=0 ))

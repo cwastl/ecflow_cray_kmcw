@@ -9,9 +9,9 @@ user=%USER%
 
 set +e
 
-##############Run setup script for environment##################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date 999 999 999 $user
-################################################################
+###################Run setup script for environment##################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date 999 999 999 $user
+#####################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"

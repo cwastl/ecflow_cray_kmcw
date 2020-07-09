@@ -3,23 +3,24 @@
 %include <pbs.h>
 %include <head.h>
 
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 assimc=%ASSIMC%
 user=%USER%
 
-
-#################Run setup script for environment####################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################
+################Run setup script for environment##########################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
+# Environmental settings
+module load cray-snplauncher
+
 [[ ! -d ${ADDSURFDIR} ]] && mkdir -p ${ADDSURFDIR}
+[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
 
 RUNDIR=${ADDSURFDIR}/$PBS_JOBID
 [[ ! -d ${RUNDIR} ]] && mkdir -p ${RUNDIR}
@@ -44,7 +45,7 @@ cp ${C927DIR}/ADDSURFAROMALBC000 ./fort.12
 cp ${NAMELADDSURF} fort.4
 
 ecflow_client --label=info "Addsurf"
-/usr/bin/time -v mpiexec ${BINADDSURF} 
+/usr/bin/time -v mpiexec ${BINADDSURF} > ${LOGDIR}/ADDSURF_${mem}.LOG 2>&1 
 
 mv fort.11 ${ADDSURFRESULTFILE}
 

@@ -1,8 +1,6 @@
 %include <pbs.h>
 %include <head.h>
 
-module load python3
-
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
@@ -11,15 +9,17 @@ enjk=%ENSJK%
 user=%USER%
 assimm=%ASSIMM%
 
-############################Run setup script for environment#########################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################################
+##########################Run setup script for environment################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
 # Environmental settings
 prgenvswitchto intel
+
+module load python3
 
 INFLATION=.FALSE.       # ECMWF EDA spread will be increased by an inflation factor
 LHYDRO3D=.TRUE.
@@ -91,6 +91,7 @@ then
    export TIME_INIT_HHMMSS=${run}0000
    export ODB_STATIC_LINKING=1
    export TO_ODB_ECMWF=0
+   export RTTOV_COEFDIR=${RUNDIR}
 
    #Jk parameters perturbations
    typeset -i seed seed1 aa
@@ -151,8 +152,8 @@ then
    # Fetching of the input files
    cp $CLIMDIR/table? .
 
-   cp ${CLIMDIR}/const.tar.gz .
-   tar -xzvf const.tar.gz
+   cp ${CLIMDIR}/const_cy43t2.tar.gz .
+   tar -xzvf const_cy43t2.tar.gz
 
    ln -s scat.cmod5.table fort.36
 
@@ -165,7 +166,6 @@ then
    tar -xvf CCMA.tar
 
    cp $NAMELIASICHAN $RUNDIR/iasichannels
-   cp $NAMELCRISCHAN $RUNDIR/crischannels
    cp CCMA/IOASSIGN IOASSIGN
 
    # Get B-MATRIX and V-MATRIX files
@@ -214,7 +214,7 @@ then
   
    else
  
-     LSPRT=.TRUE.
+     LSPRT=.FALSE.
      QLGP=.TRUE. 
      QLSP=.FALSE.
 
@@ -251,13 +251,14 @@ then
        -e "s/{PRESUPJK}/${PRESUPJK}/" \
        -e "s/{NTRUNCJK}/${NTRUNCJK}/" ${NAMELMINIM} > fort.4
 
-
+   module swap intel/18.0.0.033
    # Run minimization config 131
    ecflow_client --label=info "Run Minimization"
-   /usr/bin/time -v aprun -n $NPROC ${BINMASTER}
+   /usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MINIMIZATION_${mem}.log 2>&1
 
 
    if [[ $LEJK == ".TRUE." ]]; then
+     module swap intel/17.0.3.053
      ecflow_client --label=info "Change humidity to gridpoint"
      ${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f MXMINI999+0000 golem_sentry 
      ${BINDIR}/fa_sp2gp.py golem_sentry
@@ -291,7 +292,7 @@ then
      cp AldsurfA AldsurfC
      cp $NAMELBLEND fort.4
 
-     /usr/bin/time -v aprun -n 1 $BLENDBIN
+     /usr/bin/time -v aprun -n 1 $BLENDBIN > ${LOGDIR}/BLEND_${mem}.log 2>&1
 
      mv AldsurfC ${MINIMRESULTFILE}
    fi

@@ -3,23 +3,25 @@
 %include <pbs.h>
 %include <head.h>
 
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 user=%USER%
 
-##############Run setup script for environment##################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date 999 999 999 $user
-################################################################
+###################Run setup script for environment##################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date 999 999 999 $user
+#####################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
+# Environmental settings
+module load cray-snplauncher
+prgenvswitchto intel
+module swap intel/18.0.0.033
+
 LNATIONAL=.FALSE.
 LMETAROBS=.TRUE.
 LHYDROOBS=.TRUE.
-LSCHIWMOBS=.TRUE.
 
 [[ ! -d ${BATORDIR} ]] && mkdir -p ${BATORDIR}
 [[ ! -d ${LOGDIRBATOR} ]] && mkdir -p ${LOGDIRBATOR}
@@ -119,10 +121,6 @@ if [ -s ${OBSFILEOPLACE} ] && [ -s ${OBSFILEZAMG} ] ; then
       [ -s obsoul_1_xxxxxy_${cc}_${date}${run} ] && ls obsoul_1_xxxxxy_${cc}_${date}${run} >>LISTFILE
     done
   fi
-  #### add SCHI-WM station observations (optional) ##
-  if [[ ${LSCHIWMOBS} = ".TRUE." ]] && [ -s $OBSFILE14a ] ; then
-    ls $OBSFILE14a >> LISTFILE
-  fi
 
   ${MERGEOBSBIN} -obsoul OBSFILE -files LISTFILE
 
@@ -196,6 +194,12 @@ export ODB_IO_METHOD=1
 export ODB_CMA=ECMA
 export BATOR_LAMFLAG=1
 
+#cy43
+export BATOR_WINDOW_LEN=180
+export BATOR_WINDOW_SHIFT=-90
+export BATOR_SLOT_LEN=0
+export BATOR_CENTER_LEN=0
+
 export IOASSIGN=IOASSIGN
 export ODB_ANALYSIS_DATE=$date
 export ODB_ANALYSIS_TIME=${run}0000
@@ -220,7 +224,7 @@ export ODB_ECMA_CREATE_POOLMASK=1
 export ODB_ECMA_POOLMASK_FILE=$RUNDIR/$out_BASE/ECMA.poolmask
 
 # get input data (ELSC*, namelist, binary, etc.)
-cp ${BATORDIR}/OBSFILE ./OBSOUL
+cp ${BATORDIR}/OBSFILE ./OBSOUL.conv
 cp ${CLIMDIR}/LISTE_NOIRE_DIAP .
 cp ${IOASSIGNBIN} ./ioassign
 cp ${NAMELLAMFLAG} ./NAM_lamflag
@@ -228,12 +232,14 @@ cp ${NAMELBATOR} ./NAMELIST
 cp ${CIOASSIGNBIN} ./create_ioassign
 cp ${BATORDIR}/ficdate ./ficdate
 cp ${CLIMFILENAME_BATOR} param.cfg
-cp ${CLIMDIR}/LIST_GPSSOL list_gpssol 
+cp ${CLIMDIR}/LIST_GPSSOL list_gpssol
+# new in cy43
+cp ${BATORMAPSURF} batormap
 
 ecflow_client --label=info "Create IOASSIGN"
 ./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} > ${LOGDIRBATOR}/CREATEIOASSIGN.log 2>&1
 
-/usr/bin/time -v mpiexec -n $NPROC $BATORBIN > ${LOGDIRBATOR}/BATOR.log 2>&1
+/usr/bin/time -v mpiexec -n ${NPROC} $BATORBIN > ${LOGDIRBATOR}/BATOR.log 2>&1
 
 tar cvf ecma_raw.tar ECMA*
 mv ECMA ECMA.conv

@@ -3,8 +3,6 @@
 %include <pbs_mem1.h>
 %include <head.h>
 
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
@@ -14,12 +12,15 @@ user=%USER%
 
 set +e
 
-#####################Run setup script for environment################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################
+##########################Run setup script for environment################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+module load cray-snplauncher
 
 [[ ! -d ${CANARIDIR} ]] && mkdir -p ${CANARIDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
@@ -87,13 +88,7 @@ export NSLOTS=$EC_total_tasks
 # --- Create working directory
 export NPROMA=-32
 export NPROC=$NSLOTS
-export NPRGPEW=1
-export NPRGPNS=$NPROC
-export NPRTRV=1
-export NPRTRW=$NPROC
 
-export NSTRIN=$NPROC
-export NSTROUT=$NPROC
 export NPOOLS=$NPROC
 
 export NEINI=0
@@ -163,7 +158,7 @@ if [[ $LINISNOW == ".TRUE." ]] ; then
   echo "&NAMSCEN" >> fort.4
   echo "   /" >> fort.4
 
-  /usr/bin/time -v mpiexec -n $NSLOTS ${BINSNOWGRID3}
+  /usr/bin/time -v mpiexec -n $NSLOTS ${BINSNOWGRID3} > ${LOGDIR}/SNOWGRID3_${mem}.log 2>&1
   status1=$?
   if (( $status1 != 0 )) && (( $status1 != 137 )) 
   then
@@ -191,7 +186,7 @@ if [[ ${LINISNOW2} == ".TRUE." ]] ; then
   echo "&NAMSCEN" >> fort.4
   echo "   /" >> fort.4
 
-  /usr/bin/time -v mpiexec -n $NSLOTS ${BINSNOWGRID4}
+  /usr/bin/time -v mpiexec -n $NSLOTS ${BINSNOWGRID4} > ${LOGDIR}/SNOWGRID4_${mem}.log 2>&1
   status11=$?                                                 
   if (( $status11 != 0 )) && (( $status11 != 137 ))
   then    
@@ -201,22 +196,14 @@ if [[ ${LINISNOW2} == ".TRUE." ]] ; then
 fi  
 
 sed -e "s/{NPROC}/${NPROC}/" \
-    -e "s/{NPRTRV}/${NPRTRV}/" \
-    -e "s/{NPRTRW}/${NPRTRW}/" \
-    -e "s/{NSTRIN}/${NSTRIN}/" \
-    -e "s/{NSTROUT}/${NSTROUT}/" \
     -e "s/{NPROMA}/${NPROMA}/" \
     -e "s/{NEINI}/${NEINI}/" \
-    -e "s/{NPRGPEW}/${NPRGPEW}/" \
     -e "s/{TSTEP_701}/${TSTEP_701}/"\
     -e "s/{CNMEXPB}/${CNMEXPB}/"\
-    -e "s/{NSTOP}/${NSTOP}/"\
-    -e "s/{NPRGPNS}/${NPRGPNS}/" ${NAMELCANARI} > fort.4
+    -e "s/{NSTOP}/${NSTOP}/" ${NAMELCANARI} > fort.4
 
-cp ${CLIMDIR}/rszcoef_fmt .
-
-cp ${CLIMDIR}/const.tar.gz .
-tar -xzvf const.tar.gz
+cp ${CLIMDIR}/const_cy43t2.tar.gz .
+tar -xzvf const_cy43t2.tar.gz
 
 cp ${ECOCLIMAPI} .
 cp ${ECOCLIMAPII} .
@@ -229,11 +216,7 @@ ln -s guess ICMSHANALINIT
 cp ${CLIMFILE1} ICMSHCYCLCLIM
 cp ${CLIMFILE2} ICMSHCYCLCLI2
 
-if [[ -s ${PGDFILE_FA} ]]; then
-   cp ${PGDFILE_FA} Const.Clim.sfx
-else
-   cp ${CLIMDIR}/PGD_${EXP}.fa Const.Clim.sfx
-fi
+cp ${PGDFILE_FA} Const.Clim.sfx
 
 try_guess=1
 found=0
@@ -268,7 +251,7 @@ export F_RECLUNIT=BYTE
 export F_UFMTENDIAN="big:10,33,50,54,81"
 
 ecflow_client --label=info "Canari"
-/usr/bin/time -v mpiexec -n $NSLOTS ${BINMASTER}
+/usr/bin/time -v mpiexec -n $NSLOTS ${BINMASTER} > ${LOGDIR}/CANARI_${mem}.log 2>&1
 
 export F_RECLUNIT=WORD
 # distribute output 

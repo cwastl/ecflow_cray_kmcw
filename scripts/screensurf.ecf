@@ -9,15 +9,16 @@ mem=%MEMBER%
 assimc=%ASSIMC%
 user=%USER%
 
-#############################Run setup script for environment########
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################
+#############################Run setup script for environment#############
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
 
 # Environmental settings
 prgenvswitchto intel
+module load python3
 
 [[ ! -d ${SCREENDIR} ]] && mkdir -p ${SCREENDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
@@ -30,7 +31,7 @@ cd ${RUNDIR}
 rm -fr ${RUNDIR}/*
 
 ODB_DATAPATH_CCMA=${RUNDIR}/CCMA
-ODB_SRCPATH_RSTBIAS=$RUNDIR/RSTBIAS
+ODB_SRCPATH_RSTBIAS=${RUNDIR}/RSTBIAS
 ODB_DATAPATH_RSTBIAS=$ODB_SRCPATH_RSTBIAS
 
 # Obs perturabtion
@@ -91,6 +92,7 @@ export ODB_ANALYSIS_DATE=$date
 export ODB_ANALYSIS_TIME=${run}0000
 export TIME_INIT_YYYYMMDD=$date
 export TIME_INIT_HHMMSS=${run}0000
+export RTTOV_COEFDIR=${RUNDIR}
 
 # ODB environment
 export ODB_SRCPATH_CCMA=${RUNDIR}/CCMA
@@ -121,20 +123,25 @@ cp ${CIOASSIGNBIN} ./create_ioassign
 chmod 777 ./create_ioassign
 cp ioassign $ODB_DATAPATH_CCMA/IOASSIGN
 
-cp ${CLIMDIR}/const.tar.gz .
-tar -xzvf const.tar.gz
-
-cp rtcoef_noaa_17_hirs.bin rtcoef_noaa_18_hirs.bin
+cp ${CLIMDIR}/const_cy43t2.tar.gz .
+tar -xzvf const_cy43t2.tar.gz
 ln -s scat.cmod5.table fort.36
 cp errgrib_scr errgrib
 
-#cp $CLIMDIR/table? .
 cp ${ADDSURFRESULTFILE} ICMSHSCREINIT
 cp ${BATORDIR}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
 
+# Humidity -> spectral (because of LSPRT)
+ecflow_client --label=info "Change humidity to spectral"
+${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
+${BINDIR}/fa_gp2sp.py medusa_worm
+${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHSCREINIT
+rm -rf medusa_worm.allsp
+
 ecflow_client --label=info "Create IOASSIGN"
-./create_ioassign -lCCMA -n$NPROC
+module swap intel/18.0.0.033
+./create_ioassign -lCCMA -n$NPROC > ${LOGDIR}/CREATE_IOASSIGN_${mem}.log 2>&1
 cp CCMA.IOASSIGN ./CCMA/CCMA.IOASSIGN
 ln -s CCMA.IOASSIGN ./CCMA/IOASSIGN.CCMA
 cp ./CCMA/CCMA.IOASSIGN ./CCMA/IOASSIGN
@@ -144,7 +151,6 @@ cp $IOASSIGN_CCMA $ODB_DATAPATH_CCMA/IOASSIGN
 cat $IOASSIGN_CCMA >> $ODB_SRCPATH_ECMA/IOASSIGN
 
 cp $NAMELIASICHAN $RUNDIR/iasichannels
-cp $NAMELCRISCHAN $RUNDIR/crischannels
 cp ECMA/IOASSIGN IOASSIGN
 
 export IOASSIGN=IOASSIGN
@@ -163,17 +169,9 @@ sed -e "s/{NBPROC}/${NPROC}/" \
     -e "s/{naemember}/${NAEMEMBER}/" \
     -e "s/{NPRGPNS}/${NPRGPNS}/" $NAMELSCREEN > fort.4
 
-# Humidity -> spectral (because of LSPRT)
-ecflow_client --label=info "Change humidity to spectral"
-module load python3
-${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
-${BINDIR}/fa_gp2sp.py medusa_worm
-${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHSCREINIT
-rm -rf medusa_worm.allsp
-
 # Run screening config 002
 ecflow_client --label=info "Screensurf"
-/usr/bin/time -v aprun -n $NPROC ${BINMASTER} 
+/usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/SCREENSURF_${mem}.log 2>&1 
 
 if (( $? != 0 ))
 then
@@ -190,4 +188,3 @@ cd ${SCREENDIR}
 rm -rf ${RUNDIR}
 
 %include <tail.h>
-

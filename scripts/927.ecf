@@ -3,23 +3,23 @@
 %include <pbs.h>
 %include <head.h>
 
-module load cray-snplauncher
-
 date=%DATUM%
 run=%LAUF%
 mem=%MEMBER%
 lagg=%VORHI%
 couplfr=%KOPPLUNG%
 assim=%ASSIM%
-gl=%GL%
 user=%USER%
 
-###################Run setup script for environment################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg 999 $user
-###################################################################
+########################Run setup script for environment################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem $lagg 999 $user
+########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
+
+# Environmental settings
+module load cray-snplauncher
 
 if [[ ${mem} == "00" ]]
 then
@@ -86,20 +86,14 @@ ln -sf ${BINMASTER} MASTER
 # --- get necessary files
 
 ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
-if [[ $gl == 1 ]];then
-   ln -s ${CLIMFILENAME_ECMWF_LAE}${month} Const.Clim
+if [[ ${mem} == "00" ]];then
+   ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
    NAM=${NAMEL927}
    NAMADDS=${NAMEL927ADDS}
 else
-   if [[ ${mem} == "00" ]];then
-      ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
-      NAM=${NAMEL927}
-      NAMADDS=${NAMEL927ADDS}
-   else
-      ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
-      NAM=${NAMEL927_GLO}
-      NAMADDS=${NAMEL927ADDS_GLO}
-   fi
+   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} Const.Clim
+   NAM=${NAMEL927_GLO}
+   NAMADDS=${NAMEL927ADDS_GLO}
 fi
 
 ln -s ${ECOCLIMAPI} .
@@ -122,31 +116,19 @@ while (( $i <= $leadtime )) ; do
   
     #---  modifiy namelist
     sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{neini}/$NEINI/"\
-        -e   "s/{lsprt}/.false./"\
         -e   "s/{EXPERIMENT}/$EXP/"\
         -e   "s/{NPROC}/$NPROC/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
         -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{nprtrw}/$NPRTRW/g" ${NAMADDS} > $RUNDIR/fort.4
+        -e   "s/{nstrout}/$NSTROUT/g" ${NAMADDS} > $RUNDIR/fort.4
 
   else
 
     #---  modifiy namelist
     sed -e   "s/{nproma}/$NPROMA/"\
-        -e   "s/{neini}/$NEINI/"\
-        -e   "s/{lsprt}/.false./"\
         -e   "s/{EXPERIMENT}/$EXP/"\
         -e   "s/{NPROC}/$NPROC/"\
-        -e   "s/{nprgpew}/$NPRGPEW/"\
-        -e   "s/{nprgpns}/$NPRGPNS/"\
-        -e   "s/{nprtrv}/$NPRTRV/"\
         -e   "s/{nstrin}/$NSTRIN/"\
-        -e   "s/{nstrout}/$NSTROUT/"\
-        -e   "s/{nprtrw}/$NPRTRW/g" ${NAM} > $RUNDIR/fort.4
+        -e   "s/{nstrout}/$NSTROUT/g" ${NAM} > $RUNDIR/fort.4
 
   fi    
 
@@ -184,7 +166,7 @@ while (( $i <= $leadtime )) ; do
      done
   fi
 
-  if [[ ${WAITCOUNT} -le 120 ]]
+  if [[ ${WAITCOUNT} -le 121 ]]
   then
      echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
      ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"

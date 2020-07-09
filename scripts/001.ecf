@@ -13,9 +13,9 @@ stophy=%STOCH%
 step15=%STEPS15%
 user=%USER%
 
-#####################Run setup script for environment##################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem $lagg $assimc $user
-#######################################################################
+##########################Run setup script for environment##################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem $lagg $assimc $user
+############################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"
@@ -93,8 +93,8 @@ elif [ -s ${SOILGUESSFILE3} ] ; then
 elif [ -s ${SOILGUESSFILE4} ] ; then
    INITFILE_SFX=${SOILGUESSFILE4}
    ecflow_client --label=info "Use old soil file 4"
-elif [ -s ${C927SURFDIR}/PFE927${EXP}+0000.sfx ] ; then
-   INITFILE_SFX=${C927SURFDIR}/PFE927${EXP}+0000.sfx
+elif [ -s ${C927SURFDIR}/SURFEX_${EXP}_INIT.fa ] ; then
+   INITFILE_SFX=${C927SURFDIR}/SURFEX_${EXP}_INIT.fa
    ecflow_client --label=info "Use ECMWF soil"
 else
    echo "No INITFILE_SFX found"
@@ -102,34 +102,21 @@ else
    exit 91
 fi
 
-if [[ -s ${PGDFILE_FA} ]]; then
-   INITFILE_SURFACE=${PGDFILE_FA}
-else
-   INITFILE_SURFACE=${CLIMDIR}/PGD_${EXP}.fa
-fi
+INITFILE_SURFACE=${PGDFILE_FA}
+
+cp ${CLIMDIR}/const_cy43t2.tar.gz .
+tar -xzvf const_cy43t2.tar.gz
 
 ln -sf ${C927DIR}/ELSC*${EXP}* .
 ln -sf ${INITFILE_3D} ICMSH${EXP}INIT
 
 ln -sf ICMSH${EXP}INIT ./ELSCF${EXP}ALBC000
-ln -sf ${INITFILE_SFX} ICMSH${EXP}INIT.sfx #nka
-ln -sf ${INITFILE_SURFACE} Const.Clim.sfx    #nka
+ln -sf ${INITFILE_SFX} ICMSH${EXP}INIT.sfx
+ln -sf ${INITFILE_SURFACE} Const.Clim.sfx
 ln -sf ${CLIMFILENAME_AROME}${month} Const.Clim
 
-ln -sf ${ECOCLIMAPI} . #cy40
-ln -sf ${ECOCLIMAPII} . #cy40
-ln -sf ${CLIMDIR}/RADRRTM . #cy40 
-ln -sf ${CLIMDIR}/GCO2CLIM . #cy40 
-ln -sf ${CLIMDIR}/GCH4CLIM . #cy40 
-ln -sf ${CLIMDIR}/N2OCLIM . #cy40 
-ln -sf ${CLIMDIR}/NO2CLIM . #cy40 
-ln -sf ${CLIMDIR}/C11CLIM . #cy40 
-ln -sf ${CLIMDIR}/C12CLIM . #cy40 
-ln -sf ${CLIMDIR}/GOZOCLIM . #cy40 
-ln -sf ${CLIMDIR}/C22CLIM . #cy40 
-ln -sf ${CLIMDIR}/CCL4CLIM . #cy40 
-ln -sf ${CLIMDIR}/RADSRTM . #cy40 
-ln -sf ${CLIMDIR}/ECOZC . #cy40 
+ln -sf ${ECOCLIMAPI} .
+ln -sf ${ECOCLIMAPII} .
 
 ln -sf ${NAMEL001SURFEX} EXSEG1.nam
 

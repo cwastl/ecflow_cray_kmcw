@@ -10,9 +10,9 @@ step15=%STEPS15%
 assimc=%ASSIMC%
 user=%USER%
 
-#####################Run setup script for environment################
-. /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
-#####################################################################
+######################Run setup script for environment####################
+. /home/ms/at/${user}/SCR/setup_cy43.ksh $run $date $mem 999 $assimc $user
+##########################################################################
 
 # report to ecflow
 ecflow_client --label=run "The date is now ${date} ${run}"

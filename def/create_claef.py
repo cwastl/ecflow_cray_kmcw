@@ -47,9 +47,6 @@ couplf = 3
 # use 15min output for precipitation
 step15 = False
 
-# use GL Tool yes/no, if no - 901 is used
-gl = False
-
 # assimilation switches
 assimi = True   #assimilation yes/no
 assimm = 0      #number of members without 3DVar
@@ -214,9 +211,6 @@ def family_lbc():
     # Family LBC
     return Family("lbc",
 
-       Edit(
-          GL=gl),
-
        # Task getlbc
        [
           Task("getlbc",
@@ -241,8 +235,8 @@ def family_lbc():
           # Task divlbc
           [
              Task("divlbc",
-                Trigger(":GL == 0 and ../getlbc:a"),
-                Complete(":GL == 1 or :MEMBER == 00 and ../../dummy/ez_trigger/dummy1 == complete"),
+                Trigger("../getlbc:a"),
+                Complete(":MEMBER == 00 and ../../dummy/ez_trigger/dummy1 == complete"),
                 Event("b"),
                 Edit(
                    NP=1,
@@ -259,8 +253,8 @@ def family_lbc():
           # Task 901
           [
              Task("901",
-                Trigger(":GL == 0 and divlbc:b"),
-                Complete(":GL == 1 or :MEMBER == 00 and ../../dummy/ez_trigger/dummy1 == complete"),
+                Trigger("divlbc:b"),
+                Complete(":MEMBER == 00 and ../../dummy/ez_trigger/dummy1 == complete"),
                 Event("c"),
                 Edit(
                    NP=1,
@@ -271,39 +265,6 @@ def family_lbc():
                 Label("run", ""),
                 Label("info", ""),
                 Label("error", ""),
-             )
-          ],
-
-          # Task getlbc_gl
-          [
-             Task("getlbc_gl",
-                Trigger(":GL == 1 and ../../dummy/ez_trigger/dummy1 == complete"),
-                Complete(":GL == 0"),
-                Edit(
-                   NP=1,
-                   CLASS='ns',
-                   SUITENAME=suite_name,
-                   MEMBER="{:02d}".format(mem),
-                   NAME="getlbcgl{:02d}".format(mem),
-                ),
-                Label("run", ""),
-                Label("info", ""),
-             )
-          ],
-
-          # Task GL
-          [
-             Task("gl",
-                Trigger(":GL == 1 and getlbc_gl == complete"),
-                Complete(":GL == 0"),
-                Edit(
-                   MEMBER="{:02d}".format(mem),
-                   NP=1,
-                   CLASS='nf',
-                   NAME="gl{:02d}".format(mem),
-                ),
-                Label("run", ""),
-                Label("info", ""),
              )
           ],
 
@@ -390,7 +351,6 @@ def family_main():
    return Family("main",
 
       Edit(
-         GL=gl,
          ASSIM=assimi,
          LEADT=fcst),
 
@@ -401,8 +361,7 @@ def family_main():
             # Task 927atm
             [
                Task("927",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
-#                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete".format(mem)),
+                  Trigger("../../lbc/MEM_{:02d}/901 == complete or ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
                   Event("d"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -415,25 +374,10 @@ def family_main():
                )
             ],
 
-#            # Task 927/PGD
-#            [
-#              Task("pgd",
-#                 Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
-#                 Edit(
-#                    MEMBER="{:02d}".format(mem),
-#                    NP=1,
-#                    CLASS='nf',
-#                    NAME="pgd{:02d}".format(mem),
-#                 ),
-#                 Label("run", ""),
-#                 Label("info", ""),
-#               )
-#            ],
-
             # Task 927/surf
             [
                Task("927surf",
-                  Trigger(":GL == 1 and ../../lbc/MEM_{:02d}/gl == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901 == complete or :GL == 0 and ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
+                  Trigger("../../lbc/MEM_{:02d}/901 == complete or ../../lbc/MEM_{:02d}/901:c".format(mem,mem,mem)),
 #                  Trigger("pgd == complete"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
