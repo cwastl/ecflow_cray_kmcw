@@ -65,7 +65,7 @@ while (( $i <= $leadtime )) ; do
 
       done
 
-      if [[ ${WAITCOUNT} -gt 60 ]]
+      if [[ ${WAITCOUNT} -gt 61 ]]
       then
          if [[ ${FT} -ne 000 ]]
          then

@@ -10,7 +10,7 @@ step15=%STEPS15%
 assimc=%ASSIMC%
 user=%USER%
 
-#################Run setup script for environment####################
+#####################Run setup script for environment################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
 #####################################################################
 
@@ -311,7 +311,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
       
         fi
 
-        if [[ ${WAITCOUNT} -eq 60 ]]
+        if [[ ${WAITCOUNT} -eq 61 ]]
          then
 
             ecflow_client --label=error "CLAEF${mem}+${cstep}:${min}".grb" still does not yet exist, exit!"

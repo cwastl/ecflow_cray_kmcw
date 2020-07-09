@@ -33,13 +33,13 @@ suite_name = "claef"
 
 #ensemble members
 #members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [0]
+members = [0,1]
 
 # forecasting range
-fcst = 48
+fcst = 24
 
 # forecasting range control member
-fcstctl = 48
+fcstctl = 24
 
 # coupling frequency
 couplf = 3
@@ -58,7 +58,7 @@ eda = True      #ensemble data assimilation
 seda = True     #surface eda
 
 # use EnJK method of Endy yes/no
-enjk = True
+enjk = False
 
 # use stochastic physics model error representation yes/no
 stophy = True
@@ -317,7 +317,8 @@ def family_obs(starto1,starto2) :
     # Family OBS
     return Family("obs",
 
-       Edit(ASSIM=assimi),
+       Edit(ASSIM=assimi,
+            SEDA=seda),
 
        # Task assim/getobs
        [
@@ -500,7 +501,7 @@ def family_main():
             [
                Task("screensurf",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0 or :SEDA == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -710,7 +711,7 @@ defs = Defs().add(
                 ),
 
                 Family("RUN_06",
-                   Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
+                   Edit( LAUF='06',VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 
                    # add suite Families and Tasks
                    family_dummy(timing['c06_1'],timing['c06_2']),

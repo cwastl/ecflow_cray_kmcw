@@ -10,7 +10,7 @@ assimc=%ASSIMC%
 eda=%EDA%
 user=%USER%
 
-################Run setup script for environment#####################
+#####################Run setup script for environment################
 . /home/ms/at/${user}/SCR/setup.ksh $run $date $mem 999 $assimc $user
 #####################################################################
 
@@ -31,7 +31,7 @@ cd ${RUNDIR}
 rm -fr ${RUNDIR}/*
 
 ODB_DATAPATH_CCMA=${RUNDIR}/CCMA
-ODB_SRCPATH_RSTBIAS=$RUNDIR/RSTBIAS
+ODB_SRCPATH_RSTBIAS=${RUNDIR}/RSTBIAS
 ODB_DATAPATH_RSTBIAS=$ODB_SRCPATH_RSTBIAS
 
 # Obs perturabtion
@@ -187,6 +187,7 @@ then
   ecflow_client --label=error "Error screening"
   exit 1
 fi
+
 # Distribute output (log files, NODE file, ODB file, VARBC file)
 mv VARBC.cycle ${SCREENDIR}/VARBC.cycle
 tar cvf ECMA_screen.tar ECMA*

@@ -108,7 +108,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
         fi
       done 
 
-      if [[ ${WAITCOUNT} -eq 60 ]] 
+      if [[ ${WAITCOUNT} -eq 61 ]] 
       then
          
          ecflow_client --label=error "PF${EXP}${EXP}+${cstep}:${min} does still not exist, exit!"

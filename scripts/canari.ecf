@@ -49,7 +49,7 @@ CLIMFILE1=${CLIMFILENAME_AROME}${MM}
 CLIMFILE2=${CLIMFILENAME_AROME}${M2}
 
 [[ -s ${OBSDIR}/laketemperatures_${date}.txt ]] && cp ${OBSDIR}/laketemperatures_${date}.txt ./laketemperatures.txt
-[[ -s ${OBSDIR}/ELSCFAROMALBC000_snow_$date ]] && cp ${OBSDIR}/ELSCFAROMALBC000_snow_$date ./snow_sat
+#[[ -s ${OBSDIR}/ELSCFAROMALBC000_snow_$date ]] && cp ${OBSDIR}/ELSCFAROMALBC000_snow_$date ./snow_sat
 [[ -s ${OBSDIR}/ELSCFAR33ALBC000_snow_$date ]] && cp ${OBSDIR}/ELSCFAR33ALBC000_snow_$date ./snow_mod
 
 # MPI, openMP env, etc.

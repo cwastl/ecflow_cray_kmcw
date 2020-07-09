@@ -79,7 +79,7 @@ while (( $i <= $leadtime )) ; do
 
 #-- Exit if files from dissemination do not exist
 
-   if [[ ${WAITCOUNT} -le 120 ]]
+   if [[ ${WAITCOUNT} -le 121 ]]
    then
       echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
       ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"

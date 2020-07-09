@@ -35,6 +35,8 @@ RUNDIR=${COUPLDIR}/$PBS_JOBID
 cd ${RUNDIR}
 
 ln -sf ${BIN901} MASTER
+#ln -sf ${BINMASTER} MASTER
+#ln -sf /home/ms/at/kmcw/PACKS/AROME_CY43_ZAMG/bin/MASTERODB MASTER
 
 export OMP_NUM_THREADS=$EC_threads_per_task
 
@@ -121,6 +123,13 @@ while (( $i <= $leadtime )) ; do
        fi
 
     done
+
+    if [[ ${WAITCOUNT} -le 121 ]]
+    then
+       echo "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+       ecflow_client --label=error "AT LEAST ONE FILE FROM DISSEMINATION DOES NOT EXIST!!!"
+       exit 999
+    fi
 
     if (( ${i} > ${triggert} ))
     then
