@@ -58,6 +58,8 @@ export DR_HOOK=0
 export DR_HOOK_SILENT=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 
+ln -sf ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
+
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
 ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}

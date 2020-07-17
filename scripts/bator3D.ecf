@@ -508,12 +508,12 @@ echo "${ficright}00" >> ${BATOR3DIR}/ficdate
 #types_BASE='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
 types_BASE='conv ascat geow iasi amsua amsub hirs sevb'
 #types_BASE='conv ascat geow' 
-#types_BASE='conv geow'
+#types_BASE='conv'
 
 #base2merge='conv europro ascat geow iasi amsua amsub hirs sevb radarv'
 base2merge='conv ascat geow iasi amsua amsub hirs sevb'
 #base2merge='conv ascat geow'
-#base2merge='conv geow'
+#base2merge='conv'
 
 export EC_PROFILE_HEAP=0
 export BATOR_NBPOOL=36

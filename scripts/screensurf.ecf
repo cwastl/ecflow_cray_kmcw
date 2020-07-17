@@ -18,7 +18,7 @@ ecflow_client --label=run "The date is now ${date} ${run}"
 
 # Environmental settings
 prgenvswitchto intel
-module load python3
+module swap intel/18.0.0.033
 
 [[ ! -d ${SCREENDIR} ]] && mkdir -p ${SCREENDIR}
 [[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
@@ -68,8 +68,8 @@ export OMP_NUM_THREADS=1
 #export F_RECLUNIT=byte
 #export TO_PRESCREEN_DEBUG=1
 LSPRT=.FALSE.
-QLGP=.FALSE.   #humidity GP in input
-QLSP=.TRUE.    #humidity SP in input
+QLGP=.TRUE.   #humidity GP in input
+QLSP=.FALSE.    #humidity SP in input
 
 export DR_HOOK=0
 export DR_HOOK_SILENT=0
@@ -132,15 +132,7 @@ cp ${ADDSURFRESULTFILE} ICMSHSCREINIT
 cp ${BATORDIR}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
 
-# Humidity -> spectral (because of LSPRT)
-ecflow_client --label=info "Change humidity to spectral"
-${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -r S043TEMPERATURE -f -v ICMSHSCREINIT medusa_worm
-${BINDIR}/fa_gp2sp.py medusa_worm
-${BINDIR}/fa_copy -w prefix=S,suffix=HUMI.SPECIFI -f -v medusa_worm.allsp ICMSHSCREINIT
-rm -rf medusa_worm.allsp
-
 ecflow_client --label=info "Create IOASSIGN"
-module swap intel/18.0.0.033
 ./create_ioassign -lCCMA -n$NPROC > ${LOGDIR}/CREATE_IOASSIGN_${mem}.log 2>&1
 cp CCMA.IOASSIGN ./CCMA/CCMA.IOASSIGN
 ln -s CCMA.IOASSIGN ./CCMA/IOASSIGN.CCMA
