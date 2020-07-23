@@ -228,9 +228,9 @@ fi
 ecflow_client --label=info "Run 001"
 ecflow_client --event=e
 
-/usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_${mem}.log 2>&1
+/usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MASTERODB_%ECF_TRYNO%_${mem}.log 2>&1
 
-rename NODE.001_01 ${LOGDIR}/NODE.001_01_${mem} NODE.001_01
+rename NODE.001_01 ${LOGDIR}/NODE.001_%ECF_TRYNO%_${mem} NODE.001_01
 
 #ii=0                        #For B-Matrix calculation
 #mkdir -p /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}

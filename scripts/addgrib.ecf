@@ -108,7 +108,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf ${BINDIR}/aromesnowline .
               echo "Calculate snowline for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate snowline for CLAEF${mem}+${cstep}:00.grb"
-              ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
                 ecflow_client --label=error"Snowline not ok" 
@@ -126,7 +126,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               SHOWGRIB=${ADDGRIBDIR}/show+${cstep}.grb
               ln -sf ${BINDIR}/alashowalter .
               echo "Calculate showalter for CLAEF${mem}+" ${cstep} ":00.grb"
-              ./alashowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./alashowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
                 ecflow_client --label=error"Showalter not ok" 
@@ -148,7 +148,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf ${BINDIR}/arometotalprec .
               echo "Calculate total prec for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate total prec for CLAEF${mem}+${cstep}:00.grb"
-              ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
   
               if (( $? != 0 )); then
                 ecflow_client --label=error"Total prec not ok" 
@@ -169,7 +169,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf  ${BINDIR}/aromettrigger .
               echo "Calculate init T for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate init T for CLAEF${mem}+${cstep}.grb"
-              ./aromettrigger ${OUTFILE} ${LCLTGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./aromettrigger ${OUTFILE} ${LCLTGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
                 ecflow_client --label=error"Init T not ok" 
@@ -188,7 +188,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf  ${BINDIR}/gust_uv10m2ff10m .
               echo "Calculate gusts for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate gusts for CLAEF${mem}+${cstep}.grb"
-              ./gust_uv10m2ff10m ${OUTFILE} ${GUSTGRIB} 130 131 133  >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./gust_uv10m2ff10m ${OUTFILE} ${GUSTGRIB} 130 131 133  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
               if (( $? != 0 )); then
                 ecflow_client --label=error"Gusts not ok" 
@@ -207,7 +207,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf  ${BINDIR}/aromevisibility .
               echo "Calculate Visibility for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate Visibility for CLAEF${mem}+${cstep}.grb"
-              ./aromevisibility ${OUTFILE} ${VISGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./aromevisibility ${OUTFILE} ${VISGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
               if (( $? != 0 )); then
                 ecflow_client --label=error"Visibility not ok"
@@ -228,7 +228,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  ln -sf  ${BINDIR}/alarotemponheights .
                  echo "Calculate Temp at specific heights for CLAEF${mem}+" ${cstep} ":00.grb"
                  ecflow_client --label=info "Calculate Temp for CLAEF${mem}+${cstep}.grb"
-                 ./alarotemponheights ${OUTFILE} ${TEMPGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+                 ./alarotemponheights ${OUTFILE} ${TEMPGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
                  if (( $? != 0 )); then
                    ecflow_client --label=error"Temp not ok"
@@ -247,7 +247,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  ln -sf  ${BINDIR}/alageopotheight .
                  echo "Calculate Geopot at surface for CLAEF${mem}+" ${cstep} ":00.grb"
                  ecflow_client --label=info "Calculate SurfGeopot for CLAEF${mem}+${cstep}.grb"
-                 ./alageopotheight ${OUTFILE} ${GEOGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+                 ./alageopotheight ${OUTFILE} ${GEOGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
                  if (( $? != 0 )); then
                    ecflow_client --label=error"Geopot not ok"
@@ -281,7 +281,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ln -sf ${BINDIR}/arometotalprec .
               echo "Calculate total prec for CLAEF${mem}+" ${cstep} ":00.grb"
               ecflow_client --label=info "Calculate total prec for CLAEF${mem}+${cstep}:00.grb"
-              ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}.log 2>&1
+              ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
   
               if (( $? != 0 )); then
                 ecflow_client --label=error"Total prec not ok" 

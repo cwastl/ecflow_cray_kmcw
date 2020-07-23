@@ -46,7 +46,7 @@ if [ -s ${GPSOBSFILE} ] ; then
   cp ${LIST_GPS} ./list_gpssol
   chmod 777 OBSOUL.conv list_gpssol
   status=0
-  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL.log 2>&1
+  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL_%ECF_TRYNO%.log 2>&1
   mv OBSOUL.gpssol ${PREGPSDIR}
   status=$?
   if (( $status != 0 ))
@@ -59,7 +59,7 @@ elif [ -s ${GPSOBSFILE1} ] ; then
   cp ${LIST_GPS} ./list_gpssol
   chmod 777 OBSOUL.conv list_gpssol
   status=0
-  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL.log 2>&1
+  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL_%ECF_TRYNO%.log 2>&1
   mv OBSOUL.gpssol ${PREGPSDIR}
   status=$?
   if (( $status != 0 ))
@@ -72,7 +72,7 @@ elif [ -s ${GPSOBSFILE11} ] ; then
   cp ${LIST_GPS} ./list_gpssol
   chmod 777 OBSOUL.conv list_gpssol
   status=0
-  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL.log 2>&1
+  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL_%ECF_TRYNO%.log 2>&1
   mv OBSOUL.gpssol ${PREGPSDIR}
   status=$?
   if (( $status != 0 ))
@@ -88,7 +88,7 @@ if [ -s ${GPSOBSFILE2} ] ; then
   cp ${LIST_GPS} ./list_gpssol
   chmod 777 OBSOUL.conv list_gpssol
   status2=0
-  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL2.log 2>&1
+  ${PREGPSBIN} > ${LOGDIRBATOR}/PREGPSSOL2_%ECF_TRYNO%.log 2>&1
   mv OBSOUL.gpssol ${PREGPSDIR}/OBSOUL2.gpssol
   status2=$?
   if (( $status2 != 0 ))

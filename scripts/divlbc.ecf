@@ -67,12 +67,12 @@ while (( $i <= $leadtime )) ; do
 
       if [[ ${WAITCOUNT} -gt 61 ]]
       then
-         if [[ ${FT} -ne 000 ]]
+         if [[ ${FT} -ne "000" ]]
          then
             grib_filter -o ${LBCGET}/${mem}-sol.pdg.grb_${n1date}${n1run}00+${FT} app_lsm.filter landseamask.grb 
             grib_filter -o ${LBCGET}/${mem}-sol.pdg.grb_${n1date}${n1run}00+${FT} app_z.filter landseamask.grb
          else
-            if [[ ${mem} -ne 00 ]]
+            if [[ ${mem} -ne "00" ]] 
             then
                grib_filter -o ${LBCGET}/${mem}-sol.pdg.grb_${n1date}${n1run}00+${FT} app_lsm.filter landseamask.grb 
             fi

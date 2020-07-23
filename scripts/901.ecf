@@ -36,8 +36,6 @@ RUNDIR=${COUPLDIR}/$PBS_JOBID
 cd ${RUNDIR}
 
 ln -sf ${BIN901} MASTER
-#ln -sf ${BINMASTER} MASTER
-#ln -sf /home/ms/at/kmcw/PACKS/AROME_CY43_ZAMG/bin/MASTERODB MASTER
 
 export OMP_NUM_THREADS=$EC_threads_per_task
 
@@ -81,17 +79,16 @@ while (( $i <= $leadtime )) ; do
           ln -s ${LBCDIR}/sol.pdg.grib_${n1date}${n1run}+${ii} ICMGGa001INIT
 
           ecflow_client --label=info "901 for +${ii}"
-          /usr/bin/time -v mpiexec MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf 
-#          /usr/bin/time -v mpiexec MASTER 
+          /usr/bin/time -v mpiexec MASTER -t160 -ea001 -fd5 -aeul -c901 -vecmwf > ${LOGDIR}/901_%ECF_TRYNO%_${mem}.out 2>&1
           CODEREP=$?
 
           if (( ${CODEREP} !=0 ))
           then
              echo "901 for ${ii} failed"
              ecflow_client --label=error "901 for ${ii} failed"
-             rename 901.out ${LOGDIR}/${mem}-901.out.${ii} 901.out
-             rename 901.err ${LOGDIR}/${mem}-901.err.${ii} 901.err
-             rename NODE.001_01 ${d_LOG}/${mem}-901.node.${ii} NODE.001_01
+             rename 901.out ${LOGDIR}/${mem}-901_%ECF_TRYNO%.out.${ii} 901.out
+             rename 901.err ${LOGDIR}/${mem}-901_%ECF_TRYNO%.err.${ii} 901.err
+             rename NODE.001_01 ${d_LOG}/${mem}-901_%ECF_TRYNO%.node.${ii} NODE.001_01
              exit 1
           fi
 
@@ -101,7 +98,7 @@ while (( $i <= $leadtime )) ; do
 
           ln -sf ${BINADDSURF} ADDSURF
           ecflow_client --label=info "ADDSURF for +${ii}"
-          /usr/bin/time -v mpiexec ADDSURF fort.11 fort.12
+          /usr/bin/time -v mpiexec ADDSURF fort.11 fort.12 > ${LOGDIR}/901ADDS_%ECF_TRYNO%_${mem}.out 2>&1
           CODEREP=$?
           rename fort.11 ${COUPLDIR}/ICMSHBC${mem}+0${ii} fort.11
 
@@ -109,8 +106,8 @@ while (( $i <= $leadtime )) ; do
           then
              echo "ADDSURF for ${ii} failed"
              ecflow_client --label=error "ADDSURF for ${ii} failed"
-             rename addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim.out.${ii} addArpClim.out
-             rename addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim.err.${ii} addArpClim.err
+             rename addArpClim.out ${LOGDIR}/pf_${mem}-addArpClim_%ECF_TRYNO%.out.${ii} addArpClim.out
+             rename addArpClim.err ${LOGDIR}/pf_${mem}-addArpClim_%ECF_TRYNO%.err.${ii} addArpClim.err
      	     exit 1
           fi
 

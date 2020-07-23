@@ -133,7 +133,7 @@ cp ${BATORDIR}/ECMA_merged.tar ./ECMA_merged.tar
 tar -xvf ECMA_merged.tar
 
 ecflow_client --label=info "Create IOASSIGN"
-./create_ioassign -lCCMA -n$NPROC > ${LOGDIR}/CREATE_IOASSIGN_${mem}.log 2>&1
+./create_ioassign -lCCMA -n$NPROC > ${LOGDIR}/CREATE_IOASSIGN_%ECF_TRYNO%_${mem}.log 2>&1
 cp CCMA.IOASSIGN ./CCMA/CCMA.IOASSIGN
 ln -s CCMA.IOASSIGN ./CCMA/IOASSIGN.CCMA
 cp ./CCMA/CCMA.IOASSIGN ./CCMA/IOASSIGN
@@ -163,7 +163,7 @@ sed -e "s/{NBPROC}/${NPROC}/" \
 
 # Run screening config 002
 ecflow_client --label=info "Screensurf"
-/usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/SCREENSURF_${mem}.log 2>&1 
+/usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/SCREENSURF_%ECF_TRYNO%_${mem}.log 2>&1 
 
 if (( $? != 0 ))
 then
@@ -174,7 +174,7 @@ fi
 # Distribute output (log files, NODE file, ODB file)
 tar cvf ECMA_surf.tar ECMA*
 mv ECMA_surf.tar ${SCREENSURFRESULTFILE}
-mv NODE.001_01 ${LOGDIR}/NODE_SCREEN_SURF_${date}${run}_${mem}
+mv NODE.001_01 ${LOGDIR}/NODE_SCREEN_SURF_${date}${run}_%ECF_TRYNO%_${mem}
 
 cd ${SCREENDIR}
 rm -rf ${RUNDIR}

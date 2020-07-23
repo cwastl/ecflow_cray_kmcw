@@ -95,7 +95,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
           ln -sf ${INFILE} fort.11
           status=0
           ecflow_client --label=info "Prepare CLAEF${mem}+${cstep}:${min}.grb"
-          /usr/bin/time -v mpiexec -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_${mem}.log 2>&1
+          /usr/bin/time -v mpiexec -n ${NSLOTS} ${PROGRIDBIN} > ${LOGDIR}/PROGRID_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
           status=$?
           rename GRIDBIZARRE ${PROGRIDDIR}/CLAEF${mem}+${cstep}:${min}".grb" GRIDBIZARRE
           rm -f fort.11

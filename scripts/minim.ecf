@@ -69,7 +69,7 @@ then
    #export MALLOC_CHECK_=3   
    #export CNF_DEBUG=1
    #export TO_ODB_DEBUG=1
-   #export F_RECLUNIT=BYTE  #cini se da ne utjece na rezultat
+   #export F_RECLUNIT=BYTE
    REDNMC=1.2
    NITER=66 
    NSIMU=69
@@ -95,10 +95,10 @@ then
 
    #Jk parameters perturbations
    typeset -i seed seed1 aa
-   adate3=$(($adate3 + $mem))
-   seed=$mem*$adate3
+   adate3=$(($adate3 + ${mem}))
+   seed=${mem}*$adate3
 
-   if [[ $mem -eq "00" ]]; then
+   if [[ ${mem} -eq "00" ]]; then
      AT=0.70
      AV=0.80
      AD=0.10
@@ -106,7 +106,7 @@ then
      AP=0.00
    fi
 
-   if [[ $mem -ne "00" ]]; then
+   if [[ ${mem} -ne "00" ]]; then
      aa=$adate3*1
      seed1=$(($seed + $aa))
      AT=$(python3 -c "import random; random.seed($seed1); br=random.randint(2,11)/10.;print(br)")
@@ -135,7 +135,7 @@ then
       LEJK=.FALSE.
    fi
 
-   if [[ $mem -eq "00" ]]; then
+   if [[ ${mem} -eq "00" ]]; then
       LEJK=.FALSE.
    fi
 
@@ -230,7 +230,7 @@ then
 
    # Run minimization config 131
    ecflow_client --label=info "Run Minimization"
-   /usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MINIMIZATION_${mem}.log 2>&1
+   /usr/bin/time -v aprun -n $NPROC ${BINMASTER} > ${LOGDIR}/MINIMIZATION_%ECF_TRYNO%_${mem}.log 2>&1
 
    # Distribute output (logfiles,nodefiles, ODB output FA output, VARBC output)
    cp VARBC.cycle ${VARBCFILE}${run}_${mem}
@@ -251,12 +251,12 @@ then
      cp AldsurfA AldsurfC
      cp $NAMELBLEND fort.4
 
-     /usr/bin/time -v aprun -n 1 $BLENDBIN > ${LOGDIR}/BLEND_${mem}.log 2>&1
+     /usr/bin/time -v aprun -n 1 $BLENDBIN > ${LOGDIR}/BLEND_%ECF_TRYNO%_${mem}.log 2>&1
 
      mv AldsurfC ${MINIMRESULTFILE}
    fi
 
-   cp NODE.001_01 ${LOGDIR}/NODE_MINIMIZATION_${date}${run}_${mem}
+   cp NODE.001_01 ${LOGDIR}/NODE_MINIMIZATION_${date}${run}_%ECF_TRYNO%_${mem}
 
 fi
 

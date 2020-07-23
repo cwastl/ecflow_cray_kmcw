@@ -237,9 +237,9 @@ cp ${CLIMDIR}/LIST_GPSSOL list_gpssol
 cp ${BATORMAPSURF} batormap
 
 ecflow_client --label=info "Create IOASSIGN"
-./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} > ${LOGDIRBATOR}/CREATEIOASSIGN.log 2>&1
+./create_ioassign -l${ODB_CMA} -n${BATOR_NBPOOL} > ${LOGDIRBATOR}/CREATEIOASSIGN_%ECF_TRYNO%.log 2>&1
 
-/usr/bin/time -v mpiexec -n ${NPROC} $BATORBIN > ${LOGDIRBATOR}/BATOR.log 2>&1
+/usr/bin/time -v mpiexec -n ${NPROC} $BATORBIN > ${LOGDIRBATOR}/BATOR_%ECF_TRYNO%.log 2>&1
 
 tar cvf ecma_raw.tar ECMA*
 mv ECMA ECMA.conv
@@ -275,7 +275,7 @@ ln -s $SHUFFLEBIN shuffle
 
 #aprun -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na
 ecflow_client --label=info "Shuffle"
-/usr/bin/time -v mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na > ${LOGDIRBATOR}/SHUFFLE.log 2>&1
+/usr/bin/time -v mpiexec -n 1 ./shuffle -i$out_BASE -o$out_BASE -b$nb -a$na > ${LOGDIRBATOR}/SHUFFLE_%ECF_TRYNO%.log 2>&1
 
 # save merged bases (including sub bases)
 tar cvf ECMA_merged.tar $out_BASE ECMA.*
