@@ -36,10 +36,10 @@ suite_name = "claef"
 members = [0,1]
 
 # forecasting range
-fcst = 24
+fcst = 48
 
 # forecasting range control member
-fcstctl = 24
+fcstctl = 48
 
 # coupling frequency
 couplf = 3
@@ -55,7 +55,7 @@ eda = True      #ensemble data assimilation
 seda = True     #surface eda
 
 # use EnJK method of Endy yes/no
-enjk = False
+enjk = True
 
 # use stochastic physics model error representation yes/no
 stophy = True
@@ -278,8 +278,7 @@ def family_obs(starto1,starto2) :
     # Family OBS
     return Family("obs",
 
-       Edit(ASSIM=assimi,
-            SEDA=seda),
+       Edit(ASSIM=assimi),
 
        # Task assim/getobs
        [
@@ -352,7 +351,8 @@ def family_main():
 
       Edit(
          ASSIM=assimi,
-         LEADT=fcst),
+         LEADT=fcst,
+         SEDA=seda),
 
       # Family MEMBER
       [
@@ -467,7 +467,6 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
-                     SEDA=seda,
                      NAME="canari{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -609,14 +608,14 @@ defs = Defs().add(
 
              Family("admin",
             
-                # Task clean logfile
-                Task("cleanlog",Date("28.*.*"),Time(timing['clean']),
-                   Edit(
-                      ECF_JOBOUT="%ECF_HOME%/ecf_out/ecf.out",
-                      ECF_JOB_CMD="{} {} ecgb %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
-                      NAME="cleanlog"),
-                   Label("info", ""),
-                ),
+#                # Task clean logfile
+#                Task("cleanlog",Date("28.*.*"),Time(timing['clean']),
+#                   Edit(
+#                      ECF_JOBOUT="%ECF_HOME%/ecf_out/ecf.out",
+#                      ECF_JOB_CMD="{} {} ecgb %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
+#                      NAME="cleanlog"),
+#                   Label("info", ""),
+#                ),
 
                 # Task complete if something went wrong on the previous day
                 Task("complete", Cron(timing['comp']),
@@ -655,7 +654,7 @@ defs = Defs().add(
                 ),
 
                 Family("RUN_06",
-                   Edit( LAUF='06',VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
+                   Edit( LAUF='06',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
 
                    # add suite Families and Tasks
                    family_dummy(timing['c06_1'],timing['c06_2']),
