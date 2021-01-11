@@ -31,7 +31,7 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
       if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii} ] ; then
 
          cd ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}
-         rm -rf 927 927SURF ADDSURF CANARI COUPL LBC MINIMIZATION PROGRID SCREENING SSTEX
+         rm -rf 927 927SURF ADDSURF COUPL LBC PROGRID SCREENING SSTEX
       
          if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}/001 ] ; then
  
