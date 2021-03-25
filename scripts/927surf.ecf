@@ -62,7 +62,8 @@ ln -sf ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
-ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
+ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
+
 if [[ ${mem} == "00" ]];then
    ln -s ${CLIMFILENAME_ECMWF_DET}${month} ${RUNDIR}/Const.Clim
    NAMELSURF=${NAMEL927SURF}
@@ -80,6 +81,7 @@ sed -e   "s/{nproma}/$NPROMA/"\
     -e   "s/{lpgdfwr}/${lpgdfwr}/g" ${NAMELSURF} > ${RUNDIR}/fort.4
  
 ln -s ${PGDFILE_FA} ${RUNDIR}/const.clim.sfx.${EXP}
+
 ln -s ${ECOCLIMAPI} ${RUNDIR}/ecoclimapI_covers_param.bin
 ln -s ${ECOCLIMAPII} ${RUNDIR}/ecoclimapII_eu_covers_param.bin
 

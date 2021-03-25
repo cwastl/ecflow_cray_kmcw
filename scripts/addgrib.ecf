@@ -43,7 +43,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
 
     cstep=$(printf "%%04d" $step)
 
-    if [[ ${step15} == 1 && ${step} < ${leadtime} ]]
+    if [[ ${step15} -eq 1 && ${step} -lt ${leadtime} ]]
     then
 
       my_min="00 15 30 45"
@@ -90,7 +90,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               cp ${GRIBFILTER} filter.tmp
               sed -e "s/{NUMBER}/${mem}/g" filter.tmp > filt.tmp1
 
-              if [[ ${mem} -eq 00 ]]
+              if [[ ${mem} == "00" ]]
               then
                   sed -e "s/{TYPE}/10/g" filt.tmp1 > rule.filter
               else

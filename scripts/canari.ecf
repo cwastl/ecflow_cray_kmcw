@@ -118,7 +118,7 @@ LINISNOW2=.FALSE.
 [[ -s ./laketemperatures.txt ]] && LINILAKE=".TRUE."
 sed -e "s/{LINILAKE}/${LINILAKE}/g" ${NAMELOIMAIN} >./OPTIONS.nam
 
-if [ ${seda} == 1 ]
+if [ ${seda} -eq 1 ]
 then
 
   cp ${SCREENSURFRESULTFILE} ./ecma_raw.tar

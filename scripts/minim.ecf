@@ -98,7 +98,7 @@ then
    adate3=$(($adate3 + ${mem}))
    seed=${mem}*$adate3
 
-   if [[ ${mem} -eq "00" ]]; then
+   if [[ ${mem} == "00" ]]; then
      AT=0.70
      AV=0.80
      AD=0.10
@@ -129,13 +129,13 @@ then
    fi
 
    # Jk namelist parameters
-   if [[ $enjk == 1 ]]; then
+   if [[ $enjk -eq 1 ]]; then
       LEJK=.TRUE.          # main Jk switch
    else
       LEJK=.FALSE.
    fi
 
-   if [[ ${mem} -eq "00" ]]; then
+   if [[ ${mem} == "00" ]]; then
       LEJK=.FALSE.
    fi
 

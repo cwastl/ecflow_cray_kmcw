@@ -43,7 +43,7 @@ else
   member=${mem}
 fi
 
-if [ ${mem} -eq 00 ]
+if [ ${mem} == "00" ]
 then
   export LPERTURB=.FALSE. #obs perturbations
   export NAEMEMBER=0      #needed for obs perturbation

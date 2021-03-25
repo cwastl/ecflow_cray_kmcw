@@ -33,7 +33,7 @@ suite_name = "claef"
 
 #ensemble members
 #members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [0,1]
+members = [0]
 
 # forecasting range
 fcst = 48
@@ -96,7 +96,7 @@ anzmem = len(members)
 # date to start the suite
 start_date = int(now.strftime('%Y%m%d'))
 #start_date = 20190411
-end_date = 20201231
+end_date = 20211231
 
 ###########################################
 #####define Families and Tasks#############
@@ -445,7 +445,7 @@ def family_main():
             [
                Task("screensurf",
                   Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator == complete"),
-                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0 or :SEDA == 0"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
@@ -467,6 +467,7 @@ def family_main():
                      MEMBER="{:02d}".format(mem),
                      NP=1,
                      CLASS='ns',
+                     SEDA=seda,
                      NAME="canari{:02d}".format(mem),
                   ),
                   Label("run", ""),

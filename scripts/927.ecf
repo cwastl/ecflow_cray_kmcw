@@ -86,6 +86,7 @@ ln -sf ${BINMASTER} MASTER
 # --- get necessary files
 
 ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
+
 if [[ ${mem} == "00" ]];then
    ln -s ${CLIMFILENAME_ECMWF_DET}${month} Const.Clim
    NAM=${NAMEL927}
@@ -112,7 +113,7 @@ while (( $i <= $leadtime )) ; do
 
   ecflow_client --label=info "Creating ELSCFAROMALBC${l}"
 
-  if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]] ; then
+  if [[ $assim -eq 1 ]] && [[ $k -eq 0 ]] && [[ $addsurf -eq 0 ]] ; then
   
     #---  modifiy namelist
     sed -e   "s/{nproma}/$NPROMA/"\
@@ -177,7 +178,7 @@ while (( $i <= $leadtime )) ; do
   /usr/bin/time -v mpiexec -n $EC_total_tasks ./MASTER > ${LOGDIR}/927atm_master_%ECF_TRYNO%_${mem}.log 2>&1 
   status=$?
 
-  if [[ $assim == 1 ]] && [[ $k == 0 ]] && [[ $addsurf == 0 ]]; then
+  if [[ $assim -eq 1 ]] && [[ $k -eq 0 ]] && [[ $addsurf -eq 0 ]]; then
      
      addsurf=1   
      rename PFE927AROM+0000 ${C927DIR}/ADDSURFAROMALBC000 PFE927AROM+0000
@@ -188,7 +189,7 @@ while (( $i <= $leadtime )) ; do
      rename PFE927AROM+0000 ${C927DIR}/ELSCFAROMALBC${l} PFE927AROM+0000
      rename NODE.001_01 ${LOGDIR}/NODE_927_${l}_%ECF_TRYNO%_${mem} NODE.001_01
 
-     if [[ $assim == 1 ]] && [[ $k == 0 ]];then
+     if [[ $assim -eq 1 ]] && [[ $k -eq 0 ]];then
 
         ecflow_client --event=d
 
