@@ -70,7 +70,7 @@ then
    #export CNF_DEBUG=1
    #export TO_ODB_DEBUG=1
    #export F_RECLUNIT=BYTE
-   REDNMC=1.2
+   REDNMC=0.5
    NITER=66 
    NSIMU=69
 
@@ -104,9 +104,7 @@ then
      AD=0.10
      AQ=0.04
      AP=0.00
-   fi
-
-   if [[ ${mem} -ne "00" ]]; then
+   else
      aa=$adate3*1
      seed1=$(($seed + $aa))
      AT=$(python3 -c "import random; random.seed($seed1); br=random.randint(2,11)/10.;print(br)")

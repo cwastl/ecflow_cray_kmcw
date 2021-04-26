@@ -68,10 +68,6 @@ elif [ -s ${SSTEXANAFILE} ] ; then     # use ECMWF/ARPEGE as init
    INITFILE_3D=${SSTEXANAFILE}
    INHYDRO=-1 
    ecflow_client --label=info "Use ECMWF file"
-elif [ -s ${FILE903} ] ; then     # use ECMWF/ARPEGE from 903 as init
-   INITFILE_3D=${FILE903}
-   INHYDRO=-1 
-   ecflow_client --label=info "Use ECMWF file from 903"
 else
    echo "No INITFILE_3D found"
    ecflow_client --label=error "No INITFILE_3D found"

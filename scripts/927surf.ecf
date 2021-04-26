@@ -64,13 +64,8 @@ month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
 ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
 
-if [[ ${mem} == "00" ]];then
-   ln -s ${CLIMFILENAME_ECMWF_DET}${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMEL927SURF}
-else
-   ln -s ${CLIMFILENAME_ECMWF_GLO}${month} ${RUNDIR}/Const.Clim
-   NAMELSURF=${NAMEL927SURF_GLO}
-fi
+ln -s ${CLIMFILENAME_ECMWF_DET}${month} ${RUNDIR}/Const.Clim
+NAMELSURF=${NAMEL927SURF}
 
 lpgdfwr=.FALSE.
 
@@ -107,9 +102,9 @@ then
 else
    while [[ ${WAITCOUNT} -le 120 ]]
    do
-      if [[ -f ${COUPLDIR}/ICMSHBC${mem}+${cstep} ]]
+      if [[ -f ${LBCIFS_ENS}/ffee${n1date}_${n1run}00+${cstep2}-${mem} ]]
       then
-         ln -s ${COUPLDIR}/ICMSHBC${mem}+${cstep} ICMSHFPOSINIT
+         ln -s ${LBCIFS_ENS}/ffee${n1date}_${n1run}00+${cstep2}-${mem} ICMSHFPOSINIT
          (( WAITCOUNT = 300 ))
       else
          echo "ATTENTION: dissemination file does not yet exist!!!"

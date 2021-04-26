@@ -28,13 +28,13 @@ LRADAR=.FALSE.
 LDOPPLER=.FALSE.
 LREFL=.FALSE.
 LNATIONAL=.FALSE.
-LMODES=.FALSE.
-LMODESNATIONAL=.FALSE.
+LMODES=.TRUE.
+LMODESNATIONAL=.TRUE.
 L15MIN_FPOS=.FALSE.
 LMETAROBS=.FALSE.
 LHYDRO3D=.TRUE.
 LHYDROOBS=.TRUE.
-LGPS=.FALSE.        # using GPS observations if available
+LGPS=.TRUE.        # using GPS observations if available
 LPSEUDO=.FALSE.     # using pseudosoundings from surface observations in the alps
 
 export MALLOC_CHECK_=0
