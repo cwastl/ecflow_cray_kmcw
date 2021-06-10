@@ -117,6 +117,7 @@ LINISNOW2=.FALSE.
 [[ -s ./snow_mod ]] && LINISNOW2=".TRUE."
 [[ -s ./laketemperatures.txt ]] && LINILAKE=".TRUE."
 sed -e "s/{LINILAKE}/${LINILAKE}/g" ${NAMELOIMAIN} >./OPTIONS.nam
+cp ./OPTIONS.nam ./EXSEG1.nam
 
 if [ ${seda} -eq 1 ]
 then
