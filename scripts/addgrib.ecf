@@ -259,11 +259,14 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  rm -f ${GEOGRIB:="xxx"}
 
               fi
-  
+ 
+              scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+ 
             else 
  
               echo ${OUTFILE} " already there" 
               ecflow_client --label=info "CLAEF${mem}+${cstep}:00.grb already there"
+              scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
     
             fi
 

@@ -32,8 +32,8 @@ schedule = "/usr/local/apps/schedule/1.4/bin/schedule";
 suite_name = "claef"
 
 #ensemble members
-#members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-members = [0]
+members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+#members = [0]
 
 # forecasting range
 fcst = 48
@@ -53,12 +53,16 @@ assimm = 0      #number of members without 3DVar
 assimc = 6      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
+pertsurf = True #perturbation of sfx files
 
 # use EnJK method of Endy yes/no
 enjk = True
 
 # use stochastic physics model error representation yes/no
 stophy = True
+
+#run harp
+harpi = True
 
 # SBU account, cluster and user name, logport
 account = "ata01";
@@ -79,7 +83,7 @@ timing = {
   'o18_1' : '1955',
   'o18_2' : '2005',
   'c00_1' : '02:30',
-  'c00_2' : '05:15',
+  'c00_2' : '10:15',
   'c06_1' : '08:30',
   'c06_2' : '11:15',
   'c12_1' : '14:30',
@@ -185,6 +189,30 @@ def family_cleaning():
 
           )
 
+def family_harp():
+
+   # Family HARP
+   return Family("harp",
+
+      Edit(LEADT=fcst,
+           ACCOUNT=account,
+           HARPI=harpi),
+
+         # Task harpio
+         [
+            Task("harpio",
+                Trigger(":HARPI == 1 and ../main == complete"),
+                Complete(":LEAD < :LEADT or :HARPI == 0"),
+                Edit(
+                   ECF_JOBOUT="%ECF_HOME%/ecf_out/ecf.out",
+                   ECF_JOB_CMD="{} {} ecgb %ECF_JOB% %ECF_JOBOUT%".format(schedule, user),
+                   NAME="harpio",
+                ),
+                Label("run", ""),
+                Label("info", ""),
+            ) 
+         ],
+      )
 
 def family_obs(starto1,starto2) :
 
@@ -265,7 +293,8 @@ def family_main():
       Edit(
          ASSIM=assimi,
          LEADT=fcst,
-         SEDA=seda),
+         SEDA=seda,
+         PERTS=pertsurf),
 
       # Family MEMBER
       [
@@ -336,10 +365,26 @@ def family_main():
                )
             ],
 
+            # Task assim/varbccomb
+            [
+               Task("varbccomb",
+                  Trigger(":ASSIM == 1 and addsurf == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='ts',
+                     NAME="varbccomb{:02d}".format(mem),
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+               )
+            ],
+
             # Task assim/screening 3D
             [
                Task("screen",
-                  Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator3D == complete"),
+                  Trigger(":ASSIM == 1 and varbccomb == complete and ../../obs/bator3D == complete"),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -357,7 +402,7 @@ def family_main():
             # Task assim/screening surface
             [
                Task("screensurf",
-                  Trigger(":ASSIM == 1 and addsurf == complete and ../../obs/bator == complete"),
+                  Trigger(":ASSIM == 1 and varbccomb == complete and ../../obs/bator == complete"),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -406,10 +451,26 @@ def family_main():
                )
             ],
 
+            # Task assim/pertsurf
+            [
+               Task("pertsurf",
+                  Trigger(":ASSIM == 1 and canari == complete"),
+                  Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0 or :PERTS == 0 or :MEMBER == 00"),
+                  Edit(
+                     MEMBER="{:02d}".format(mem),
+                     NP=1,
+                     CLASS='ts',
+                     NAME="pertsurf{:02d}".format(mem),
+                  ),
+                  Label("run", ""),
+                  Label("info", ""),
+               )
+            ],
+
             # Task 001
             [
                Task("001",
-                  Trigger("927 == complete and minim == complete and canari == complete"),
+                  Trigger("927 == complete and minim == complete and pertsurf == complete"),
                   Event("e"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -465,8 +526,8 @@ def family_main():
 #            # Task verif
 #            [
 #               Task("verif",
-#                  Trigger("../MEM_{:02d}/addgrib == complete".format(mem)),
-#                  Complete(":LEAD < :LEADT"),
+#                  Time("04:30"),
+#                  Complete(":LEAD < :LEADT or :MEMBER != 00"),
 #                  Edit(
 #                     MEMBER="{:02d}".format(mem),
 #                     NP=1,
@@ -477,6 +538,7 @@ def family_main():
 #                  Label("info", ""),
 #               )
 #            ],
+
 
            ) for mem in members
          ]
@@ -542,7 +604,7 @@ defs = Defs().add(
              Family("runs",
 
                 RepeatDate("DATUM",start_date,end_date),
-    
+
                 # Task dummy
                 Task("dummy",
                   Edit(
@@ -564,6 +626,7 @@ defs = Defs().add(
                    family_cleaning(),
                    family_obs(timing['o00_1'],timing['o00_2']),
                    family_main(),
+                   family_harp(),
                 ),
 
                 Family("RUN_06",
@@ -574,6 +637,7 @@ defs = Defs().add(
                    family_cleaning(),
                    family_obs(timing['o06_1'],timing['o06_2']),
                    family_main(),
+                   family_harp(),
                 ),
 
                 Family("RUN_12",
@@ -584,6 +648,7 @@ defs = Defs().add(
                    family_cleaning(),
                    family_obs(timing['o12_1'],timing['o12_2']),
                    family_main(),
+                   family_harp(),
                 ),
 
                 Family("RUN_18",
@@ -594,9 +659,10 @@ defs = Defs().add(
                    family_cleaning(),
                    family_obs(timing['o18_1'],timing['o18_2']),
                    family_main(),
-                ),
-             )     
-          )
+                   family_harp(),
+               ),
+            )
+         )
        )
 
 ###################################

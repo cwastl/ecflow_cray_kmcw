@@ -58,8 +58,14 @@ export DR_HOOK=0
 export DR_HOOK_SILENT=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 
-# fetch input files 
+if [[ ${mem} == "00" ]]
+then
+   lpertl=".F."
+else
+   lpertl=".T."
+fi
 
+# fetch input files 
 if [ -s ${MINIMRESULTFILE} ] ; then
    INITFILE_3D=${MINIMRESULTFILE}
    INHYDRO=1
@@ -74,9 +80,13 @@ else
    exit 90
 fi
 
-if [ -s ${CANARIANAFILESURF} ] ; then            # if CANARI output is available
+if [ -s ${PERTSURFRESULTFILE} ] ; then            # if PERTSURF is used
+   INITFILE_SFX=${PERTSURFRESULTFILE}
+   ecflow_client --label=info "Use pertsurf file"
+elif [ -s ${CANARIANAFILESURF} ] ; then            # if CANARI output is available
    INITFILE_SFX=${CANARIANAFILESURF}
    ecflow_client --label=info "Use canari file"
+   lpertl=".F."
 elif [ -s ${SOILGUESSFILE1} ] ; then
    INITFILE_SFX=${SOILGUESSFILE1}
    ecflow_client --label=info "Use old soil file 1"
@@ -92,6 +102,7 @@ elif [ -s ${SOILGUESSFILE4} ] ; then
 elif [ -s ${C927SURFDIR}/SURFEX_${EXP}_INIT.fa ] ; then
    INITFILE_SFX=${C927SURFDIR}/SURFEX_${EXP}_INIT.fa
    ecflow_client --label=info "Use ECMWF soil"
+   lpertl=".F."
 else
    echo "No INITFILE_SFX found"
    ecflow_client --label=error "No INITFILE_SFX found"
@@ -114,8 +125,6 @@ ln -s ${CLIMFILENAME_AROME}${month} Const.Clim
 
 ln -sf ${ECOCLIMAPI} .
 ln -sf ${ECOCLIMAPII} .
-
-ln -sf ${NAMEL001SURFEX} EXSEG1.nam
 
 # run 001
 #-------------------------------------
@@ -202,6 +211,8 @@ then
       -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
+  ln -sf ${NAMEL001SURFEX} $RUNDIR/EXSEG1.nam
+
 else
 
   sed -e   "s/{nproma}/$NPROMA/"\
@@ -219,6 +230,8 @@ else
       -e   "s/NFRPOS=60,/NFRPOS=${steps},/"\
       -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
+
+  sed -e   "s/LPERTSURF=.F./LPERTSURF=${lpertl}/g" ${NAMEL001SURFEX} > $RUNDIR/EXSEG1.nam
 
 fi  
 
