@@ -3,7 +3,7 @@
 import os
 
 suite = "claef"
-runs = ["00","06","12","18"]
+runs = ["00","03","06","09","12","15","18","21"]
 ofamil = ["admin","runs"]
 famil = ["obs","main","harp"]
 members = ["00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16"]
@@ -12,9 +12,9 @@ tasks_ez_trigger = ["dummy1"]
 tasks_check_obs = ["dummy2"]
 tasks_check_main = ["dummy2"]
 tasks_clean = ["cleaning"]
-tasks_harp = ["harpio"]
+tasks_harp = ["harpio","verif"]
 tasks_obs = ["getobs","bator","bator3D","pregps"]
-tasks_main = ["927","pgd","927surf","sstex","addsurf","varbccomb","screen","screensurf","canari","minim","pertsurf","001","progrid","addgrib","verif","transfer","archmars"]
+tasks_main = ["927","pgd","927surf","sstex","addsurf","varbccomb","screen","screensurf","canari","minim","pertsurf","001","progrid","addgrib","transfer","archmars"]
 
 hpath="/home/ms/at/kmcw/ecf/"
 

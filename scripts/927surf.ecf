@@ -62,7 +62,7 @@ ln -sf ${NAMEL927SURFEX} ${RUNDIR}/PRE_REAL1.nam
 
 month=`echo "$date" | awk '{print substr($1,5,2)}'`
 
-ln -s ${CLIMFILENAME_AROME}${month} const.clim.AROM
+ln -s ${CLIMFILENAME_AROME}${month} ${RUNDIR}/const.clim.${EXP}
 
 ln -s ${CLIMFILENAME_ECMWF_DET}${month} ${RUNDIR}/Const.Clim
 NAMELSURF=${NAMEL927SURF}

@@ -10,6 +10,7 @@ lagg=%VORHI%
 couplfr=%KOPPLUNG%
 assimc=%ASSIMC%
 stophy=%STOCH%
+pertsurf=%PERTSU%
 step15=%STEPS15%
 user=%USER%
 
@@ -58,13 +59,6 @@ export DR_HOOK=0
 export DR_HOOK_SILENT=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 
-if [[ ${mem} == "00" ]]
-then
-   lpertl=".F."
-else
-   lpertl=".T."
-fi
-
 # fetch input files 
 if [ -s ${MINIMRESULTFILE} ] ; then
    INITFILE_3D=${MINIMRESULTFILE}
@@ -80,13 +74,14 @@ else
    exit 90
 fi
 
+lpertl=".F."
 if [ -s ${PERTSURFRESULTFILE} ] ; then            # if PERTSURF is used
    INITFILE_SFX=${PERTSURFRESULTFILE}
    ecflow_client --label=info "Use pertsurf file"
+   lpertl=".T."
 elif [ -s ${CANARIANAFILESURF} ] ; then            # if CANARI output is available
    INITFILE_SFX=${CANARIANAFILESURF}
    ecflow_client --label=info "Use canari file"
-   lpertl=".F."
 elif [ -s ${SOILGUESSFILE1} ] ; then
    INITFILE_SFX=${SOILGUESSFILE1}
    ecflow_client --label=info "Use old soil file 1"
@@ -102,7 +97,6 @@ elif [ -s ${SOILGUESSFILE4} ] ; then
 elif [ -s ${C927SURFDIR}/SURFEX_${EXP}_INIT.fa ] ; then
    INITFILE_SFX=${C927SURFDIR}/SURFEX_${EXP}_INIT.fa
    ecflow_client --label=info "Use ECMWF soil"
-   lpertl=".F."
 else
    echo "No INITFILE_SFX found"
    ecflow_client --label=error "No INITFILE_SFX found"
@@ -211,8 +205,6 @@ then
       -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
-  ln -sf ${NAMEL001SURFEX} $RUNDIR/EXSEG1.nam
-
 else
 
   sed -e   "s/{nproma}/$NPROMA/"\
@@ -231,9 +223,14 @@ else
       -e   "s/ ! CNPPATH='.',/  CNPPATH='.',/"\
       -e   "s/{fcstrange}/${leadtime}/g" ${NAMEL001} > $RUNDIR/fort.4
 
-  sed -e   "s/LPERTSURF=.F./LPERTSURF=${lpertl}/g" ${NAMEL001SURFEX} > $RUNDIR/EXSEG1.nam
-
 fi  
+
+if [[ $mem == "00" || $pertsurf -eq 0 ]]
+then
+  ln -sf ${NAMEL001SURFEX} $RUNDIR/EXSEG1.nam
+else
+  sed -e "s/LPERTSURF=.F./LPERTSURF=${lpertl}/g" ${NAMEL001SURFEX} > $RUNDIR/EXSEG1.nam
+fi
 
 ecflow_client --label=info "Run 001"
 ecflow_client --event=e
@@ -242,14 +239,14 @@ ecflow_client --event=e
 
 rename NODE.001_01 ${LOGDIR}/NODE.001_%ECF_TRYNO%_${mem} NODE.001_01
 
-#ii=0                        #For B-Matrix calculation
-#mkdir -p /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}
-#while [ $ii -le 6 ]
-#do
-#   cp ICMSH${EXP}+000${ii}:00 /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
-#   cp ICMSH${EXP}+000${ii}:00.sfx /scratch/ms/at/kmcw/CLAEF/BMATRIX/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
-#   let "ii = $ii + 3"
-#done
+ii=0                        #For B-Matrix calculation
+mkdir -p /sc1/tcwork/zat2/lb/CLAEF/BMATRIX_cy43/${date}/${run}/MEM_${mem}
+while [ $ii -le ${assimc} ]
+do
+   cp ICMSH${EXP}+000${ii}:00 /sc1/tcwork/zat2/lb/CLAEF/BMATRIX_cy43/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}
+   cp ICMSH${EXP}+000${ii}:00.sfx /sc1/tcwork/zat2/lb/CLAEF/BMATRIX_cy43/${date}/${run}/MEM_${mem}/ICMSH${EXP}+000${ii}.sfx
+   let "ii = $ii + 3"
+done
 
 ii=0                       #For assimilation cycle
 while [ $ii -le ${leadtime} ]

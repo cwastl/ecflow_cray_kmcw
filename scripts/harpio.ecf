@@ -38,6 +38,7 @@ tar czvf esuite_${year}_${month}.tar.gz FCTABLE*${year}${month}_${run}.sqlite
 ecflow_client --label=info "esuite_${year}_${month}.tar.gz"
 
 #(( CHECKTRANS = 1 ))
+#(( CHECKTRANSOK = 1 ))
 #while (( ${CHECKTRANS} < 20 ))
 #do
 #
@@ -54,15 +55,16 @@ ecflow_client --label=info "esuite_${year}_${month}.tar.gz"
 #   else
 #
 #      (( CHECKTRANS = 30 ))
-#      (( CHECKTRANSOK = 1 ))
 #      OKFILE_E=CLAEF_E.ok
 #      echo ${date}${run} > ${OKFILE_E}
-#
+#      sleep 10
+#       
 #      while (( ${CHECKTRANSOK} < 20 ))
 #      do
 #
 #         ectrans -gateway zaaecm99.zamg.ac.at -remote claef_zat -put -source ${OKFILE_E} -target /HARP/CLAEF_ESUITE/${OKFILE_E} -overwrite -verbose -mailto clemens.wastl@zamg.ac.at -onfailure
 #
+#         sleep 10
 #         CODEREP2=$?
 #         if (( ${CODEREP2} !=0 ))
 #         then

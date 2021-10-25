@@ -11,6 +11,7 @@ set -ex
 
 ##--- Set date variables for actual model run
 lagg=6
+lagg2=9
 HPROD=$MSJ_BASETIME
 
 (( HRUN = $HPROD + $lagg))
@@ -21,10 +22,19 @@ fi
 
 HRJ=$(printf "%02d" $HRUN)
 
+(( HRUN2 = $HPROD + $lagg2))
+if [[ $HRUN2 -ge 24 ]]
+then
+   (( HRUN2 = $HRUN2 - 24))
+fi
+
+HRJ2=$(printf "%02d" $HRUN2)
+
 # Set task complete for ecFlow
 module load ecflow
 export ECF_HOST=ecgate
 export ECF_PORT=3152
 suiteName='claef'
-ecflow_client --resume /${suiteName}/runs/RUN_${HRJ}/dummy/ez_trigger/dummy1 
+ecflow_client --resume /${suiteName}/runs/RUN_${HRJ}/dummy/ez_trigger/dummy1
+ecflow_client --resume /${suiteName}/runs/RUN_${HRJ2}/dummy/ez_trigger/dummy1 
 exit

@@ -4,7 +4,7 @@
 #
 #OUTPUT: claef.def and *.job0 - task files
 #
-#CREATED: 2019-01-14
+#CREATED: 2021-10-25
 #
 #AUTHOR: C. Wastl
 ###########################################################
@@ -33,7 +33,7 @@ suite_name = "claef"
 
 #ensemble members
 members = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-#members = [0]
+#members = [0,1]
 
 # forecasting range
 fcst = 48
@@ -42,7 +42,7 @@ fcst = 48
 fcstctl = 48
 
 # coupling frequency
-couplf = 3
+couplf = 1
 
 # use 15min output for precipitation
 step15 = False
@@ -50,10 +50,10 @@ step15 = False
 # assimilation switches
 assimi = True   #assimilation yes/no
 assimm = 0      #number of members without 3DVar
-assimc = 6      #assimilation cycle in hours
+assimc = 3      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
-pertsurf = True #perturbation of sfx files
+pertsurf = False #perturbation of sfx files
 
 # use EnJK method of Endy yes/no
 enjk = True
@@ -64,32 +64,51 @@ stophy = True
 #run harp
 harpi = True
 
+#save Files vor Ment verif tool
+verifm = False
+
 # SBU account, cluster and user name, logport
-account = "ata01";
+account = "atlaef";
 schost  = "cca";
 user    = "kmcw";
 logport = 36652;
 
 # main runs time schedule
 timing = {
-  'comp' : '23:30',
+  'comp' : '00:30',
   'clean' : '05:00',
   'o00_1' : '0155',
   'o00_2' : '0205',
+  'o03_1' : '0455',
+  'o03_2' : '0505',
   'o06_1' : '0755',
   'o06_2' : '0805',
+  'o09_1' : '1055',
+  'o09_2' : '1105',
   'o12_1' : '1355',
   'o12_2' : '1405',
+  'o15_1' : '1655',
+  'o15_2' : '1705',
   'o18_1' : '1955',
   'o18_2' : '2005',
+  'o21_1' : '2255',
+  'o21_2' : '2305',
   'c00_1' : '02:30',
-  'c00_2' : '10:15',
+  'c00_2' : '06:00',
+  'c03_1' : '05:30',
+  'c03_2' : '08:00',
   'c06_1' : '08:30',
-  'c06_2' : '11:15',
+  'c06_2' : '11:00',
+  'c09_1' : '11:30',
+  'c09_2' : '14:00',
   'c12_1' : '14:30',
-  'c12_2' : '17:15',
+  'c12_2' : '18:00',
+  'c15_1' : '17:30',
+  'c15_2' : '20:00',
   'c18_1' : '20:30',
-  'c18_2' : '23:15',
+  'c18_2' : '23:00',
+  'c21_1' : '23:30',
+  'c21_2' : '00:25',
 }
 
 # debug mode (1 - yes, 0 - no)
@@ -98,9 +117,9 @@ debug = 0;
 anzmem = len(members)
 
 # date to start the suite
-start_date = int(now.strftime('%Y%m%d'))
-#start_date = 20190411
-end_date = 20221231
+#start_date = int(now.strftime('%Y%m%d'))
+start_date = 20201123
+end_date = 20201123
 
 ###########################################
 #####define Families and Tasks#############
@@ -196,7 +215,8 @@ def family_harp():
 
       Edit(LEADT=fcst,
            ACCOUNT=account,
-           HARPI=harpi),
+           HARPI=harpi,
+           VERIF=verifm),
 
          # Task harpio
          [
@@ -211,6 +231,21 @@ def family_harp():
                 Label("run", ""),
                 Label("info", ""),
             ) 
+         ],
+
+         # Task verif
+         [
+            Task("verif",
+               Trigger(":VERIF == 1 and ../main == complete"),
+               Complete(":LEAD < :LEADT or :VERIF == 0"),
+               Edit(
+                  NP=1,
+                  CLASS='ns',
+                  NAME="verif",
+               ),
+               Label("run", ""),
+               Label("info", ""),
+            )
          ],
       )
 
@@ -336,7 +371,7 @@ def family_main():
             # Task assim/sstex
             [
                Task("sstex",
-                  Trigger(":ASSIM == 1 and ../MEM_{:02d}/927:d".format(mem)),
+                  Trigger(":ASSIM == 1 and ../../obs/getobs == complete".format(mem)),
                   Complete(":ASSIM == 1 and ../../obs/getobs:obsprog == 0 or :ASSIM == 0"),
                   Edit(
                      MEMBER="{:02d}".format(mem),
@@ -459,7 +494,7 @@ def family_main():
                   Edit(
                      MEMBER="{:02d}".format(mem),
                      NP=1,
-                     CLASS='ts',
+                     CLASS='ns',
                      NAME="pertsurf{:02d}".format(mem),
                   ),
                   Label("run", ""),
@@ -477,6 +512,7 @@ def family_main():
                      NP=360,
                      CLASS='np',
                      STOCH=stophy,
+                     PERTSU=pertsurf,
                      STEPS15=step15,
                      NAME="001_{:02d}".format(mem),
                   ),
@@ -617,7 +653,7 @@ defs = Defs().add(
                   Defstatus("suspended"),
                 ),
 
-                # Main Runs per day (00, 06, 12, 18)
+                # Main Runs per day (00, 03, 06, 09,  12, 15, 18, 21)
                 Family("RUN_00",
                    Edit( LAUF='00', VORHI=6, LEAD=fcst, LEADCTL=fcstctl ),
 
@@ -625,6 +661,17 @@ defs = Defs().add(
                    family_dummy(timing['c00_1'],timing['c00_2']),
                    family_cleaning(),
                    family_obs(timing['o00_1'],timing['o00_2']),
+                   family_main(),
+                   family_harp(),
+                ),
+
+                Family("RUN_03",
+                   Edit( LAUF='03', VORHI=9, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c03_1'],timing['c03_2']),
+                   family_cleaning(),
+                   family_obs(timing['o03_1'],timing['o03_2']),
                    family_main(),
                    family_harp(),
                 ),
@@ -640,9 +687,20 @@ defs = Defs().add(
                    family_harp(),
                 ),
 
+                Family("RUN_09",
+                   Edit( LAUF='09', VORHI=9, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c09_1'],timing['c09_2']),
+                   family_cleaning(),
+                   family_obs(timing['o09_1'],timing['o09_2']),
+                   family_main(),
+                   family_harp(),
+                ),
+
                 Family("RUN_12",
                    Edit( LAUF='12',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-
+   
                    # add suite Families and Tasks
                    family_dummy(timing['c12_1'],timing['c12_2']),
                    family_cleaning(),
@@ -651,9 +709,20 @@ defs = Defs().add(
                    family_harp(),
                 ),
 
+                Family("RUN_15",
+                   Edit( LAUF='15', VORHI=9, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c15_1'],timing['c15_2']),
+                   family_cleaning(),
+                   family_obs(timing['o15_1'],timing['o15_2']),
+                   family_main(),
+                   family_harp(),
+                ),
+
                 Family("RUN_18",
                    Edit( LAUF='18',VORHI=6, LEAD=assimc, LEADCTL=assimc ),
-
+ 
                    # add suite Families and Tasks
                    family_dummy(timing['c18_1'],timing['c18_2']),
                    family_cleaning(),
@@ -661,6 +730,18 @@ defs = Defs().add(
                    family_main(),
                    family_harp(),
                ),
+
+                Family("RUN_21",
+                   Edit( LAUF='21', VORHI=9, LEAD=assimc, LEADCTL=assimc ),
+
+                   # add suite Families and Tasks
+                   family_dummy(timing['c21_1'],timing['c21_2']),
+                   family_cleaning(),
+                   family_obs(timing['o21_1'],timing['o21_2']),
+                   family_main(),
+                   family_harp(),
+                ),
+
             )
          )
        )

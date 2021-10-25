@@ -17,10 +17,10 @@ user=%USER%
 ecflow_client --label=run "The date is now ${date} ${run}"
 
 ecflow_client --label=info "Cleaning files"
-if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
+if [ -d ${MY_DIR}/DATA/${p2date}/${p2run} ] ; then
 
-   ecflow_client --label=info "${p1date}/${p1run} exists"
-   cd ${MY_DIR}/DATA/${p1date}/${p1run}
+   ecflow_client --label=info "${p2date}/${p2run} exists"
+   cd ${MY_DIR}/DATA/${p2date}/${p2run}
    rm -rf BATOR BATOR3D OBSERVATIONS LBCGET PREGPSSOL
 
    i=0
@@ -28,14 +28,14 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
       ii=$(printf "%%02d" $i)
 
-      if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii} ] ; then
+      if [ -d ${MY_DIR}/DATA/${p2date}/${p2run}/MEM_${ii} ] ; then
 
-         cd ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}
-         rm -rf 927SURF ADDSURF COUPL LBC PROGRID SCREENING SSTEX
+         cd ${MY_DIR}/DATA/${p2date}/${p2run}/MEM_${ii}
+         rm -rf 927SURF VARBCCOMB ADDSURF COUPL LBC PROGRID SCREENING SSTEX
       
-         if [ -d ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}/001 ] ; then
+         if [ -d ${MY_DIR}/DATA/${p2date}/${p2run}/MEM_${ii}/001 ] ; then
  
-            cd ${MY_DIR}/DATA/${p1date}/${p1run}/MEM_${ii}/001
+            cd ${MY_DIR}/DATA/${p2date}/${p2run}/MEM_${ii}/001
             find . -mindepth 1 ! -name "ICMSH*" | xargs rm -rf
         
          fi 
@@ -48,7 +48,7 @@ if [ -d ${MY_DIR}/DATA/${p1date}/${p1run} ] ; then
 
 else
 
-   ecflow_client --label=info "${p1date}/${p1run} does not exist"
+   ecflow_client --label=info "${p2date}/${p2run} does not exist"
 
 fi
 

@@ -54,11 +54,11 @@ fi
 gunzip -f obs_foreign_${date}${run}.tar.gz
 
 #ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S/DATA_IN/${date}/obsoul_MODES_${date}_${run}00_RUC -overwrite -verbose
-ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date}/obsoul_MODES_aut_${date}_${run}00.asc -overwrite -verbose
-ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date1}/obsoul_MODES_aut_${date1}_${hh1}00.asc -overwrite -verbose
-ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date2}/obsoul_MODES_aut_${date2}_${hh2}00.asc -overwrite -verbose
-ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date3}/obsoul_MODES_aut_${date3}_${hh3}00.asc -overwrite -verbose
-ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date4}/obsoul_MODES_aut_${date4}_${hh4}00.asc -overwrite -verbose
+#ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date}/obsoul_MODES_aut_${date}_${run}00.asc -overwrite -verbose
+#ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date1}/obsoul_MODES_aut_${date1}_${hh1}00.asc -overwrite -verbose
+#ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date2}/obsoul_MODES_aut_${date2}_${hh2}00.asc -overwrite -verbose
+#ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date3}/obsoul_MODES_aut_${date3}_${hh3}00.asc -overwrite -verbose
+#ectrans -gateway zaaecm99.zamg.ac.at -remote ${fectrans} -get -source /../../../ment_arch/aladin/MODE-S_ACG/DATA_OUT/${date4}/obsoul_MODES_aut_${date4}_${hh4}00.asc -overwrite -verbose
 
 # Now get ZAMG observations - /modelle/prod/mgruppe
 ecflow_client --label=info "Copy ZAMG data"
