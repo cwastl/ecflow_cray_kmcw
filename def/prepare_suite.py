@@ -14,7 +14,7 @@ tasks_check_main = ["dummy2"]
 tasks_clean = ["cleaning"]
 tasks_harp = ["harpio","verif"]
 tasks_obs = ["getobs","bator","bator3D","pregps"]
-tasks_main = ["927","pgd","927surf","sstex","addsurf","varbccomb","screen","screensurf","canari","minim","pertsurf","001","progrid","addgrib","transfer","archmars"]
+tasks_main = ["927","927surf","sstex","addsurf","varbccomb","screen","screensurf","canari","minim","pertsurf","001","progrid","addgrib","transfer","archmars"]
 
 hpath="/home/ms/at/kmcw/ecf/"
 

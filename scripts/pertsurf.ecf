@@ -42,7 +42,7 @@ cp ${CANARIANAFILESURF} ./canari.sfx
 
 try_guess=1
 found=0
-while (( $try_guess <= 9 )) && (( $found < 1 )) # loop through all possible guessfiles
+while (( $try_guess <= 12 )) && (( $found < 1 )) # loop through all possible guessfiles
 do
    eval "actfile=\$SOILGUESSCTRLFILE${try_guess}"
    ecflow_client --label=info "Try ctrlsfxguess file ${try_guess}"
@@ -60,7 +60,7 @@ done
 
 try_guess2=1
 found2=0
-while (( $try_guess2 <= 9 )) && (( $found2 < 1 )) # loop through all possible guessfiles
+while (( $try_guess2 <= 12 )) && (( $found2 < 1 )) # loop through all possible guessfiles
 do
    eval "actfile2=\$GUESSFILE${try_guess2}"
    ecflow_client --label=info "Try ctrlguess file ${try_guess2}"
@@ -111,7 +111,7 @@ rm -f fort.4
 
 ecflow_client --label=info "Blend canari2"
 
-cp canari.sfx ./analyse.sfx
+cp canari_lsm ./analyse.sfx
 cp ${NAMELSURF4} fort.4
 
 /usr/bin/time -v ${BLENDSURBIN} > ${LOGDIR}/BLENDSURFEX4_%ECF_TRYNO%_${mem}.log 2>&1
@@ -121,7 +121,13 @@ chmod 666 ./analyse.sfx
 ecflow_client --label=info "Pertsurf"
 
 date2=$( echo $date | cut -c7-8 )
-seedm=`expr ${mem} \* ${date2}`
+if [ ${run} == "00" ]; then
+   run2=1
+else
+   run2=${run}
+fi
+
+seedm=`expr ${mem} \* ${date2} \* ${run2}`
 sed -e   "s/ISEED=1/ISEED=${seedm}/g" ${NAMELPERTSURF} > ./nampert
 
 /usr/bin/time -v mpiexec ${BINPERTSURF} > ${LOGDIR}/PERTSURF_${mem}.LOG 2>&1

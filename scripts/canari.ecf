@@ -220,7 +220,7 @@ cp ${PGDFILE_FA} Const.Clim.sfx
 
 try_guess=1
 found=0
-while (( $try_guess <= 9 )) && (( $found < 1 )) # loop through all possible guessfiles
+while (( $try_guess <= 12 )) && (( $found < 1 )) # loop through all possible guessfiles
 do
    ecflow_client --label=info "Try guess file ${try_guess}"
    eval "actfile=\$SOILGUESSFILE${try_guess}"

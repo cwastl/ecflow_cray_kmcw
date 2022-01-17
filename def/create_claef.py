@@ -53,7 +53,7 @@ assimm = 0      #number of members without 3DVar
 assimc = 3      #assimilation cycle in hours
 eda = True      #ensemble data assimilation
 seda = True     #surface eda
-pertsurf = False #perturbation of sfx files
+pertsurf = True #perturbation of sfx files
 
 # use EnJK method of Endy yes/no
 enjk = True
@@ -62,7 +62,7 @@ enjk = True
 stophy = True
 
 #run harp
-harpi = True
+harpi = False
 
 #save Files vor Ment verif tool
 verifm = False
@@ -75,24 +75,24 @@ logport = 36652;
 
 # main runs time schedule
 timing = {
-  'comp' : '00:30',
+  'comp' : '00:20',
   'clean' : '05:00',
-  'o00_1' : '0155',
-  'o00_2' : '0205',
-  'o03_1' : '0455',
-  'o03_2' : '0505',
-  'o06_1' : '0755',
-  'o06_2' : '0805',
-  'o09_1' : '1055',
-  'o09_2' : '1105',
-  'o12_1' : '1355',
-  'o12_2' : '1405',
-  'o15_1' : '1655',
-  'o15_2' : '1705',
-  'o18_1' : '1955',
-  'o18_2' : '2005',
-  'o21_1' : '2255',
-  'o21_2' : '2305',
+  'o00_1' : '0145',
+  'o00_2' : '0155',
+  'o03_1' : '0445',
+  'o03_2' : '0455',
+  'o06_1' : '0745',
+  'o06_2' : '0755',
+  'o09_1' : '1045',
+  'o09_2' : '1055',
+  'o12_1' : '1345',
+  'o12_2' : '1355',
+  'o15_1' : '1645',
+  'o15_2' : '1655',
+  'o18_1' : '1945',
+  'o18_2' : '1955',
+  'o21_1' : '2245',
+  'o21_2' : '2255',
   'c00_1' : '02:30',
   'c00_2' : '06:00',
   'c03_1' : '05:30',
@@ -108,7 +108,7 @@ timing = {
   'c18_1' : '20:30',
   'c18_2' : '23:00',
   'c21_1' : '23:30',
-  'c21_2' : '00:25',
+  'c21_2' : '00:15',
 }
 
 # debug mode (1 - yes, 0 - no)
@@ -119,7 +119,7 @@ anzmem = len(members)
 # date to start the suite
 #start_date = int(now.strftime('%Y%m%d'))
 start_date = 20201123
-end_date = 20201123
+end_date = 20221123
 
 ###########################################
 #####define Families and Tasks#############
@@ -609,6 +609,12 @@ defs = Defs().add(
                 KOPPLUNG=couplf,
                 ASSIMC=assimc,
  
+                # some variables for MARS archive
+                MARS_FOR_BOND_DATASET=345,
+                BOND_DHS_DRY_RUN_RETRIEVE=0,
+                MARS_DOUBLE_ARCHIVE=0,
+                ECFS_DOUBLE_ARCHIVE=0,
+
                 # Running jobs remotely on HPCF
                 ECF_OUT = '/scratch/ms/at/' + user + '/ECF', # jobs output dir on remote host
                 ECF_LOGHOST='%SCHOST%-log',                     # remote log host

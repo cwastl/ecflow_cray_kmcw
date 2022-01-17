@@ -45,7 +45,7 @@ cp ${C927DIR}/ADDSURFAROMALBC000 ./fort.12
 cp ${NAMELADDSURF} fort.4
 
 ecflow_client --label=info "Addsurf"
-/usr/bin/time -v mpiexec ${BINADDSURF} > ${LOGDIR}/ADDSURF_%ECF_TRYNO%_${mem}.LOG 2>&1 
+/usr/bin/time -v mpiexec ${BINADDSURF} > ${LOGDIR}/ADDSURF_%ECF_TRYNO%_${mem}.LOG 2>&1
 
 mv fort.11 ${ADDSURFRESULTFILE}
 

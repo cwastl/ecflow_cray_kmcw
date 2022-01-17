@@ -41,7 +41,9 @@ if [ ${leadtime} -gt ${assimc} ]; then
   step=0
   while (( $step <= ${leadtime} )) ; do
 
+    (( stepprev=${step}-1 ))
     cstep=$(printf "%%04d" $step)
+    cstep2=$(printf "%%04d" $stepprev)
 
     if [[ ${step15} -eq 1 && ${step} -lt ${leadtime} ]]
     then
@@ -60,21 +62,30 @@ if [ ${leadtime} -gt ${assimc} ]; then
       INFILE=$PROGRIDDIR/CLAEF${mem}+${cstep}:${min}".grb"
       OUTFILE=$ADDGRIBDIR/CLAEF${mem}+${cstep}:${min}".grb"
 
+      if [ ${step} -gt 0 ]
+      then
+         OUTFILE_OLD=$ADDGRIBDIR/CLAEF${mem}+${cstep2}:${min}".grb"
+      fi
+ 
       if [ ${min} == "00" ]; then
         if [ ${mem} == "00" ]; then
           PROGRIDOUTS=${PROGRIDOUTSIZECTL}
         else
           PROGRIDOUTS=${PROGRIDOUTSIZE}
         fi
+        (( PROGRIDOUTS1=${PROGRIDOUTS}*0.97 ))
+        (( PROGRIDOUTS2=${PROGRIDOUTS}*1.03 ))
       else
         PROGRIDOUTS=${PROGRIDOUTSIZE15}
+        (( PROGRIDOUTS1=${PROGRIDOUTS}*0.97 ))
+        (( PROGRIDOUTS2=${PROGRIDOUTS}*1.03 ))
       fi
 
       (( WAITCOUNT = 0 ))
       while [[ ${WAITCOUNT} -le 60 ]]
       do
 
-        if [ -s ${INFILE} ]  && [ $(/usr/bin/stat --printf="%%s" ${INFILE}) == ${PROGRIDOUTS} ] ; then
+        if [ -s ${INFILE} ]  && [ $(/usr/bin/stat --printf="%%s" ${INFILE}) -gt ${PROGRIDOUTS1} ] && [ $(/usr/bin/stat --printf="%%s" ${INFILE}) -lt ${PROGRIDOUTS2} ]; then
 
           if [ ${min} == "00" ] ; then
  
@@ -111,7 +122,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./aromesnowline ${OUTFILE} ${SNOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
-                ecflow_client --label=error"Snowline not ok" 
+                ecflow_client --label=error "Snowline not ok" 
                 echo "Snowline not ok"
                 exit 1
               fi
@@ -124,12 +135,12 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ##############################################
  
               SHOWGRIB=${ADDGRIBDIR}/show+${cstep}.grb
-              ln -sf ${BINDIR}/alashowalter .
+              ln -sf ${BINDIR}/aromeshowalter .
               echo "Calculate showalter for CLAEF${mem}+" ${cstep} ":00.grb"
-              ./alashowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
+              ./aromeshowalter ${OUTFILE} ${SHOWGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
-                ecflow_client --label=error"Showalter not ok" 
+                ecflow_client --label=error "Showalter not ok" 
                 echo "Showalter not ok"
                 exit 1
               fi
@@ -151,7 +162,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
   
               if (( $? != 0 )); then
-                ecflow_client --label=error"Total prec not ok" 
+                ecflow_client --label=error "Total prec not ok" 
                 echo "Total prec not ok"
                 exit 1
               fi
@@ -172,7 +183,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./aromettrigger ${OUTFILE} ${LCLTGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
  
               if (( $? != 0 )); then
-                ecflow_client --label=error"Init T not ok" 
+                ecflow_client --label=error "Init T not ok" 
                 echo "Init T not ok"
                 exit 1
               fi
@@ -191,7 +202,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./gust_uv10m2ff10m ${OUTFILE} ${GUSTGRIB} 130 131 133  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
               if (( $? != 0 )); then
-                ecflow_client --label=error"Gusts not ok" 
+                ecflow_client --label=error "Gusts not ok" 
                 echo "Gusts not ok"
                 exit 1
               fi
@@ -210,13 +221,37 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./aromevisibility ${OUTFILE} ${VISGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
               if (( $? != 0 )); then
-                ecflow_client --label=error"Visibility not ok"
+                ecflow_client --label=error "Visibility not ok"
                 echo "Visibility not ok"
                 exit 1
               fi
 
               cat ${VISGRIB} >> ${OUTFILE}
               rm -f ${VISGRIB:="xxx"}
+
+              ##################
+              # Add ww symbols #
+              ##################
+
+              if [ ${step} -gt 0 ]
+              then
+
+                 WWGRIB=${ADDGRIBDIR}/ww+${cstep}.grb
+                 ln -sf  ${BINDIR}/arome_symbol_ww .
+                 echo "Calculate ww symbols for CLAEF${mem}+" ${cstep} ":00.grb"
+                 ecflow_client --label=info "Calculate ww symbols for CLAEF${mem}+${cstep}.grb"
+                 ./arome_symbol_ww ${OUTFILE_OLD} ${OUTFILE} ${WWGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
+
+                 if (( $? != 0 )); then
+                   ecflow_client --label=error "ww symb not ok"
+                   echo "ww symb not ok"
+                   exit 1
+                 fi
+
+                 cat ${WWGRIB} >> ${OUTFILE}
+                 rm -f ${WWGRIB:="xxx"}
+
+              fi
 
               if [ ${mem} == "00" ] ; then
      
@@ -225,13 +260,13 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  ################################
 
                  TEMPGRIB=${ADDGRIBDIR}/temp+${cstep}.grb
-                 ln -sf  ${BINDIR}/alarotemponheights .
+                 ln -sf  ${BINDIR}/arometemponheights .
                  echo "Calculate Temp at specific heights for CLAEF${mem}+" ${cstep} ":00.grb"
                  ecflow_client --label=info "Calculate Temp for CLAEF${mem}+${cstep}.grb"
-                 ./alarotemponheights ${OUTFILE} ${TEMPGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
+                 ./arometemponheights ${OUTFILE} ${TEMPGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
                  if (( $? != 0 )); then
-                   ecflow_client --label=error"Temp not ok"
+                   ecflow_client --label=error "Temp not ok"
                    echo "Temp not ok"
                    exit 1
                  fi
@@ -244,13 +279,13 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  ######################################
 
                  GEOGRIB=${ADDGRIBDIR}/geo+${cstep}.grb
-                 ln -sf  ${BINDIR}/alageopotheight .
+                 ln -sf  ${BINDIR}/aromegeopotheight .
                  echo "Calculate Geopot at surface for CLAEF${mem}+" ${cstep} ":00.grb"
                  ecflow_client --label=info "Calculate SurfGeopot for CLAEF${mem}+${cstep}.grb"
-                 ./alageopotheight ${OUTFILE} ${GEOGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
+                 ./aromegeopotheight ${OUTFILE} ${GEOGRIB}  >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
 
                  if (( $? != 0 )); then
-                   ecflow_client --label=error"Geopot not ok"
+                   ecflow_client --label=error "Geopot not ok"
                    echo "Geopot not ok"
                    exit 1
                  fi
@@ -259,15 +294,164 @@ if [ ${leadtime} -gt ${assimc} ]; then
                  rm -f ${GEOGRIB:="xxx"}
 
               fi
+
+              ############################################
+              ############Check number of fields##########
+              ############################################
+          
+              ecflow_client --label=info "Check field number ${step}"
+              (( stepfail = 0 )) 
+              if [ ${step} -gt 0 ]
+              then
+
+                 if [ ${mem} == "00" ] ; then
+                    ADDGRIBNBR=$ADDGRIBOUTNBRCTL
+                 else
+                    ADDGRIBNBR=$ADDGRIBOUTNBR
+                 fi
+
+                 while (( $stepfail < 10 )) ; do
+                    if [ $(grib_count ${OUTFILE}) -ne ${ADDGRIBNBR} ]            
+                    then
  
-              scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+                       (( stepfail=${stepfail}+1 ))
+                       sleep 10
+                    
+                    else 
+ 
+                       scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+                       (( stepfail = 11 )) 
+                    fi
+                 done
+
+                 if [ ${stepfail} -eq 10 ]
+                 then
+
+                    ecflow_client --label=error "Fieldnbr ${step}  not ok"
+                    echo "Fieldnbr not ok" ${step}
+                    echo "Fehler fieldnbr" ${mem} "+" ${step} | mail -s "Fehler progrid" clemens.wastl@zamg.ac.at
+                    rm -f ${OUTFILE}
+                    exit 1
+
+                 fi  
+                  
+              else 
+
+                 if [ ${mem} == "00" ] ; then
+                    ADDGRIBNBR=$ADDGRIBOUTNBRCTL_0
+                 else
+                    ADDGRIBNBR=$ADDGRIBOUTNBR_0
+                 fi
+
+                 while (( $stepfail < 10 )) ; do
+                    if [ $(grib_count ${OUTFILE}) -ne ${ADDGRIBNBR} ]            
+                    then
+ 
+                       (( stepfail=${stepfail}+1 ))
+                       sleep 10
+
+                    else 
+ 
+                       scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+                       (( stepfail = 11 )) 
+                    
+                    fi    
+                 done                
+
+                 if [ ${stepfail} -eq 10 ]
+                 then
+
+                    ecflow_client --label=error "Fieldnbr ${step}  not ok"
+                    echo "Fieldnbr not ok" ${step}
+                    echo "Fehler fieldnbr" ${mem} "+" ${step} | mail -s "Fehler progrid" clemens.wastl@zamg.ac.at
+                    rm -f ${OUTFILE}
+                    exit 1
+
+                 fi  
+                    
+              fi 
  
             else 
  
               echo ${OUTFILE} " already there" 
               ecflow_client --label=info "CLAEF${mem}+${cstep}:00.grb already there"
-              scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
-    
+
+              ############################################
+              ############Check number of fields##########
+              ############################################
+          
+              ecflow_client --label=info "Check field number ${step}"
+              (( stepfail = 0 )) 
+              if [ ${step} -gt 0 ]
+              then
+
+                 if [ ${mem} == "00" ] ; then
+                    ADDGRIBNBR=$ADDGRIBOUTNBRCTL
+                 else
+                    ADDGRIBNBR=$ADDGRIBOUTNBR
+                 fi
+
+                 while (( $stepfail < 10 )) ; do
+                    if [ $(grib_count ${OUTFILE}) -ne ${ADDGRIBNBR} ]            
+                    then
+ 
+                       (( stepfail=${stepfail}+1 ))
+                       sleep 10
+                    
+                    else 
+ 
+                       scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+                       (( stepfail = 11 )) 
+                    fi
+                 done
+
+                 if [ ${stepfail} -eq 10 ]
+                 then
+
+                    ecflow_client --label=error "Fieldnbr ${step}  not ok"
+                    echo "Fieldnbr not ok" ${step}
+                    echo "Fehler fieldnbr" ${mem} "+" ${step} | mail -s "Fehler progrid" clemens.wastl@zamg.ac.at
+                    rm -f ${OUTFILE}
+                    exit 1
+
+                 fi                    
+
+              else 
+
+                 if [ ${mem} == "00" ] ; then
+                    ADDGRIBNBR=$ADDGRIBOUTNBRCTL_0
+                 else
+                    ADDGRIBNBR=$ADDGRIBOUTNBR_0
+                 fi
+
+                 while (( $stepfail < 10 )) ; do
+                    if [ $(grib_count ${OUTFILE}) -ne ${ADDGRIBNBR} ]            
+                    then
+ 
+                       (( stepfail=${stepfail}+1 ))
+                       sleep 10
+
+                    else 
+ 
+                       scp ${OUTFILE} kmcw@ecgate:/scratch/ms/at/kmcw/CLAEF/${run}_esuite/MEM_${mem}/
+                       (( stepfail = 11 )) 
+                    
+                    fi    
+                 done                
+
+                 if [ ${stepfail} -eq 10 ]
+                 then
+
+                    ecflow_client --label=error "Fieldnbr ${step}  not ok"
+                    echo "Fieldnbr not ok" ${step}
+                    echo "Fehler fieldnbr" ${mem} "+" ${step} | mail -s "Fehler progrid" clemens.wastl@zamg.ac.at
+                    rm -f ${OUTFILE}
+                    exit 1
+
+                 fi                    
+                    
+              fi 
+   
             fi
 
           else
@@ -287,7 +471,7 @@ if [ ${leadtime} -gt ${assimc} ]; then
               ./arometotalprec ${OUTFILE} ${APCPGRIB} >> ${LOGDIR}/ADDGRIB_${cstep}_%ECF_TRYNO%_${mem}.log 2>&1
   
               if (( $? != 0 )); then
-                ecflow_client --label=error"Total prec not ok" 
+                ecflow_client --label=error "Total prec not ok" 
                 echo "Total prec not ok"
                 exit 1
               fi
