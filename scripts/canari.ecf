@@ -118,20 +118,20 @@ LINISNOW2=.FALSE.
 [[ -s ./laketemperatures.txt ]] && LINILAKE=".TRUE."
 sed -e "s/{LINILAKE}/${LINILAKE}/g" ${NAMELOIMAIN} >./EXSEG1.nam
 
-if [ ${seda} -eq 1 ]
+#if [[ ${mem} == "00" || ${seda} -eq 0 ]]
+if [[ ${seda} -eq 0 ]]
 then
 
-  cp ${SCREENSURFRESULTFILE} ./ecma_raw.tar
-  tar xvf ecma_raw.tar
-  ln -s ECMA/ECMA.IOASSIGN IOASSIGN
-  ln -s ECMA/ECMA.IOASSIGN IOASSIGN.ECMA
-
-else
-	 
   cp ${BATORODBFILE} ./ecma_raw.tar
   tar xvf ecma_raw.tar
   ln -s ECMA.IOASSIGN IOASSIGN
   ln -s ECMA.IOASSIGN IOASSIGN.ECMA
+
+else
+  cp ${SCREENSURFRESULTFILE} ./ecma_raw.tar
+  tar xvf ecma_raw.tar
+  ln -s ECMA/ECMA.IOASSIGN IOASSIGN
+  ln -s ECMA/ECMA.IOASSIGN IOASSIGN.ECMA
 
 fi
 
